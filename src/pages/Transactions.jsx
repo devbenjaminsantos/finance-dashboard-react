@@ -1,19 +1,45 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTransactions } from "../features/transactions/useTransactions";
 import TransactionModal from "../features/transactions/components/TransactionModal";
 import TransactionsFilters from "../features/transactions/components/TransactionsFilters";
-import TransactionsTable from "../features/transactions/components/TransactionsTables";
+import TransactionsTable from "../features/transactions/components/TransactionsTable";
+import { loadJSON, saveJSON } from "../lib/storage/jsonStorage";
 
+const FILTERS_KEY = "fd_tx_filters_v1";
 export default function Transactions() {
   const { transactions, addTransaction, removeTransaction, updateTransaction } =
     useTransactions();
 
+function currentMonthISO() {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  return `${yyyy}-${mm}`;
+}
+
   // filtros
-  const [q, setQ] = useState("");
-  const [typeFilter, setTypeFilter] = useState("all"); // all | income | expense
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [month, setMonth] = useState(""); // "YYYY-MM" ou ""
-  const [sortBy, setSortBy] = useState("date_desc"); // date_desc | date_asc | amount_desc | amount_asc
+  const saved = loadJSON(FILTERS_KEY, {
+    q: "",
+    typeFilter: "all",
+    categoryFilter: "all",
+    month: "currentMonthISO",
+    sortBy: "date_desc",
+    });
+
+  const [q, setQ] = useState(() => saved.q);
+  const [typeFilter, setTypeFilter] = useState(() => saved.typeFilter);
+  const [categoryFilter, setCategoryFilter] = useState(() => saved.categoryFilter);
+  const [month, setMonth] = useState(() => saved.month);
+  const [sortBy, setSortBy] = useState(() => saved.sortBy);
+    useEffect(() => {
+      saveJSON(FILTERS_KEY, {
+        q: q.trim(),
+        typeFilter,
+        categoryFilter,
+        month,
+        sortBy,
+      });
+    }, [q, typeFilter, categoryFilter, month, sortBy]);
 
   // modal
   const [isOpen, setIsOpen] = useState(false);
@@ -100,12 +126,20 @@ export default function Transactions() {
     if (confirm("Remover esta transação?")) removeTransaction(id);
   }
 
-  function resetFilters() {
+   function resetFilters() {
     setQ("");
     setTypeFilter("all");
     setCategoryFilter("all");
     setMonth("");
     setSortBy("date_desc");
+
+    saveJSON(FILTERS_KEY, {
+      q: "",
+      typeFilter: "all",
+      categoryFilter: "all",
+      month: "",
+      sortBy: "date_desc",
+   });
   }
 
   return (

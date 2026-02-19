@@ -5,7 +5,9 @@ import {
 } from "../../lib/storage/transactionsStorage";
 
 function uid() {
-  return crypto?.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
+  return crypto?.randomUUID
+    ? crypto.randomUUID()
+    : String(Date.now() + Math.random());
 }
 
 export function useTransactions() {
@@ -24,6 +26,12 @@ export function useTransactions() {
     setTransactions((prev) => prev.filter((t) => t.id !== id));
   }
 
+  function updateTransaction(id, patch) {
+    setTransactions((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, ...patch } : t))
+    );
+  }
+
   const summary = useMemo(() => {
     let income = 0;
     let expense = 0;
@@ -37,5 +45,5 @@ export function useTransactions() {
     return { income, expense, balance: income - expense };
   }, [transactions]);
 
-  return { transactions, addTransaction, removeTransaction, summary };
+  return { transactions, addTransaction, removeTransaction, updateTransaction, summary };
 }

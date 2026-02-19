@@ -1,92 +1,128 @@
 import { useMemo, useState } from "react";
 import { useTransactions } from "../features/transactions/useTransactions";
-import { formatBRLFromCents, parseMoneyToCents } from "../lib/format/currency";
-
-const CATEGORIES = [
-  "Alimentação",
-  "Transporte",
-  "Moradia",
-  "Lazer",
-  "Saúde",
-  "Educação",
-  "Assinaturas",
-  "Outros",
-];
-
-function todayISO() {
-  const d = new Date();
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-}
+import { formatBRLFromCents } from "../lib/format/currency";
+import { formatBRDate } from "../lib/format/date";
+import TransactionModal from "../features/transactions/components/TransactionModal";
 
 export default function Transactions() {
-  const { transactions, addTransaction, removeTransaction } = useTransactions();
+  const { transactions, addTransaction, removeTransaction, updateTransaction } = useTransactions();
 
-  const [date, setDate] = useState(todayISO());
-  const [description, setDescription] = useState("");
-  const [type, setType] = useState("expense");
-  const [category, setCategory] = useState(CATEGORIES[0]);
-  const [amount, setAmount] = useState("");
-  const [error, setError] = useState("");
+  const [q, setQ] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all"); // all | income | expense
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [month, setMonth] = useState(""); // "YYYY-MM" ou ""
+  const [sortBy, setSortBy] = useState("date_desc"); // date_desc | date_asc | amount_desc | amount_asc
+  
+  const [isOpen, setIsOpen] = useState(false);
+  const [mode, setMode] = useState("create"); // "create" | "edit"
+  const [selected, setSelected] = useState(null);
 
   const totalCount = useMemo(() => transactions.length, [transactions.length]);
 
-  function onSubmit(e) {
-    e.preventDefault();
-    setError("");
-
-    const amountCents = parseMoneyToCents(amount);
-
-    if (!description.trim()) return setError("Informe uma descrição.");
-    if (!date) return setError("Informe uma data.");
-    if (!Number.isFinite(amountCents) || amountCents <= 0)
-      return setError("Informe um valor válido (ex: 150,00).");
-
-    addTransaction({
-      date,
-      description: description.trim(),
-      type,
-      category,
-      amountCents,
-    });
-
-    setDescription("");
-    setAmount("");
+  function openCreate() {
+    setMode("create");
+    setSelected(null);
+    setIsOpen(true);
   }
+
+  function openEdit(t) {
+    setMode("edit");
+    setSelected(t);
+    setIsOpen(true);
+  }
+
+  function closeModal() {
+    setIsOpen(false);
+  }
+
+  function handleSubmit(data) {
+    if (mode === "edit" && selected) {
+      updateTransaction(selected.id, data);
+    } else {
+      addTransaction(data);
+    }
+  }
+
+    const filtered = useMemo(() => {
+    let list = [...transactions];
+
+    if (q.trim()) {
+      const s = q.trim().toLowerCase();
+      list = list.filter((t) =>
+        (t.description || "").toLowerCase().includes(s)
+      );
+    }
+
+    if (typeFilter !== "all") {
+      list = list.filter((t) => t.type === typeFilter);
+    }
+
+    if (categoryFilter !== "all") {
+      list = list.filter((t) => t.category === categoryFilter);
+    }
+
+    if (month) {
+      list = list.filter((t) => (t.date || "").startsWith(month));
+    }
+
+    switch (sortBy) {
+      case "date_asc":
+        list.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+        break;
+      case "amount_desc":
+        list.sort(
+          (a, b) =>
+            (Number(b.amountCents) || 0) - (Number(a.amountCents) || 0)
+        );
+        break;
+      case "amount_asc":
+        list.sort(
+          (a, b) =>
+            (Number(a.amountCents) || 0) - (Number(b.amountCents) || 0)
+        );
+        break;
+      case "date_desc":
+      default:
+        list.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+        break;
+    }
+
+    return list;
+  }, [transactions, q, typeFilter, categoryFilter, month, sortBy]);
 
   return (
     <>
       <div className="d-flex justify-content-between align-items-center mb-3">
         <div>
           <h1 className="h3 mb-0">Transações</h1>
-          <div className="text-muted small">{totalCount} item(ns)</div>
+          <div className="text-muted small">
+  {filtered.length} item(ns){filtered.length !== transactions.length ? ` (de ${transactions.length})` : ""}
+</div>
         </div>
+
+        <button className="btn btn-primary btn-sm" onClick={openCreate}>
+          + Nova transação
+        </button>
       </div>
 
-      <div className="card shadow-sm mb-3">
+      <TransactionModal
+        mode={mode}
+        isOpen={isOpen}
+        onClose={closeModal}
+        onSubmit={handleSubmit}
+        initial={selected}
+      />
+
+            <div className="card shadow-sm mb-3">
         <div className="card-body">
-          <h2 className="h6 mb-3">Nova transação</h2>
-
-          <form className="row g-2" onSubmit={onSubmit}>
-            <div className="col-12 col-md-2">
-              <label className="form-label">Data</label>
-              <input
-                type="date"
-                className="form-control"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-              />
-            </div>
-
+          <div className="row g-2 align-items-end">
             <div className="col-12 col-md-4">
-              <label className="form-label">Descrição</label>
+              <label className="form-label">Buscar</label>
               <input
                 className="form-control"
-                placeholder="Ex: Mercado"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Ex: mercado"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
               />
             </div>
 
@@ -94,11 +130,12 @@ export default function Transactions() {
               <label className="form-label">Tipo</label>
               <select
                 className="form-select"
-                value={type}
-                onChange={(e) => setType(e.target.value)}
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
               >
-                <option value="expense">Despesa</option>
+                <option value="all">Todos</option>
                 <option value="income">Receita</option>
+                <option value="expense">Despesa</option>
               </select>
             </div>
 
@@ -106,38 +143,59 @@ export default function Transactions() {
               <label className="form-label">Categoria</label>
               <select
                 className="form-select"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
               >
-                {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
+                <option value="all">Todas</option>
+                {Array.from(new Set(transactions.map((t) => t.category)))
+                  .filter(Boolean)
+                  .map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
               </select>
             </div>
 
-            <div className="col-12 col-md-2">
-              <label className="form-label">Valor</label>
+            <div className="col-6 col-md-2">
+              <label className="form-label">Mês</label>
               <input
+                type="month"
                 className="form-control"
-                inputMode="decimal"
-                placeholder="150,00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                value={month}
+                onChange={(e) => setMonth(e.target.value)}
               />
             </div>
 
-            {error ? (
-              <div className="col-12">
-                <div className="alert alert-danger py-2 mb-0">{error}</div>
-              </div>
-            ) : null}
+            <div className="col-6 col-md-2">
+              <label className="form-label">Ordenar</label>
+              <select
+                className="form-select"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+              >
+                <option value="date_desc">Data (recente)</option>
+                <option value="date_asc">Data (antiga)</option>
+                <option value="amount_desc">Valor (maior)</option>
+                <option value="amount_asc">Valor (menor)</option>
+              </select>
+            </div>
 
             <div className="col-12 d-flex justify-content-end">
-              <button className="btn btn-primary">Adicionar</button>
+              <button
+                className="btn btn-outline-secondary btn-sm"
+                onClick={() => {
+                  setQ("");
+                  setTypeFilter("all");
+                  setCategoryFilter("all");
+                  setMonth("");
+                  setSortBy("date_desc");
+                }}
+              >
+                Limpar filtros
+              </button>
             </div>
-          </form>
+          </div>
         </div>
       </div>
 
@@ -155,46 +213,56 @@ export default function Transactions() {
                   <th />
                 </tr>
               </thead>
+
               <tbody>
-                {transactions.length === 0 ? (
+                {filtered.length === 0 ? (
                   <tr>
                     <td colSpan="6" className="text-center text-muted py-4">
                       Nenhuma transação ainda.
                     </td>
                   </tr>
                 ) : (
-                  transactions.map((t) => (
+                  filtered.map((t) => (
                     <tr key={t.id}>
-                      <td>{t.date}</td>
+                      <td>{formatBRDate(t.date)}</td>
                       <td>{t.description}</td>
-                      <td className="text-end">
-                        {formatBRLFromCents(t.amountCents)}
-                      </td>
+
+                      <td className="text-end">{formatBRLFromCents(t.amountCents)}</td>
+
                       <td>
                         <span
                           className={
                             "badge " +
-                            (t.type === "income"
-                              ? "text-bg-success"
-                              : "text-bg-danger")
+                            (t.type === "income" ? "text-bg-success" : "text-bg-danger")
                           }
                         >
                           {t.type === "income" ? "Receita" : "Despesa"}
                         </span>
                       </td>
+
                       <td>{t.category}</td>
+
                       <td className="text-end">
-                        <button
-                          className="btn btn-outline-danger btn-sm"
-                          onClick={() => removeTransaction(t.id)}
-                        >
-                          Remover
-                        </button>
+                        <div className="btn-group btn-group-sm" role="group">
+                          <button
+                            className="btn btn-outline-primary"
+                            onClick={() => openEdit(t)}
+                          >
+                            Editar
+                          </button>
+                          <button
+                            className="btn btn-outline-danger"
+                            onClick={() => removeTransaction(t.id)}
+                          >
+                            Remover
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
                 )}
               </tbody>
+
             </table>
           </div>
         </div>

@@ -217,11 +217,12 @@ export default function Transactions() {
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="text-center text-muted py-4">
-                      Nenhuma transação ainda.
+                   <td colSpan="6" className="text-center text-muted py-4">
+                      {transactions.length === 0
+                      ? "Nenhuma transação ainda."
+                       : "Nenhuma transação encontrada com os filtros atuais."}
                     </td>
-                  </tr>
-                ) : (
+                   </tr> ) : (
                   filtered.map((t) => (
                     <tr key={t.id}>
                       <td>{formatBRDate(t.date)}</td>
@@ -252,8 +253,9 @@ export default function Transactions() {
                           </button>
                           <button
                             className="btn btn-outline-danger"
-                            onClick={() => removeTransaction(t.id)}
-                          >
+                             onClick={() => {
+                                 if (confirm("Remover esta transação?")) removeTransaction(t.id);
+                                  }}>
                             Remover
                           </button>
                         </div>

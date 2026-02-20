@@ -6,9 +6,6 @@ import TransactionsTable from "../features/transactions/components/TransactionsT
 import { loadJSON, saveJSON } from "../lib/storage/jsonStorage";
 
 const FILTERS_KEY = "fd_tx_filters_v1";
-export default function Transactions() {
-  const { transactions, addTransaction, removeTransaction, updateTransaction } =
-    useTransactions();
 
 function currentMonthISO() {
   const d = new Date();
@@ -17,29 +14,37 @@ function currentMonthISO() {
   return `${yyyy}-${mm}`;
 }
 
-  // filtros
+export default function Transactions() {
+  const { transactions, addTransaction, removeTransaction, updateTransaction } =
+    useTransactions();
+
+  // filtros (carrega do storage; se não existir, usa mês atual como default)
   const saved = loadJSON(FILTERS_KEY, {
     q: "",
     typeFilter: "all",
     categoryFilter: "all",
-    month: "currentMonthISO",
+    month: currentMonthISO(),
     sortBy: "date_desc",
-    });
+  });
 
   const [q, setQ] = useState(() => saved.q);
   const [typeFilter, setTypeFilter] = useState(() => saved.typeFilter);
-  const [categoryFilter, setCategoryFilter] = useState(() => saved.categoryFilter);
+  const [categoryFilter, setCategoryFilter] = useState(
+    () => saved.categoryFilter
+  );
   const [month, setMonth] = useState(() => saved.month);
   const [sortBy, setSortBy] = useState(() => saved.sortBy);
-    useEffect(() => {
-      saveJSON(FILTERS_KEY, {
-        q: q.trim(),
-        typeFilter,
-        categoryFilter,
-        month,
-        sortBy,
-      });
-    }, [q, typeFilter, categoryFilter, month, sortBy]);
+
+  // persiste filtros automaticamente
+  useEffect(() => {
+    saveJSON(FILTERS_KEY, {
+      q: q.trim(),
+      typeFilter,
+      categoryFilter,
+      month,
+      sortBy,
+    });
+  }, [q, typeFilter, categoryFilter, month, sortBy]);
 
   // modal
   const [isOpen, setIsOpen] = useState(false);
@@ -126,20 +131,16 @@ function currentMonthISO() {
     if (confirm("Remover esta transação?")) removeTransaction(id);
   }
 
-   function resetFilters() {
+  function resetFilters() {
     setQ("");
     setTypeFilter("all");
     setCategoryFilter("all");
     setMonth("");
     setSortBy("date_desc");
+  }
 
-    saveJSON(FILTERS_KEY, {
-      q: "",
-      typeFilter: "all",
-      categoryFilter: "all",
-      month: "",
-      sortBy: "date_desc",
-   });
+  function goToCurrentMonth() {
+    setMonth(currentMonthISO());
   }
 
   return (
@@ -181,6 +182,7 @@ function currentMonthISO() {
         setSortBy={setSortBy}
         categories={categories}
         onReset={resetFilters}
+        onCurrentMonth={goToCurrentMonth}
       />
 
       <TransactionsTable

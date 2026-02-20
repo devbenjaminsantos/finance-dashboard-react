@@ -11,6 +11,7 @@ export default function TransactionsFilters({
   setSortBy,
   categories,
   onReset,
+  onCurrentMonth,
 }) {
   return (
     <div className="card shadow-sm mb-3">
@@ -79,8 +80,20 @@ export default function TransactionsFilters({
             </select>
           </div>
 
-          <div className="col-12 d-flex justify-content-end">
-            <button className="btn btn-outline-secondary btn-sm" onClick={onReset}>
+          <div className="col-12 d-flex justify-content-end gap-2">
+            <button
+              type="button"
+              className="btn btn-outline-primary btn-sm"
+              onClick={onCurrentMonth}
+            >
+              Mês atual
+            </button>
+
+            <button
+              type="button"
+              className="btn btn-outline-secondary btn-sm"
+              onClick={onReset}
+            >
               Limpar filtros
             </button>
           </div>

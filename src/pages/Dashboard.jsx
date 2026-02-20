@@ -1,5 +1,6 @@
 import { useTransactions } from "../features/transactions/useTransactions";
 import { formatBRLFromCents } from "../lib/format/currency";
+import DashboardCharts from "../features/dashboard/DashboardCharts";
 
 export default function Dashboard() {
   const { summary } = useTransactions();
@@ -41,6 +42,10 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="mt-3">
+        <DashboardCharts />
       </div>
     </>
   );

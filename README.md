@@ -1,16 +1,74 @@
-# React + Vite
+# Dashboard Financeiro (React)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Um dashboard de finanças pessoais feito em **React**, com **CRUD completo** de transações, **filtros/busca/ordenação**, **persistência no LocalStorage** e **gráficos (Recharts)**.
 
-Currently, two official plugins are available:
+> ✅ Este repositório está em evolução contínua: o projeto já funciona como demo e seguirá recebendo features até a versão final.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🔗 Links
+- **Demo (Vercel):** https://finance-dashboard-react-six.vercel.app
+- **Repositório (GitHub):** https://github.com/devbenjaminsantos/finance-dashboard-react
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## ✅ Funcionalidades (já implementadas)
+### Transações
+- CRUD completo de transações (**criar, listar, editar e remover**)
+- Modal Bootstrap para **criar/editar**
+- Persistência via **LocalStorage**
+- Campo de valor aceita **vírgula e ponto** (ex.: `150,00` / `150.00`)
+- Tratamento correto de dinheiro com **centavos (`amountCents`)** + formatação **BRL** (`R$ 150,00`)
 
-## Expanding the ESLint configuration
+### Filtros e navegação
+- Busca por descrição
+- Filtros por **mês**, **tipo** (receita/despesa) e **categoria**
+- Ordenação por **data** e por **valor**
+- Atalhos: **Mês atual** e **Limpar filtros**
+- Persistência dos filtros no **LocalStorage** (permanece após F5; mês atual como default na primeira vez)
+- Rotas com **React Router**: Dashboard e Transações
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Dashboard e gráficos
+- Cards: **Receitas / Despesas / Saldo**
+- Gráficos com **Recharts**
+  - Pizza: despesas por categoria
+  - Barras: receitas vs despesas (últimos 6 meses)
+
+### Organização do projeto
+- Componentização (Filters/Table/Modal)
+- Provider global de transações (estado único para o app)
+
+---
+
+## 🧭 Roadmap (funcionalidades planejadas)
+### Prioridade (antes do foco estético)
+- [ ] Filtros globais compartilhados entre Transações e Dashboard (ex.: mês selecionado impacta gráficos)
+- [ ] Exportação de CSV (todas ou filtradas)
+- [ ] Importação de CSV (validação/mapeamento)
+- [ ] Dados de demonstração (botão “Carregar demo” para visitantes)
+- [ ] Categorias melhoradas (CRUD de categorias: nome + cor/ícone)
+- [ ] Undo ao remover (toast “Desfazer”)
+
+### Evolução (mais avançado)
+- [ ] i18n (pt-BR / en-US)
+- [ ] Temas/paleta personalizada (presets + custom)
+- [ ] Paleta via wallpaper (extração de cores e aplicação nos gráficos)
+- [ ] Orçamento por categoria/mês + alertas
+- [ ] Recorrência (assinaturas/transações recorrentes)
+- [ ] Versão com API (migrar LocalStorage → API REST + banco)
+
+---
+
+## 🛠️ Stack
+- **React (JS)**
+- **Vite**
+- **Bootstrap**
+- **React Router DOM**
+- **Recharts**
+- **Git / GitHub**
+- **Vercel** (deploy)
+
+---
+
+## ▶️ Como rodar localmente
+```bash
+npm install
+npm run dev

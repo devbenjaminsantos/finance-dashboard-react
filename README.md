@@ -41,15 +41,15 @@ Aplicação de controle financeiro pessoal com registro, filtragem e visualizaç
 
 ## 🚀 Como rodar localmente
 
-# Clone o repositório
+### Clone o repositório
 
 git clone https://github.com/devbenjaminsantos/nome-do-repo
 
-# Instale as dependências
+### Instale as dependências
 
 npm install
 
-# Rode o projeto
+### Rode o projeto
 
 npm run dev
 

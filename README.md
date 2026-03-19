@@ -43,7 +43,7 @@ Aplicação de controle financeiro pessoal com registro, filtragem e visualizaç
 
 ### Clone o repositório
 
-git clone https://github.com/devbenjaminsantos/nome-do-repo
+git clone https://github.com/devbenjaminsantos/finance-dashboard-react
 
 ### Instale as dependências
 

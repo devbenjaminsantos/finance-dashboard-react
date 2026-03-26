@@ -1,62 +1,84 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import {
-  loadTransactions,
-  saveTransactions,
-} from "../../lib/storage/transactionsStorage";
+  getTransactions,
+  createTransaction,
+  updateTransaction,
+  deleteTransaction,
+} from "../../lib/api/transactions";
 
 const TransactionsContext = createContext(null);
 
-function uid() {
-  return crypto?.randomUUID
-    ? crypto.randomUUID()
-    : String(Date.now() + Math.random());
-}
-
 export function TransactionsProvider({ children }) {
-  const [transactions, setTransactions] = useState(() => loadTransactions());
+  const [transactions, setTransactions] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    saveTransactions(transactions);
-  }, [transactions]);
-
-  function addTransaction(data) {
-    const tx = { id: uid(), ...data };
-    setTransactions((prev) => [tx, ...prev]);
+  async function loadAll() {
+    setIsLoading(true);
+    try {
+      const data = await getTransactions();
+      setTransactions(data);
+      } catch (error) {
+        console.error("Erro ao carregar transações:", error);
+        setTransactions([]);
+      } finally {
+        setIsLoading(false);
+      }
   }
 
-  function removeTransaction(id) {
-    setTransactions((prev) => prev.filter((t) => t.id !== id));
-  }
+    useEffect(() => {
+      loadAll();
+    }, []);
 
-  function updateTransaction(id, patch) {
-    setTransactions((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, ...patch } : t))
-    );
-  }
-
-  const summary = useMemo(() => {
-    let income = 0;
-    let expense = 0;
-
-    for (const t of transactions) {
-      const v = Number(t.amountCents) || 0;
-      if (t.type === "income") income += v;
-      else expense += v;
+    async function addTransaction(data) {
+      const created = await createTransaction(data);
+      setTransactions((prev) => [created, ...prev]);
     }
 
-    return { income, expense, balance: income - expense };
-  }, [transactions]);
+    async function removeTransaction(id) {
+      await deleteTransaction(id);
+      setTransactions((prev) => prev.filter((t) => t.id !== id));
+    }
 
-  const value = useMemo(
-    () => ({ transactions, addTransaction, removeTransaction, updateTransaction, summary }),
-    [transactions, summary]
-  );
+    async function editTransaction(id, data) {
+      const updated = await updateTransaction(id, data);
+      setTransactions((prev) =>
+        prev.map((t) => (t.id === id ? updated : t))
+      );
+    }
 
-  return (
-    <TransactionsContext.Provider value={value}>
-      {children}
-    </TransactionsContext.Provider>
-  );
+    const summary = useMemo(() => {
+      let income = 0;
+      let expense = 0;
+
+      for (const t of transactions) {
+        const value = Number(t.amountCents) || 0;
+        if (t.type === "income") income += value;
+        else expense += value;
+      }
+
+      return {
+        income,
+        expense,
+        balance: income - expense,
+      };
+    }, [transactions]);
+
+    const value = {
+      transactions,
+      isLoading,
+      loadAll,
+      addTransaction,
+      removeTransaction,
+      editTransaction,
+      updateTransaction: editTransaction,
+      summary,
+    };
+
+    return (
+      <TransactionsContext.Provider value={value}>
+        {children}
+      </TransactionsContext.Provider>
+    );
 }
 
 export function useTransactions() {

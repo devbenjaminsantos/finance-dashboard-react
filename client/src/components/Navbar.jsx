@@ -2,8 +2,8 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { getStoredToken, logout } from "../lib/api/auth";
 
 export default function Navbar() {
-const navigate = useNavigate();
-const hasToken = !!getStoredToken();
+  const navigate = useNavigate();
+  const hasToken = !!getStoredToken();
 
 const linkClass = ({ isActive }) =>
 "nav-link" + (isActive ? " active fw-semibold" : "");

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using System.Text;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +32,17 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("frontend", policy =>
+    {
+        policy
+            .WithOrigins("Http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
@@ -44,11 +56,12 @@ if (app.Environment.IsDevelopment())
         options.Title = "FinanceDashboard API";
         options.WithHttpBearerAuthentication(bearer =>
         {
-            bearer.Token = "seu-token-aqui";
+            
         });
     });
 }
 
+app.UseCors("frontend");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();

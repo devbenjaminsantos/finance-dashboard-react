@@ -15,9 +15,7 @@ namespace FinanceDashboard.Api.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Transaction>()
-                .Property(t => t.Amount)
-                .HasPrecision(18, 2);
+            base.OnModelCreating(modelBuilder);
         }
     }
 }

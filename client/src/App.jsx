@@ -4,38 +4,41 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Transactions from "./pages/Transactions";
 import Login from "./pages/Login";
+import { TransactionsProvider } from "./features/transactions/TransactionsProvider";
+
 
 export default function App() {
-return (
-<div className="min-vh-100 bg-light">
-<Navbar />
-
+  return (
+    <div className="min-vh-100 bg-light">
+      <Navbar />
+  
   <main className="container py-4">
-    <Routes>
-      <Route path="/login" element={<Login />} />
+    <TransactionsProvider>
+      <Routes>
+        <Route path="/login" element={<Login />} />
 
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/transacoes"
-        element={
-          <ProtectedRoute>
-            <Transactions />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/transacoes"
+          element={
+            <ProtectedRoute>
+              <Transactions />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </TransactionsProvider>
   </main>
 </div>
-
 );
 }

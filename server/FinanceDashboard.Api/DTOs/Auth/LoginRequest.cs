@@ -1,8 +1,16 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace FinanceDashboard.Api.DTOs
 {
-    public class LoginDto
+    public class LoginRequest
     {
-        public string Email { get; set; } = "";
-        public string Password { get; set; } = "";
+        [Required]
+        [EmailAddress]
+        [StringLength(256)]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(128)]
+        public string Password { get; set; } = string.Empty;
     }
 }

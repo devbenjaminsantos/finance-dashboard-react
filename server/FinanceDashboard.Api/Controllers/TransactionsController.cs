@@ -1,9 +1,10 @@
 using FinanceDashboard.Api.Data;
 using FinanceDashboard.Api.DTOs;
 using FinanceDashboard.Api.Models;
+using FinanceDashboard.Api.Services.CurrentUser;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 
 namespace FinanceDashboard.Api.Controllers
 {
@@ -13,108 +14,124 @@ namespace FinanceDashboard.Api.Controllers
     public class TransactionsController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly CurrentUserService _currentUserService;
 
-        public TransactionsController(AppDbContext context)
+        public TransactionsController(AppDbContext context, CurrentUserService currentUserService)
         {
             _context = context;
+            _currentUserService = currentUserService;
         }
 
         [HttpGet]
-        public IActionResult GetAll()
+        public async Task<ActionResult<IReadOnlyList<TransactionResponse>>> GetAll()
         {
-            var userId = GetUserId();
+            var userId = _currentUserService.GetRequiredUserId();
 
-            var transactions = _context.Transactions
-                .Where(t => t.UserId == userId)
-                .OrderByDescending(t => t.Date)
-                .ToList();
+            var transactions = await _context.Transactions
+                .Where(transaction => transaction.UserId == userId)
+                .OrderByDescending(transaction => transaction.Date)
+                .Select(transaction => ToResponse(transaction))
+                .ToListAsync();
 
             return Ok(transactions);
         }
 
-        [HttpGet("{id}")]
-        public IActionResult GetById(int id)
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<TransactionResponse>> GetById(int id)
         {
-            var userId = GetUserId();
+            var userId = _currentUserService.GetRequiredUserId();
 
-            var transaction = _context.Transactions
-                .FirstOrDefault(t => t.Id == id && t.UserId == userId);
+            var transaction = await _context.Transactions
+                .Where(transaction => transaction.Id == id && transaction.UserId == userId)
+                .Select(transaction => ToResponse(transaction))
+                .FirstOrDefaultAsync();
 
-            if (transaction == null)
+            if (transaction is null)
+            {
                 return NotFound();
+            }
 
             return Ok(transaction);
         }
 
         [HttpPost]
-        public IActionResult Create(TransactionCreateRequest dto)
+        public async Task<ActionResult<TransactionResponse>> Create(TransactionCreateRequest dto)
         {
-            var userId = GetUserId();
+            var userId = _currentUserService.GetRequiredUserId();
 
             var transaction = new Transaction
             {
-                Description = dto.Description,
-                Category = dto.Category,
+                Description = dto.Description.Trim(),
+                Category = dto.Category.Trim(),
                 AmountCents = dto.AmountCents,
                 Date = dto.Date,
-                Type = dto.Type,
+                Type = dto.Type.Trim().ToLowerInvariant(),
                 UserId = userId
             };
 
             _context.Transactions.Add(transaction);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetById), new { id = transaction.Id }, transaction);
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id = transaction.Id },
+                ToResponse(transaction));
         }
 
-        [HttpPut("{id}")]
-        public IActionResult Update(int id, TransactionUpdateRequest dto)
+        [HttpPut("{id:int}")]
+        public async Task<ActionResult<TransactionResponse>> Update(int id, TransactionUpdateRequest dto)
         {
-            var userId = GetUserId();
+            var userId = _currentUserService.GetRequiredUserId();
 
-            var transaction = _context.Transactions
-                .FirstOrDefault(t => t.Id == id && t.UserId == userId);
+            var transaction = await _context.Transactions
+                .FirstOrDefaultAsync(existing => existing.Id == id && existing.UserId == userId);
 
-            if (transaction == null)
+            if (transaction is null)
+            {
                 return NotFound();
+            }
 
-                transaction.Description = dto.Description;
-                transaction.Category = dto.Category;
-                transaction.AmountCents = dto.AmountCents;
-                transaction.Date = dto.Date;
-                transaction.Type = dto.Type;
+            transaction.Description = dto.Description.Trim();
+            transaction.Category = dto.Category.Trim();
+            transaction.AmountCents = dto.AmountCents;
+            transaction.Date = dto.Date;
+            transaction.Type = dto.Type.Trim().ToLowerInvariant();
 
-                _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
-                return Ok(transaction);
+            return Ok(ToResponse(transaction));
         }
 
-        [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
         {
-            var userId = GetUserId();
+            var userId = _currentUserService.GetRequiredUserId();
 
-            var transaction = _context.Transactions
-                .FirstOrDefault(t => t.Id == id && t.UserId == userId);
+            var transaction = await _context.Transactions
+                .FirstOrDefaultAsync(existing => existing.Id == id && existing.UserId == userId);
 
-            if (transaction == null)
+            if (transaction is null)
+            {
                 return NotFound();
+            }
 
             _context.Transactions.Remove(transaction);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        private int GetUserId()
+        private static TransactionResponse ToResponse(Transaction transaction)
         {
-            var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (string.IsNullOrEmpty(claim))
-                throw new UnauthorizedAccessException("Usuário não autenticado.");
-
-            return int.Parse(claim);
+            return new TransactionResponse
+            {
+                Id = transaction.Id,
+                Description = transaction.Description,
+                Category = transaction.Category,
+                AmountCents = transaction.AmountCents,
+                Date = transaction.Date,
+                Type = transaction.Type
+            };
         }
     }
-
 }

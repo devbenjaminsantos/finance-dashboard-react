@@ -7,6 +7,6 @@ namespace FinanceDashboard.Api.Models
         public string Email { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
 
-        public List<Transaction> Transactions { get; set; } = new();
+        public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
     }
 }

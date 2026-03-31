@@ -1,12 +1,10 @@
-using Microsoft.AspNetCore.Mvc;
 using FinanceDashboard.Api.Data;
 using FinanceDashboard.Api.DTOs;
 using FinanceDashboard.Api.Models;
-using System.Security.Cryptography;
-using System.Text;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
+using FinanceDashboard.Api.Services.Auth;
+using Microsoft.Data.SqlClient;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace FinanceDashboard.Api.Controllers
 {
@@ -15,82 +13,99 @@ namespace FinanceDashboard.Api.Controllers
     public class AuthController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly IConfiguration _config;
+        private readonly PasswordHasher _passwordHasher;
+        private readonly JwTokenService _tokenService;
 
-        public AuthController(AppDbContext context, IConfiguration config)
+        public AuthController(
+            AppDbContext context,
+            PasswordHasher passwordHasher,
+            JwTokenService tokenService)
         {
             _context = context;
-            _config = config;
+            _passwordHasher = passwordHasher;
+            _tokenService = tokenService;
         }
 
         [HttpPost("register")]
-        public IActionResult Register(RegisterDto dto)
+        public async Task<ActionResult<AuthUserResponse>> Register(RegisterRequest dto)
         {
-            var hash = HashPassword(dto.Password);
+            var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
+
+            var emailAlreadyExists = await _context.Users
+                .AnyAsync(user => user.Email == normalizedEmail);
+
+            if (emailAlreadyExists)
+            {
+                return Conflict(new ProblemDetails
+                {
+                    Title = "E-mail ja cadastrado.",
+                    Status = StatusCodes.Status409Conflict
+                });
+            }
 
             var user = new User
             {
-                Name = dto.Name,
-                Email = dto.Email,
-                PasswordHash = hash
+                Name = dto.Name.Trim(),
+                Email = normalizedEmail
             };
 
-            _context.Users.Add(user);
-            _context.SaveChanges();
+            user.PasswordHash = _passwordHasher.HashPassword(user, dto.Password);
 
-            return Ok(user);
+            _context.Users.Add(user);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException exception) when (IsDuplicateEmailViolation(exception))
+            {
+                return Conflict(new ProblemDetails
+                {
+                    Title = "E-mail ja cadastrado.",
+                    Status = StatusCodes.Status409Conflict
+                });
+            }
+
+            return StatusCode(StatusCodes.Status201Created, ToAuthUserResponse(user));
         }
 
         [HttpPost("login")]
-        public IActionResult Login(LoginDto dto)
+        public async Task<ActionResult<AuthResponse>> Login(LoginRequest dto)
         {
-            var user = _context.Users.FirstOrDefault(x => x.Email == dto.Email);
+            var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
 
-            if (user == null || user.PasswordHash != HashPassword(dto.Password))
-                return Unauthorized();
+            var user = await _context.Users
+                .FirstOrDefaultAsync(x => x.Email == normalizedEmail);
 
-            var token = GenerateToken(user);
-
-            return Ok(new 
-            { 
-                token,
-                user = new
+            if (user == null || !_passwordHasher.VerifyPassword(user, dto.Password))
+            {
+                return Unauthorized(new ProblemDetails
                 {
-                    user.Id,
-                    user.Name,
-                    user.Email
-                }
+                    Title = "E-mail ou senha invalidos.",
+                    Status = StatusCodes.Status401Unauthorized
+                });
+            }
+
+            return Ok(new AuthResponse
+            {
+                Token = _tokenService.GenerateToken(user),
+                User = ToAuthUserResponse(user)
             });
         }
 
-        private string HashPassword(string password)
+        private static AuthUserResponse ToAuthUserResponse(User user)
         {
-            using var sha = SHA256.Create();
-            var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return Convert.ToBase64String(bytes);
+            return new AuthUserResponse
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Email = user.Email
+            };
         }
 
-        private string GenerateToken(User user)
+        private static bool IsDuplicateEmailViolation(DbUpdateException exception)
         {
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email)
-            };
-
-            var jwtKey = _config["Jwt:Key"] ?? throw new Exception("Jwt:Key não configurado.");
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var token = new JwtSecurityToken(
-                issuer: _config["Jwt:Issuer"],
-                audience: _config["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.Now.AddHours(2),
-                signingCredentials: creds
-            );
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            return exception.InnerException is SqlException { Number: 2601 or 2627 };
         }
     }
 }

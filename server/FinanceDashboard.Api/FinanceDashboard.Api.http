@@ -1,6 +1,40 @@
 @FinanceDashboard.Api_HostAddress = http://localhost:5278
+@contentType = application/json
+@authToken = COLE_SEU_JWT_AQUI
 
-GET {{FinanceDashboard.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+### Registrar usuario
+POST {{FinanceDashboard.Api_HostAddress}}/api/auth/register
+Content-Type: {{contentType}}
 
-###
+{
+  "name": "Usuario Teste",
+  "email": "teste@finova.local",
+  "password": "SenhaForte123"
+}
+
+### Login
+POST {{FinanceDashboard.Api_HostAddress}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "teste@finova.local",
+  "password": "SenhaForte123"
+}
+
+### Listar transacoes
+GET {{FinanceDashboard.Api_HostAddress}}/api/transactions
+Authorization: Bearer {{authToken}}
+Accept: {{contentType}}
+
+### Criar transacao
+POST {{FinanceDashboard.Api_HostAddress}}/api/transactions
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "description": "Salario",
+  "category": "Trabalho",
+  "amountCents": 350000,
+  "date": "2026-03-31T00:00:00Z",
+  "type": "income"
+}

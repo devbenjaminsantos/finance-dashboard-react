@@ -15,11 +15,14 @@ yarn-error.log*
 *.suo
 *.userosscache
 *.sln.docstates
+.dotnet/
+server/FinanceDashboard.Api/build-review/
 
 # Env
 
 .env
 server/.env
+server/FinanceDashboard.Api/appsettings.Development.local.json
 
 # OS
 

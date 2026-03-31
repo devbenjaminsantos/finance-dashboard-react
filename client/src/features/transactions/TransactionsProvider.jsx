@@ -27,6 +27,7 @@ export function TransactionsProvider({ children }) {
 
     useEffect(() => {
       
+      
       loadAll();
     }, []);
 

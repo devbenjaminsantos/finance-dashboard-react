@@ -51,7 +51,16 @@ namespace FinanceDashboard.Api.Controllers
 
             var token = GenerateToken(user);
 
-            return Ok(new { token });
+            return Ok(new 
+            { 
+                token,
+                user = new
+                {
+                    user.Id,
+                    user.Name,
+                    user.Email
+                }
+            });
         }
 
         private string HashPassword(string password)

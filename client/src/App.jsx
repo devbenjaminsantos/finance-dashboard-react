@@ -3,6 +3,7 @@ import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Transactions from "./pages/Transactions";
+import Register from "./pages/Register";
 import Login from "./pages/Login";
 import { TransactionsProvider } from "./features/transactions/TransactionsProvider";
 
@@ -34,6 +35,8 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route path="/register" element={<Register />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

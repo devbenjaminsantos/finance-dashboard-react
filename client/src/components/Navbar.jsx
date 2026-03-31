@@ -52,7 +52,7 @@ export default function Navbar() {
                 </span>
 
                 <button
-                  className="btn btn-sm btn-light mt-2 mt-lg-0"
+                  className="btn finova-btn-light btn-sm mt-2 mt-lg-0"
                   onClick={handleLogout}
                 >
                   Sair

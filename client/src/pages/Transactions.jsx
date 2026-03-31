@@ -7,23 +7,20 @@ import { loadJSON, saveJSON } from "../lib/storage/jsonStorage";
 
 const FILTERS_KEY = "fd_tx_filters_v1";
 
-function currentMonthISO() {
-  const d = new Date();
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  return `${yyyy}-${mm}`;
-}
-
 export default function Transactions() {
-  const { transactions, addTransaction, removeTransaction, updateTransaction } =
-    useTransactions();
+  const {
+    transactions,
+    addTransaction,
+    removeTransaction,
+    updateTransaction,
+    isLoading,
+  } = useTransactions();
 
-  // filtros (carrega do storage; se não existir, usa mês atual como default)
   const saved = loadJSON(FILTERS_KEY, {
     q: "",
     typeFilter: "all",
     categoryFilter: "all",
-    month: currentMonthISO(),
+    month: "",
     sortBy: "date_desc",
   });
 
@@ -35,20 +32,12 @@ export default function Transactions() {
   const [month, setMonth] = useState(() => saved.month);
   const [sortBy, setSortBy] = useState(() => saved.sortBy);
 
-  // persiste filtros automaticamente
   useEffect(() => {
-    saveJSON(FILTERS_KEY, {
-      q: q.trim(),
-      typeFilter,
-      categoryFilter,
-      month,
-      sortBy,
-    });
+    saveJSON(FILTERS_KEY, { q, typeFilter, categoryFilter, month, sortBy });
   }, [q, typeFilter, categoryFilter, month, sortBy]);
 
-  // modal
   const [isOpen, setIsOpen] = useState(false);
-  const [mode, setMode] = useState("create"); // "create" | "edit"
+  const [mode, setMode] = useState("create");
   const [selected, setSelected] = useState(null);
 
   const categories = useMemo(() => {
@@ -60,9 +49,9 @@ export default function Transactions() {
     let list = [...transactions];
 
     if (q.trim()) {
-      const s = q.trim().toLowerCase();
+      const search = q.trim().toLowerCase();
       list = list.filter((t) =>
-        (t.description || "").toLowerCase().includes(s)
+        (t.description || "").toLowerCase().includes(search)
       );
     }
 
@@ -109,9 +98,9 @@ export default function Transactions() {
     setIsOpen(true);
   }
 
-  function openEdit(t) {
+  function openEdit(transaction) {
     setMode("edit");
-    setSelected(t);
+    setSelected(transaction);
     setIsOpen(true);
   }
 
@@ -119,16 +108,18 @@ export default function Transactions() {
     setIsOpen(false);
   }
 
-  function handleSubmit(data) {
+  async function handleSubmit(data) {
     if (mode === "edit" && selected) {
-      updateTransaction(selected.id, data);
+      await updateTransaction(selected.id, data);
     } else {
-      addTransaction(data);
+      await addTransaction(data);
     }
   }
 
-  function handleRemove(id) {
-    if (confirm("Remover esta transação?")) removeTransaction(id);
+  async function handleRemove(id) {
+    if (confirm("Remover esta transação?")) {
+      await removeTransaction(id);
+    }
   }
 
   function resetFilters() {
@@ -137,27 +128,29 @@ export default function Transactions() {
     setCategoryFilter("all");
     setMonth("");
     setSortBy("date_desc");
-  }
 
-  function goToCurrentMonth() {
-    setMonth(currentMonthISO());
+    saveJSON(FILTERS_KEY, {
+      q: "",
+      typeFilter: "all",
+      categoryFilter: "all",
+      month: "",
+      sortBy: "date_desc",
+    });
   }
 
   return (
-    <>
-      <div className="d-flex justify-content-between align-items-center mb-3">
+    <section className="finova-section-space">
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 gap-3">
         <div>
-          <h1 className="h3 mb-0">Transações</h1>
-          <div className="text-muted small">
-            {filtered.length} item(ns)
-            {filtered.length !== transactions.length
-              ? ` (de ${transactions.length})`
-              : ""}
-          </div>
+          <h1 className="finova-title mb-1">Transações</h1>
+          <p className="finova-subtitle mb-0">
+            Gerencie receitas e despesas com controle total do seu fluxo
+            financeiro.
+          </p>
         </div>
 
-        <button className="btn btn-primary btn-sm" onClick={openCreate}>
-          + Nova transação
+        <button className="btn finova-btn-primary px-4" onClick={openCreate}>
+          Nova transação
         </button>
       </div>
 
@@ -182,15 +175,17 @@ export default function Transactions() {
         setSortBy={setSortBy}
         categories={categories}
         onReset={resetFilters}
-        onCurrentMonth={goToCurrentMonth}
       />
 
-      <TransactionsTable
-        transactions={filtered}
-        totalTransactionsCount={transactions.length}
-        onEdit={openEdit}
-        onRemove={handleRemove}
-      />
-    </>
+      <div className="mt-4">
+        <TransactionsTable
+          transactions={filtered}
+          totalTransactionsCount={transactions.length}
+          onEdit={openEdit}
+          onRemove={handleRemove}
+          isLoading={isLoading}
+        />
+      </div>  
+    </section>
   );
 }

@@ -90,7 +90,7 @@ export default function DashboardCharts() {
     [transactions, months]
   );
 
-  // paleta simples (sem “fixar cor” do matplotlib — aqui é Recharts, ok)
+  // paleta simples
   const PIE_COLORS = ["#0d6efd", "#198754", "#dc3545", "#ffc107", "#6f42c1", "#20c997", "#fd7e14", "#6c757d"];
 
   const pieLegend = expenseByCategory.map((x) => ({
@@ -102,15 +102,15 @@ export default function DashboardCharts() {
     <div className="row g-3">
       {/* Pizza */}
       <div className="col-12 col-lg-5">
-        <div className="card shadow-sm h-100">
-          <div className="card-body">
+        <div className="finova-card h-100">
+          <div className="p-4">
             <div className="d-flex justify-content-between align-items-baseline mb-2">
-              <h2 className="h6 mb-0">Despesas por categoria</h2>
+              <h2 className="finova-title h5 mb-0">Despesas por categoria</h2>
               <span className="text-muted small">{monthLabel(month)}</span>
             </div>
 
             {expenseByCategory.length === 0 ? (
-              <div className="text-muted">Sem despesas no mês atual.</div>
+              <div className="finova-subtitle">Sem despesas registradas no mês atual.</div>
             ) : (
               <div style={{ width: "100%", height: 320 }}>
                 <ResponsiveContainer>
@@ -141,9 +141,10 @@ export default function DashboardCharts() {
 
       {/* Barras */}
       <div className="col-12 col-lg-7">
-        <div className="card shadow-sm h-100">
-          <div className="card-body">
-            <h2 className="h6 mb-2">Receitas vs Despesas (últimos 6 meses)</h2>
+        <div className="finova-card h-100">
+          <div className="p-4">
+            <h2 className="finova-title h5 mb-2">Receitas vs Despesas</h2>
+            <p className="finova-subtitle small mb-3">Últimos 6 meses</p>
 
             <div style={{ width: "100%", height: 320 }}>
               <ResponsiveContainer>

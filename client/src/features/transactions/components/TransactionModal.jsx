@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { parseMoneyToCents } from "../../../lib/format/currency";
+import { useEffect, useMemo, useState } from "react";
 
 const CATEGORIES = [
   "Alimentação",
@@ -20,38 +19,56 @@ function todayISO() {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-function centsToInputBRL(cents) {
-  const v = (Number(cents) || 0) / 100;
-  // retorna "150,00" (string) pra editar no input
-  return v.toFixed(2).replace(".", ",");
+function parseMoneyToCents(value) {
+  if (!value) return 0;
+
+  const normalized = String(value)
+    .replace(/\s/g, "")
+    .replace(/\./g, "")
+    .replace(",", ".");
+
+  const number = Number(normalized);
+  if (!Number.isFinite(number)) return NaN;
+
+  return Math.round(number * 100);
+}
+
+function centsToInput(value) {
+  if (!Number.isFinite(Number(value))) return "";
+  return (Number(value) / 100).toFixed(2).replace(".", ",");
 }
 
 export default function TransactionModal({
-  mode, // "create" | "edit"
+  mode,
   isOpen,
   onClose,
-  onSubmit, // (data) => void
-  initial, // transaction quando edit
+  onSubmit,
+  initial,
 }) {
+  const isEdit = mode === "edit";
+
   const [date, setDate] = useState(todayISO());
   const [description, setDescription] = useState("");
   const [type, setType] = useState("expense");
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [amount, setAmount] = useState("");
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Quando abrir, preencher campos (create vs edit)
+  const title = useMemo(
+    () => (isEdit ? "Editar transação" : "Nova transação"),
+    [isEdit]
+  );
+
   useEffect(() => {
     if (!isOpen) return;
 
-    setError("");
-
-    if (mode === "edit" && initial) {
-      setDate(initial.date || todayISO());
+    if (isEdit && initial) {
+      setDate((initial.date || "").slice(0, 10) || todayISO());
       setDescription(initial.description || "");
       setType(initial.type || "expense");
       setCategory(initial.category || CATEGORIES[0]);
-      setAmount(centsToInputBRL(initial.amountCents));
+      setAmount(centsToInput(initial.amountCents));
     } else {
       setDate(todayISO());
       setDescription("");
@@ -59,136 +76,173 @@ export default function TransactionModal({
       setCategory(CATEGORIES[0]);
       setAmount("");
     }
-  }, [isOpen, mode, initial]);
 
-  function handleSubmit(e) {
+    setError("");
+    setIsSubmitting(false);
+  }, [isOpen, isEdit, initial]);
+
+  async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    setIsSubmitting(true);
 
     const amountCents = parseMoneyToCents(amount);
 
-    if (!description.trim()) return setError("Informe uma descrição.");
-    if (!date) return setError("Informe uma data.");
-    if (!Number.isFinite(amountCents) || amountCents <= 0)
-      return setError("Informe um valor válido (ex: 150,00).");
+    if (!description.trim()) {
+      setError("Informe uma descrição.");
+      setIsSubmitting(false);
+      return;
+    }
 
-    onSubmit({
-      date,
-      description: description.trim(),
-      type,
-      category,
-      amountCents,
-    });
+    if (!date) {
+      setError("Informe uma data.");
+      setIsSubmitting(false);
+      return;
+    }
 
-    onClose();
+    if (!Number.isFinite(amountCents) || amountCents <= 0) {
+      setError("Informe um valor válido (ex: 150,00).");
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      await onSubmit({
+        date,
+        description: description.trim(),
+        type,
+        category,
+        amountCents,
+      });
+
+      onClose();
+    } catch (err) {
+      setError(err.message || "Não foi possível salvar a transação.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
-  // Controla exibição do modal via classes Bootstrap
+  if (!isOpen) return null;
+
   return (
-    <>
-      <div
-        className={"modal fade" + (isOpen ? " show" : "")}
-        style={{ display: isOpen ? "block" : "none" }}
-        tabIndex="-1"
-        role="dialog"
-        aria-modal={isOpen ? "true" : "false"}
-      >
-        <div className="modal-dialog modal-dialog-centered" role="document">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title">
-                {mode === "edit" ? "Editar transação" : "Nova transação"}
-              </h5>
-              <button type="button" className="btn-close" onClick={onClose} />
+    <div
+      className="modal d-block"
+      tabIndex="-1"
+      role="dialog"
+      style={{ background: "rgba(15, 23, 42, 0.45)" }}
+    >
+      <div className="modal-dialog modal-dialog-centered modal-lg">
+        <div className="modal-content border-0" style={{ borderRadius: "16px" }}>
+          <div className="modal-header border-0 pb-0 px-4 pt-4">
+            <div>
+              <h2 className="finova-title h4 mb-1">{title}</h2>
+              <p className="finova-subtitle small mb-0">
+                Preencha os dados da movimentação financeira.
+              </p>
             </div>
 
-            <form onSubmit={handleSubmit}>
-              <div className="modal-body">
-                <div className="row g-2">
-                  <div className="col-12 col-md-4">
-                    <label className="form-label">Data</label>
-                    <input
-                      type="date"
-                      className="form-control"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                    />
-                  </div>
+            <button
+              type="button"
+              className="btn-close"
+              aria-label="Fechar"
+              onClick={onClose}
+            />
+          </div>
 
-                  <div className="col-12 col-md-8">
-                    <label className="form-label">Descrição</label>
-                    <input
-                      className="form-control"
-                      placeholder="Ex: Mercado"
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      autoFocus
-                    />
-                  </div>
-
-                  <div className="col-6">
-                    <label className="form-label">Tipo</label>
-                    <select
-                      className="form-select"
-                      value={type}
-                      onChange={(e) => setType(e.target.value)}
-                    >
-                      <option value="expense">Despesa</option>
-                      <option value="income">Receita</option>
-                    </select>
-                  </div>
-
-                  <div className="col-6">
-                    <label className="form-label">Categoria</label>
-                    <select
-                      className="form-select"
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                    >
-                      {CATEGORIES.map((c) => (
-                        <option key={c} value={c}>
-                          {c}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="col-12">
-                    <label className="form-label">Valor</label>
-                    <input
-                      className="form-control"
-                      inputMode="decimal"
-                      placeholder="150,00"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                    />
-                  </div>
-
-                  {error ? (
-                    <div className="col-12">
-                      <div className="alert alert-danger py-2 mb-0">
-                        {error}
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
+          <div className="modal-body px-4 pb-4 pt-3">
+            <form onSubmit={handleSubmit} className="row g-3">
+              <div className="col-12 col-md-4">
+                <label className="form-label text-dark fw-medium">Data</label>
+                <input
+                  type="date"
+                  className="form-control finova-input"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                />
               </div>
 
-              <div className="modal-footer">
-                <button type="button" className="btn btn-outline-secondary" onClick={onClose}>
+              <div className="col-12 col-md-8">
+                <label className="form-label text-dark fw-medium">Descrição</label>
+                <input
+                  type="text"
+                  className="form-control finova-input"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Ex: Mercado do mês"
+                />
+              </div>
+
+              <div className="col-12 col-md-4">
+                <label className="form-label text-dark fw-medium">Tipo</label>
+                <select
+                  className="form-select finova-select"
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                >
+                  <option value="expense">Despesa</option>
+                  <option value="income">Receita</option>
+                </select>
+              </div>
+
+              <div className="col-12 col-md-4">
+                <label className="form-label text-dark fw-medium">Categoria</label>
+                <select
+                  className="form-select finova-select"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                >
+                  {CATEGORIES.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="col-12 col-md-4">
+                <label className="form-label text-dark fw-medium">Valor</label>
+                <input
+                  type="text"
+                  className="form-control finova-input"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="150,00"
+                  inputMode="decimal"
+                />
+              </div>
+
+              {error ? (
+                <div className="col-12">
+                  <div className="alert alert-danger py-2 mb-0">{error}</div>
+                </div>
+              ) : null}
+
+              <div className="col-12 d-flex justify-content-end gap-2 pt-2">
+                <button
+                  type="button"
+                  className="btn finova-btn-light px-4"
+                  onClick={onClose}
+                >
                   Cancelar
                 </button>
-                <button type="submit" className="btn btn-primary">
-                  {mode === "edit" ? "Salvar" : "Adicionar"}
+
+                <button
+                  type="submit"
+                  className="btn finova-btn-primary px-4"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting
+                    ? "Salvando..."
+                    : isEdit
+                    ? "Salvar alterações"
+                    : "Adicionar transação"}
                 </button>
               </div>
             </form>
           </div>
         </div>
       </div>
-
-      {/* backdrop */}
-      {isOpen ? <div className="modal-backdrop fade show" /> : null}
-    </>
+    </div>
   );
 }

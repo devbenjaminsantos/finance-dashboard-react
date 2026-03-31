@@ -6,74 +6,105 @@ export default function TransactionsTable({
   totalTransactionsCount,
   onEdit,
   onRemove,
+  isLoading = false,
 }) {
+  if (isLoading) {
+    return (
+      <div className="finova-card p-4">
+        <p className="finova-subtitle mb-0">Carregando transações...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="card shadow-sm">
-      <div className="card-body">
+    <div className="finova-card p-4">
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+        <div>
+          <h2 className="finova-title h5 mb-1">Histórico financeiro</h2>
+          <p className="finova-subtitle small mb-0">
+            {transactions.length} transação(ões)
+            {transactions.length !== totalTransactionsCount
+              ? ` de ${totalTransactionsCount}`
+              : ""}
+          </p>
+        </div>
+      </div>
+
+      {transactions.length === 0 ? (
+        <div className="text-center py-5">
+          <h3 className="finova-title h6 mb-2">Nenhuma transação encontrada</h3>
+          <p className="finova-subtitle mb-0">
+            Adicione sua primeira movimentação para começar a acompanhar seu saldo.
+          </p>
+        </div>
+      ) : (
         <div className="table-responsive">
-          <table className="table table-hover align-middle">
+          <table className="table finova-table align-middle mb-0">
             <thead>
               <tr>
                 <th>Data</th>
                 <th>Descrição</th>
-                <th className="text-end">Valor</th>
-                <th>Tipo</th>
                 <th>Categoria</th>
-                <th />
+                <th>Tipo</th>
+                <th className="text-end">Valor</th>
+                <th className="text-end">Ações</th>
               </tr>
             </thead>
+          
+          <tbody>
+              {transactions.map((t) => (
+                <tr key={t.id}>
+                  <td>{formatBRDate(t.date)}</td>
+                  
+                  <td>
+                    <div className="fw-medium text-dark">{t.description}</div>
+                  </td>
 
-            <tbody>
-              {transactions.length === 0 ? (
-                <tr>
-                  <td colSpan="6" className="text-center text-muted py-4">
-                    {totalTransactionsCount === 0
-                      ? "Nenhuma transação ainda."
-                      : "Nenhuma transação encontrada com os filtros atuais."}
+                  <td>  
+                    <span className="finova-subtitle">{t.category || "Sem categoria"}</span>
+                  </td>
+
+                  <td>
+                    <span
+                      className={
+                        t.type === "income"
+                          ? "finova-badge-income"
+                          : "finova-badge-expense"
+                      }
+                    >
+                      {t.type === "income" ? "Receita" : "Despesa"}
+                    </span>
+                  </td>
+
+                  <td className="text-end fw-semibold">
+                    {formatBRLFromCents(t.amountCents)}
+                  </td>
+
+                  <td className="text-end">
+                    <div className="d-flex gap-2 justify-content-end">
+                      <button
+                        type="button"
+                        className="btn finova-btn-light btn-sm"
+                        onClick={() => onEdit(t)}
+                      >
+                        Editar
+                      </button>
+
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={() => onRemove(t.id)}
+                      >
+                        Remover
+                      </button>
+                    </div>
                   </td>
                 </tr>
-              ) : (
-                transactions.map((t) => (
-                  <tr key={t.id}>
-                    <td>{formatBRDate(t.date)}</td>
-                    <td>{t.description}</td>
-                    <td className="text-end">{formatBRLFromCents(t.amountCents)}</td>
-                    <td>
-                      <span
-                        className={
-                          "badge " +
-                          (t.type === "income" ? "text-bg-success" : "text-bg-danger")
-                        }
-                      >
-                        {t.type === "income" ? "Receita" : "Despesa"}
-                      </span>
-                    </td>
-                    <td>{t.category}</td>
-
-                    <td className="text-end">
-                      <div className="btn-group btn-group-sm" role="group">
-                        <button
-                          className="btn btn-outline-primary"
-                          onClick={() => onEdit(t)}
-                        >
-                          Editar
-                        </button>
-                        <button
-                          className="btn btn-outline-danger"
-                          onClick={() => onRemove(t.id)}
-                        >
-                          Remover
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
+              ))}
             </tbody>
-
           </table>
         </div>
-      </div>
+      )}
     </div>
   );
 }

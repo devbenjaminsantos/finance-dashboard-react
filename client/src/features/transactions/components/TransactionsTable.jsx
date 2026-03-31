@@ -7,6 +7,7 @@ export default function TransactionsTable({
   onEdit,
   onRemove,
   isLoading = false,
+  isMutating = false,
 }) {
   if (isLoading) {
     return (
@@ -34,7 +35,9 @@ export default function TransactionsTable({
         <div className="text-center py-5">
           <h3 className="finova-title h6 mb-2">Nenhuma transação encontrada</h3>
           <p className="finova-subtitle mb-0">
-            Adicione sua primeira movimentação para começar a acompanhar seu saldo.
+            {totalTransactionsCount === 0
+              ? "Adicione sua primeira movimentação para começar a acompanhar seu saldo."
+              : "Tente ajustar ou limpar os filtros para visualizar outras movimentações."}
           </p>
         </div>
       ) : (
@@ -86,6 +89,7 @@ export default function TransactionsTable({
                         type="button"
                         className="btn finova-btn-light btn-sm"
                         onClick={() => onEdit(t)}
+                        disabled={isMutating}
                       >
                         Editar
                       </button>
@@ -94,6 +98,7 @@ export default function TransactionsTable({
                         type="button"
                         className="btn btn-sm btn-outline-danger"
                         onClick={() => onRemove(t.id)}
+                        disabled={isMutating}
                       >
                         Remover
                       </button>

@@ -44,6 +44,17 @@ function cents(n) {
   return Number(n) || 0;
 }
 
+function formatAxisValue(value) {
+  const amount = Number(value) || 0;
+  const brl = amount / 100;
+
+  if (Math.abs(brl) >= 1000) {
+    return `R$ ${(brl / 1000).toFixed(1)}k`;
+  }
+
+  return `R$ ${brl.toFixed(0)}`;
+}
+
 function buildExpenseByCategory(transactions, month) {
   const map = new Map();
 
@@ -90,13 +101,22 @@ export default function DashboardCharts() {
     [transactions, months]
   );
 
+  const hasIncomeVsExpenseData = useMemo(
+    () => incomeVsExpense.some((item) => item.income > 0 || item.expense > 0),
+    [incomeVsExpense]
+  );
+
   // paleta simples
   const PIE_COLORS = ["#0d6efd", "#198754", "#dc3545", "#ffc107", "#6f42c1", "#20c997", "#fd7e14", "#6c757d"];
 
-  const pieLegend = expenseByCategory.map((x) => ({
-    ...x,
-    label: `${x.name} — ${formatBRLFromCents(x.value)}`,
-  }));
+  const pieLegend = useMemo(
+    () =>
+      expenseByCategory.map((x) => ({
+        ...x,
+        label: `${x.name} — ${formatBRLFromCents(x.value)}`,
+      })),
+    [expenseByCategory]
+  );
 
   return (
     <div className="row g-3">
@@ -127,7 +147,10 @@ export default function DashboardCharts() {
                       paddingAngle={2}
                     >
                       {expenseByCategory.map((_, idx) => (
-                        <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
+                        <Cell
+                          key={expenseByCategory[idx].name}
+                          fill={PIE_COLORS[idx % PIE_COLORS.length]}
+                        />
                       ))}
                     </Pie>
                     <Legend />
@@ -146,23 +169,34 @@ export default function DashboardCharts() {
             <h2 className="finova-title h5 mb-2">Receitas vs Despesas</h2>
             <p className="finova-subtitle small mb-3">Últimos 6 meses</p>
 
-            <div style={{ width: "100%", height: 320 }}>
-              <ResponsiveContainer>
-                <BarChart data={incomeVsExpense} margin={{ left: 10, right: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" tickFormatter={monthLabel} />
-                  <YAxis tickFormatter={(v) => (v / 1000).toFixed(0) + "k"} />
-                  <Tooltip formatter={(v) => formatBRLFromCents(v)} labelFormatter={monthLabel} />
-                  <Legend />
-                  <Bar dataKey="income" name="Receitas" fill="#198754" />
-                  <Bar dataKey="expense" name="Despesas" fill="#dc3545" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            {hasIncomeVsExpenseData ? (
+              <>
+                <div style={{ width: "100%", height: 320 }}>
+                  <ResponsiveContainer>
+                    <BarChart data={incomeVsExpense} margin={{ left: 10, right: 10 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" tickFormatter={monthLabel} />
+                      <YAxis tickFormatter={formatAxisValue} width={70} />
+                      <Tooltip
+                        formatter={(v) => formatBRLFromCents(v)}
+                        labelFormatter={monthLabel}
+                      />
+                      <Legend />
+                      <Bar dataKey="income" name="Receitas" fill="#198754" />
+                      <Bar dataKey="expense" name="Despesas" fill="#dc3545" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
 
-            <div className="text-muted small">
-              Valores em BRL (centavos → reais). Baseado nas transações salvas no navegador.
-            </div>
+                <div className="text-muted small">
+                  Valores em BRL (centavos → reais). Baseado nas transações salvas no navegador.
+                </div>
+              </>
+            ) : (
+              <div className="finova-subtitle">
+                Sem movimentações suficientes para exibir o comparativo dos últimos meses.
+              </div>
+            )}
           </div>
         </div>
       </div>

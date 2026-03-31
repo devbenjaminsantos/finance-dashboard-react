@@ -1,4 +1,4 @@
-import { useTransactions } from "../features/transactions/TransactionsProvider";
+import { useTransactions } from "../features/transactions/useTransactions";
 import { formatBRLFromCents } from "../lib/format/currency";
 import DashboardCharts from "../features/dashboard/DashboardCharts";
 
@@ -14,7 +14,7 @@ function SummaryCard({ label, value, tone = "default" }) {
       border: "rgba(34, 197, 94, 0.14)",
       text: "var(--success-dark)",
     },
-      expense: {
+    expense: {
       bg: "rgba(239, 68, 68, 0.06)",
       border: "rgba(239, 68, 68, 0.12)",
       text: "#dc2626",
@@ -32,14 +32,14 @@ function SummaryCard({ label, value, tone = "default" }) {
           borderColor: styles.border,
         }}
       >
-      <div className="finova-subtitle small mb-2">{label}</div>
-      <div
-        className="finova-title mb-0"
-        style={{
-          fontSize: "1.75rem",
-          color: styles.text,
-        }}
-      >
+        <div className="finova-subtitle small mb-2">{label}</div>
+        <div
+          className="finova-title mb-0"
+          style={{
+            fontSize: "1.75rem",
+            color: styles.text,
+          }}
+        >
           {value}
         </div>
       </div>
@@ -85,7 +85,7 @@ export default function Dashboard() {
             />
           </div>
 
-          {!isLoading && transactions.length === 0 ? (
+          {transactions.length === 0 ? (
             <div className="finova-card p-4">
               <h2 className="finova-subtitle h5 mb-2">Nenhum dado financeiro ainda</h2>
               <p className="finova-subtitle mb-0">

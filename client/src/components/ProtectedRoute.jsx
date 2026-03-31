@@ -1,12 +1,11 @@
 import { Navigate } from "react-router-dom";
-import { getStoredToken } from "../lib/api/auth";
+import { hasValidSession, logout } from "../lib/api/auth";
 
 export default function ProtectedRoute({ children }) {
-    const token = getStoredToken();
+  if (!hasValidSession()) {
+    logout();
+    return <Navigate to="/login" replace />;
+  }
 
-    if (!token) {
-        return <Navigate to="/login" replace />;
-    }
-
-    return children;
+  return children;
 }

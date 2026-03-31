@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { parseMoneyToCents } from "../../../lib/format/currency";
 
 const CATEGORIES = [
   "Alimentação",
@@ -17,20 +18,6 @@ function todayISO() {
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}`;
-}
-
-function parseMoneyToCents(value) {
-  if (!value) return 0;
-
-  const normalized = String(value)
-    .replace(/\s/g, "")
-    .replace(/\./g, "")
-    .replace(",", ".");
-
-  const number = Number(normalized);
-  if (!Number.isFinite(number)) return NaN;
-
-  return Math.round(number * 100);
 }
 
 function centsToInput(value) {
@@ -54,6 +41,7 @@ export default function TransactionModal({
   const [amount, setAmount] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const descriptionInputRef = useRef(null);
 
   const title = useMemo(
     () => (isEdit ? "Editar transação" : "Nova transação"),
@@ -80,6 +68,27 @@ export default function TransactionModal({
     setError("");
     setIsSubmitting(false);
   }, [isOpen, isEdit, initial]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    descriptionInputRef.current?.focus();
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape" && !isSubmitting) {
+        onClose();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen, isSubmitting, onClose]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -130,7 +139,13 @@ export default function TransactionModal({
       className="modal d-block"
       tabIndex="-1"
       role="dialog"
+      aria-modal="true"
       style={{ background: "rgba(15, 23, 42, 0.45)" }}
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !isSubmitting) {
+          onClose();
+        }
+      }}
     >
       <div className="modal-dialog modal-dialog-centered modal-lg">
         <div className="modal-content border-0" style={{ borderRadius: "16px" }}>
@@ -165,6 +180,7 @@ export default function TransactionModal({
               <div className="col-12 col-md-8">
                 <label className="form-label text-dark fw-medium">Descrição</label>
                 <input
+                  ref={descriptionInputRef}
                   type="text"
                   className="form-control finova-input"
                   value={description}
@@ -223,6 +239,7 @@ export default function TransactionModal({
                   type="button"
                   className="btn finova-btn-light px-4"
                   onClick={onClose}
+                  disabled={isSubmitting}
                 >
                   Cancelar
                 </button>

@@ -16,13 +16,17 @@ export default function Transactions() {
     isLoading,
   } = useTransactions();
 
-  const saved = loadJSON(FILTERS_KEY, {
-    q: "",
-    typeFilter: "all",
-    categoryFilter: "all",
-    month: "",
-    sortBy: "date_desc",
-  });
+  const saved = useMemo(
+    () =>
+      loadJSON(FILTERS_KEY, {
+        q: "",
+        typeFilter: "all",
+        categoryFilter: "all",
+        month: "",
+        sortBy: "date_desc",
+      }),
+    []
+  );
 
   const [q, setQ] = useState(() => saved.q);
   const [typeFilter, setTypeFilter] = useState(() => saved.typeFilter);
@@ -31,14 +35,14 @@ export default function Transactions() {
   );
   const [month, setMonth] = useState(() => saved.month);
   const [sortBy, setSortBy] = useState(() => saved.sortBy);
+  const [isOpen, setIsOpen] = useState(false);
+  const [mode, setMode] = useState("create");
+  const [selected, setSelected] = useState(null);
+  const [isMutating, setIsMutating] = useState(false);
 
   useEffect(() => {
     saveJSON(FILTERS_KEY, { q, typeFilter, categoryFilter, month, sortBy });
   }, [q, typeFilter, categoryFilter, month, sortBy]);
-
-  const [isOpen, setIsOpen] = useState(false);
-  const [mode, setMode] = useState("create");
-  const [selected, setSelected] = useState(null);
 
   const categories = useMemo(() => {
     const set = new Set(transactions.map((t) => t.category).filter(Boolean));
@@ -93,12 +97,14 @@ export default function Transactions() {
   }, [transactions, q, typeFilter, categoryFilter, month, sortBy]);
 
   function openCreate() {
+    if (isMutating) return;
     setMode("create");
     setSelected(null);
     setIsOpen(true);
   }
 
   function openEdit(transaction) {
+    if (isMutating) return;
     setMode("edit");
     setSelected(transaction);
     setIsOpen(true);
@@ -109,16 +115,26 @@ export default function Transactions() {
   }
 
   async function handleSubmit(data) {
-    if (mode === "edit" && selected) {
-      await updateTransaction(selected.id, data);
-    } else {
-      await addTransaction(data);
+    setIsMutating(true);
+    try {
+      if (mode === "edit" && selected) {
+        await updateTransaction(selected.id, data);
+      } else {
+        await addTransaction(data);
+      }
+    } finally {
+      setIsMutating(false);
     }
   }
 
   async function handleRemove(id) {
     if (confirm("Remover esta transação?")) {
-      await removeTransaction(id);
+      setIsMutating(true);
+      try {
+        await removeTransaction(id);
+      } finally {
+        setIsMutating(false);
+      }
     }
   }
 
@@ -149,7 +165,11 @@ export default function Transactions() {
           </p>
         </div>
 
-        <button className="btn finova-btn-primary px-4" onClick={openCreate}>
+        <button
+          className="btn finova-btn-primary px-4"
+          onClick={openCreate}
+          disabled={isMutating}
+        >
           Nova transação
         </button>
       </div>
@@ -184,8 +204,9 @@ export default function Transactions() {
           onEdit={openEdit}
           onRemove={handleRemove}
           isLoading={isLoading}
+          isMutating={isMutating}
         />
-      </div>  
+      </div>
     </section>
   );
 }

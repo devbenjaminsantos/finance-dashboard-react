@@ -14,7 +14,7 @@ export function parseMoneyToCents(input) {
   if (!s) return NaN;
 
   // remove R$, espaços e caracteres estranhos (mantém dígitos, ponto, vírgula, sinal)
-  s = s.replace(/[R$\s]/g, "").replace(/[^\d,.\-]/g, "");
+  s = s.replace(/[R$\s]/g, "").replace(/[^\d,.-]/g, "");
 
   const lastComma = s.lastIndexOf(",");
   const lastDot = s.lastIndexOf(".");

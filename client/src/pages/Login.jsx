@@ -31,7 +31,7 @@ export default function Login() {
         <div className="text-center mb-4">
           <h1 className="finova-title finova-brand mb-2">Finova</h1>
           <p className="finova-subtitle mb-0">
-          Seu painel financeiro pessoal, com clareza e controle.
+            Seu painel financeiro pessoal, com clareza e controle.
           </p>
         </div>
 
@@ -39,7 +39,7 @@ export default function Login() {
           <div className="mb-4 text-center">
             <h2 className="finova-title h4 mb-2">Entrar</h2>
             <p className="finova-subtitle mb-0">
-            Acesse sua conta para visualizar suas transações.
+              Acesse sua conta para visualizar suas transações.
             </p>
           </div>
 
@@ -52,6 +52,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seuemail@exemplo.com"
+                disabled={isSubmitting}
                 required
               />
             </div>
@@ -64,6 +65,7 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Digite sua senha"
+                disabled={isSubmitting}
                 required
               />
             </div>
@@ -83,9 +85,9 @@ export default function Login() {
 
           <div className="text-center mt-4">
             <span className="finova-subtitle small">
-              Ainda não tem uma conta?{""}
+              Ainda não tem uma conta?{" "}
               <Link to="/register" className="text-decoration-none fw-semibold">
-                Criar conta  
+                Criar conta
               </Link>
             </span>
           </div>

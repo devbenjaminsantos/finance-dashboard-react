@@ -1,9 +1,9 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { getStoredToken, getStoredUser, logout } from "../lib/api/auth";
+import { getStoredUser, hasValidSession, logout } from "../lib/api/auth";
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const hasToken = !!getStoredToken();
+  const hasSession = hasValidSession();
   const user = getStoredUser();
 
   const linkClass = ({ isActive }) =>
@@ -38,7 +38,7 @@ export default function Navbar() {
 
         <div className="collapse navbar-collapse" id="nav">
           <div className="navbar-nav ms-auto align-items-lg-center">
-            {hasToken ? (
+            {hasSession ? (
               <>
                 <NavLink className={linkClass} to="/">
                   Dashboard

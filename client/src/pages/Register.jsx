@@ -53,6 +53,7 @@ export default function Register() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Seu nome"
+                disabled={isSubmitting}
                 required
               />
             </div>
@@ -65,6 +66,7 @@ export default function Register() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seuemail@exemplo.com"
+                disabled={isSubmitting}
                 required
               />
             </div>
@@ -77,6 +79,7 @@ export default function Register() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Crie uma senha"
+                disabled={isSubmitting}
                 required
               />
             </div>

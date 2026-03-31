@@ -41,13 +41,13 @@ export default function TransactionsFilters({
 
         <div className="col-6 col-lg-2">
           <label className="form-label text-dark fw-medium">Categoria</label>
-            <select
-              className="form-select finova-select"
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-            >
-              <option value="all">Todas</option>
-                {categories.map((category) => (
+          <select
+            className="form-select finova-select"
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+          >
+            <option value="all">Todas</option>
+            {categories.map((category) => (
               <option key={category} value={category}>
                 {category}
               </option>

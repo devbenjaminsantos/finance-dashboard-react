@@ -9,7 +9,7 @@ yarn-error.log*
 
 # .NET
 
-- */bin/
+**/bin/
 **/obj/
 *.user
 *.suo
@@ -21,7 +21,13 @@ server/FinanceDashboard.Api/build-review/
 # Env
 
 .env
+.env.local
+.env.development.local
+.env.production.local
 server/.env
+client/.env.local
+client/.env.development.local
+client/.env.production.local
 server/FinanceDashboard.Api/appsettings.Development.local.json
 
 # OS

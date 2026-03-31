@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { loginRequest } from "../lib/api/auth";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import { hasValidSession, loginRequest } from "../lib/api/auth";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -9,6 +9,10 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  if (hasValidSession()) {
+    return <Navigate to="/" replace />;
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -39,7 +43,7 @@ export default function Login() {
           <div className="mb-4 text-center">
             <h2 className="finova-title h4 mb-2">Entrar</h2>
             <p className="finova-subtitle mb-0">
-              Acesse sua conta para visualizar suas transações.
+              Acesse sua conta para visualizar suas transacoes.
             </p>
           </div>
 
@@ -85,7 +89,7 @@ export default function Login() {
 
           <div className="text-center mt-4">
             <span className="finova-subtitle small">
-              Ainda não tem uma conta?{" "}
+              Ainda nao tem uma conta?{" "}
               <Link to="/register" className="text-decoration-none fw-semibold">
                 Criar conta
               </Link>

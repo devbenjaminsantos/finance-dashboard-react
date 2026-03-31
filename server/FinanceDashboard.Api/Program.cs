@@ -2,7 +2,9 @@ using FinanceDashboard.Api.Data;
 using FinanceDashboard.Api.Models;
 using FinanceDashboard.Api.Services.Auth;
 using FinanceDashboard.Api.Services.CurrentUser;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -26,6 +28,7 @@ builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddHttpContextAccessor();
 
 var jwtKey = GetRequiredJwtKey(builder.Configuration);
+var allowedOrigins = GetAllowedCorsOrigins(builder.Configuration);
 
 builder.Services.AddAuthentication(options =>
 {
@@ -44,6 +47,33 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = builder.Configuration["Jwt:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey!))
     };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnChallenge = async context =>
+        {
+            context.HandleResponse();
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            context.Response.ContentType = "application/problem+json";
+
+            await context.Response.WriteAsJsonAsync(new ProblemDetails
+            {
+                Status = StatusCodes.Status401Unauthorized,
+                Title = "Sessao expirada ou token invalido."
+            });
+        },
+        OnForbidden = async context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            context.Response.ContentType = "application/problem+json";
+
+            await context.Response.WriteAsJsonAsync(new ProblemDetails
+            {
+                Status = StatusCodes.Status403Forbidden,
+                Title = "Voce nao tem permissao para acessar este recurso."
+            });
+        }
+    };
 });
 
 builder.Services.AddCors(options =>
@@ -51,7 +81,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("frontend", policy =>
     {
         policy
-            .WithOrigins("http://localhost:5173")
+            .WithOrigins(allowedOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -60,8 +90,44 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 builder.Services.AddAuthorization();
 builder.Services.AddOpenApi();
+builder.Services.AddProblemDetails();
 
 var app = builder.Build();
+
+app.UseExceptionHandler(exceptionHandlerApp =>
+{
+    exceptionHandlerApp.Run(async context =>
+    {
+        var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
+        var statusCode = exception switch
+        {
+            UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
+            BadHttpRequestException => StatusCodes.Status400BadRequest,
+            _ => StatusCodes.Status500InternalServerError
+        };
+
+        var problemDetails = new ProblemDetails
+        {
+            Status = statusCode,
+            Title = statusCode switch
+            {
+                StatusCodes.Status401Unauthorized => "Acesso nao autorizado.",
+                StatusCodes.Status400BadRequest => "Requisicao invalida.",
+                _ => "Ocorreu um erro inesperado."
+            }
+        };
+
+        if (app.Environment.IsDevelopment() && exception is not null)
+        {
+            problemDetails.Detail = exception.Message;
+        }
+
+        context.Response.StatusCode = statusCode;
+        context.Response.ContentType = "application/problem+json";
+
+        await context.Response.WriteAsJsonAsync(problemDetails);
+    });
+});
 
 if (app.Environment.IsDevelopment())
 {
@@ -109,4 +175,17 @@ static string GetRequiredJwtKey(IConfiguration configuration)
     }
 
     return jwtKey;
+}
+
+static string[] GetAllowedCorsOrigins(IConfiguration configuration)
+{
+    var allowedOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+
+    if (allowedOrigins is null || allowedOrigins.Length == 0)
+    {
+        throw new InvalidOperationException(
+            "Cors:AllowedOrigins nao configurado. Defina pelo menos uma origem permitida para o frontend.");
+    }
+
+    return allowedOrigins;
 }

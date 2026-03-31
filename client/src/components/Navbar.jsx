@@ -21,7 +21,7 @@ export default function Navbar() {
     >
       <div className="container">
         <NavLink className="navbar-brand text-white finova-brand" to="/">
-        Finova
+          Finova
         </NavLink>
 
         <button
@@ -44,7 +44,7 @@ export default function Navbar() {
                   Dashboard
                 </NavLink>
                 <NavLink className={linkClass} to="/transacoes">
-                  Transações
+                  Transacoes
                 </NavLink>
 
                 <span className="text-white-50 small ms-lg-3 me-lg-3 mt-2 mt-lg-0">

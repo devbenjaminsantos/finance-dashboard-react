@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { registerRequest } from "../lib/api/auth";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import { hasValidSession, registerRequest } from "../lib/api/auth";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -11,6 +11,10 @@ export default function Register() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  if (hasValidSession()) {
+    return <Navigate to="/" replace />;
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
@@ -20,7 +24,7 @@ export default function Register() {
       await registerRequest(name, email, password);
       navigate("/login");
     } catch (err) {
-      setError(err.message || "Não foi possível criar sua conta.");
+      setError(err.message || "Nao foi possivel criar sua conta.");
     } finally {
       setIsSubmitting(false);
     }
@@ -99,7 +103,7 @@ export default function Register() {
 
           <div className="text-center mt-4">
             <span className="finova-subtitle small">
-              Já tem uma conta?{" "}
+              Ja tem uma conta?{" "}
               <Link to="/login" className="text-decoration-none fw-semibold">
                 Entrar
               </Link>

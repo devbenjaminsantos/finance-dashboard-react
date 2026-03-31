@@ -1,6 +1,6 @@
 import { clearStoredSession } from "./auth";
 
-const API_URL = "http://localhost:5278/api";
+const API_URL = resolveApiUrl();
 
 export async function apiRequest(path, options = {}) {
   const token = localStorage.getItem("token");
@@ -12,10 +12,18 @@ export async function apiRequest(path, options = {}) {
     ...options.headers,
   };
 
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers,
-  });
+  let response;
+
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      ...options,
+      headers,
+    });
+  } catch {
+    throw new Error(
+      "Nao foi possivel conectar com a API. Verifique se o backend esta publicado e acessivel."
+    );
+  }
 
   if (response.status === 401) {
     clearStoredSession();
@@ -54,4 +62,18 @@ export async function apiRequest(path, options = {}) {
   }
 
   return response.json();
+}
+
+function resolveApiUrl() {
+  const configuredUrl = import.meta.env.VITE_API_URL?.trim();
+
+  if (configuredUrl) {
+    return configuredUrl.replace(/\/+$/, "");
+  }
+
+  if (import.meta.env.DEV) {
+    return "http://localhost:5278/api";
+  }
+
+  return "/api";
 }

@@ -74,6 +74,7 @@ A API sobe por padrao em `http://localhost:5278`.
 - O frontend e o backend usam portas locais diferentes.
 - Segredos nao devem ser versionados.
 - O arquivo `appsettings.json` ficou apenas com placeholders; a configuracao real deve ficar no ambiente local.
+- O passo a passo de deploy Azure esta em `docs/azure-deploy.md`.
 
 ## Autor
 

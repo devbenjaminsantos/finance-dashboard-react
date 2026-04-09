@@ -37,11 +37,16 @@ export async function apiRequest(path, options = {}) {
     try {
       const contentType = response.headers.get("content-type") || "";
 
-      if (contentType.includes("application/json")) {
+      if (
+        contentType.includes("application/json") ||
+        contentType.includes("application/problem+json") ||
+        contentType.includes("+json")
+      ) {
         const data = await response.json();
         message =
           data?.message ||
           data?.error ||
+          data?.detail ||
           data?.title ||
           message;
       } else {

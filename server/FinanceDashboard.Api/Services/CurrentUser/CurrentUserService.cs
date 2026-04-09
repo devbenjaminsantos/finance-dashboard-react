@@ -17,7 +17,7 @@ namespace FinanceDashboard.Api.Services.CurrentUser
 
             if (!int.TryParse(claim, out var userId))
             {
-                throw new UnauthorizedAccessException("Usuario nao autenticado.");
+                throw new UnauthorizedAccessException("Usuário não autenticado.");
             }
 
             return userId;

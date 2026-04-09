@@ -53,18 +53,20 @@ export default function TransactionsTable({
                 <th className="text-end">Ações</th>
               </tr>
             </thead>
-          
-          <tbody>
+
+            <tbody>
               {transactions.map((t) => (
                 <tr key={t.id}>
                   <td>{formatBRDate(t.date)}</td>
-                  
+
                   <td>
                     <div className="fw-medium text-dark">{t.description}</div>
                   </td>
 
-                  <td>  
-                    <span className="finova-subtitle">{t.category || "Sem categoria"}</span>
+                  <td>
+                    <span className="finova-subtitle">
+                      {t.category || "Sem categoria"}
+                    </span>
                   </td>
 
                   <td>

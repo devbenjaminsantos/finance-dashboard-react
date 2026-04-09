@@ -252,8 +252,8 @@ export default function TransactionModal({
                   {isSubmitting
                     ? "Salvando..."
                     : isEdit
-                    ? "Salvar alterações"
-                    : "Adicionar transação"}
+                      ? "Salvar alterações"
+                      : "Adicionar transação"}
                 </button>
               </div>
             </form>

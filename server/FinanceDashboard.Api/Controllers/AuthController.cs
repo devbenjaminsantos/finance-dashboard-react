@@ -38,7 +38,7 @@ namespace FinanceDashboard.Api.Controllers
             {
                 return Conflict(new ProblemDetails
                 {
-                    Title = "E-mail ja cadastrado.",
+                    Title = "E-mail já cadastrado.",
                     Status = StatusCodes.Status409Conflict
                 });
             }
@@ -61,7 +61,7 @@ namespace FinanceDashboard.Api.Controllers
             {
                 return Conflict(new ProblemDetails
                 {
-                    Title = "E-mail ja cadastrado.",
+                    Title = "E-mail já cadastrado.",
                     Status = StatusCodes.Status409Conflict
                 });
             }
@@ -77,11 +77,20 @@ namespace FinanceDashboard.Api.Controllers
             var user = await _context.Users
                 .FirstOrDefaultAsync(x => x.Email == normalizedEmail);
 
-            if (user == null || !_passwordHasher.VerifyPassword(user, dto.Password))
+            if (user == null)
+            {
+                return NotFound(new ProblemDetails
+                {
+                    Title = "Usuário não encontrado.",
+                    Status = StatusCodes.Status404NotFound
+                });
+            }
+
+            if (!_passwordHasher.VerifyPassword(user, dto.Password))
             {
                 return Unauthorized(new ProblemDetails
                 {
-                    Title = "E-mail ou senha invalidos.",
+                    Title = "Senha incorreta.",
                     Status = StatusCodes.Status401Unauthorized
                 });
             }

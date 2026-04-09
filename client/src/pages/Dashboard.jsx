@@ -56,7 +56,8 @@ export default function Dashboard() {
         <div>
           <h1 className="finova-title mb-1">Dashboard</h1>
           <p className="finova-subtitle mb-0">
-            Visualize seu saldo, acompanhe receitas e monitore despesas com clareza.
+            Visualize seu saldo, acompanhe receitas e monitore despesas com
+            clareza.
           </p>
         </div>
       </div>
@@ -87,9 +88,12 @@ export default function Dashboard() {
 
           {transactions.length === 0 ? (
             <div className="finova-card p-4">
-              <h2 className="finova-subtitle h5 mb-2">Nenhum dado financeiro ainda</h2>
+              <h2 className="finova-subtitle h5 mb-2">
+                Nenhum dado financeiro ainda
+              </h2>
               <p className="finova-subtitle mb-0">
-                Adicione sua primeira transação para começar a visualizar seu desempenho financeiro.
+                Adicione sua primeira transação para começar a visualizar seu
+                desempenho financeiro.
               </p>
             </div>
           ) : (

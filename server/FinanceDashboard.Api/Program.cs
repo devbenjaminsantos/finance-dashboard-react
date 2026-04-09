@@ -59,7 +59,7 @@ builder.Services.AddAuthentication(options =>
             await context.Response.WriteAsJsonAsync(new ProblemDetails
             {
                 Status = StatusCodes.Status401Unauthorized,
-                Title = "Sessao expirada ou token invalido."
+                Title = "Sessão expirada ou token inválido."
             });
         },
         OnForbidden = async context =>
@@ -70,7 +70,7 @@ builder.Services.AddAuthentication(options =>
             await context.Response.WriteAsJsonAsync(new ProblemDetails
             {
                 Status = StatusCodes.Status403Forbidden,
-                Title = "Voce nao tem permissao para acessar este recurso."
+                Title = "Você não tem permissão para acessar este recurso."
             });
         }
     };
@@ -111,8 +111,8 @@ app.UseExceptionHandler(exceptionHandlerApp =>
             Status = statusCode,
             Title = statusCode switch
             {
-                StatusCodes.Status401Unauthorized => "Acesso nao autorizado.",
-                StatusCodes.Status400BadRequest => "Requisicao invalida.",
+                StatusCodes.Status401Unauthorized => "Acesso não autorizado.",
+                StatusCodes.Status400BadRequest => "Requisição inválida.",
                 _ => "Ocorreu um erro inesperado."
             }
         };
@@ -159,7 +159,7 @@ static string GetRequiredConnectionString(IConfiguration configuration)
     if (string.IsNullOrWhiteSpace(connectionString))
     {
         throw new InvalidOperationException(
-            "ConnectionStrings:Default nao configurada. Defina a string de conexao em appsettings.Development.local.json ou na variavel ConnectionStrings__Default.");
+            "ConnectionStrings:Default não configurada. Defina a string de conexão em appsettings.Development.local.json ou na variável ConnectionStrings__Default.");
     }
 
     return connectionString;
@@ -172,7 +172,7 @@ static string GetRequiredJwtKey(IConfiguration configuration)
     if (string.IsNullOrWhiteSpace(jwtKey))
     {
         throw new InvalidOperationException(
-            "Jwt:Key nao configurada. Defina a chave em appsettings.Development.local.json ou na variavel Jwt__Key.");
+            "Jwt:Key não configurada. Defina a chave em appsettings.Development.local.json ou na variável Jwt__Key.");
     }
 
     return jwtKey;
@@ -185,7 +185,7 @@ static string[] GetAllowedCorsOrigins(IConfiguration configuration)
     if (allowedOrigins is null || allowedOrigins.Length == 0)
     {
         throw new InvalidOperationException(
-            "Cors:AllowedOrigins nao configurado. Defina pelo menos uma origem permitida para o frontend.");
+            "Cors:AllowedOrigins não configurado. Defina pelo menos uma origem permitida para o frontend.");
     }
 
     return allowedOrigins;

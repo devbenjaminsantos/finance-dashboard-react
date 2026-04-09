@@ -11,6 +11,6 @@ export function saveJSON(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch {
-    // Ignora falhas de persistencia para nao quebrar a UX.
+    // Ignora falhas de persistência para não quebrar a UX.
   }
 }

@@ -44,7 +44,7 @@ export default function Navbar() {
                   Dashboard
                 </NavLink>
                 <NavLink className={linkClass} to="/transacoes">
-                  Transacoes
+                  Transações
                 </NavLink>
 
                 <span className="text-white-50 small ms-lg-3 me-lg-3 mt-2 mt-lg-0">

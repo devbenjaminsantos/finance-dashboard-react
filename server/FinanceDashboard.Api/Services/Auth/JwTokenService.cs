@@ -18,13 +18,13 @@ namespace FinanceDashboard.Api.Services.Auth
         public string GenerateToken(User user)
         {
             var jwtKey = _configuration["Jwt:Key"]
-                ?? throw new InvalidOperationException("Jwt:Key nao configurado.");
+                ?? throw new InvalidOperationException("Jwt:Key não configurado.");
 
             var issuer = _configuration["Jwt:Issuer"]
-                ?? throw new InvalidOperationException("Jwt:Issuer nao configurado.");
+                ?? throw new InvalidOperationException("Jwt:Issuer não configurado.");
 
             var audience = _configuration["Jwt:Audience"]
-                ?? throw new InvalidOperationException("Jwt:Audience nao configurado.");
+                ?? throw new InvalidOperationException("Jwt:Audience não configurado.");
 
             var claims = new[]
             {

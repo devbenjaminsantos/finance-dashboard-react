@@ -25,7 +25,7 @@ export function TransactionsProvider({ children }) {
       const data = await getTransactions();
       setTransactions(data);
     } catch (error) {
-      console.error("Erro ao carregar transacoes:", error);
+      console.error("Erro ao carregar transações:", error);
       setTransactions([]);
     } finally {
       setIsLoading(false);

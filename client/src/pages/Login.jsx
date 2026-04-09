@@ -23,7 +23,7 @@ export default function Login() {
       await loginRequest(email, password);
       navigate("/");
     } catch (err) {
-      setError(err.message || "Falha no login.");
+      setError(err.message || "Falha ao fazer login.");
     } finally {
       setIsSubmitting(false);
     }
@@ -43,7 +43,7 @@ export default function Login() {
           <div className="mb-4 text-center">
             <h2 className="finova-title h4 mb-2">Entrar</h2>
             <p className="finova-subtitle mb-0">
-              Acesse sua conta para visualizar suas transacoes.
+              Acesse sua conta para visualizar suas transações.
             </p>
           </div>
 
@@ -89,7 +89,7 @@ export default function Login() {
 
           <div className="text-center mt-4">
             <span className="finova-subtitle small">
-              Ainda nao tem uma conta?{" "}
+              Ainda não tem uma conta?{" "}
               <Link to="/register" className="text-decoration-none fw-semibold">
                 Criar conta
               </Link>

@@ -21,18 +21,18 @@ export async function apiRequest(path, options = {}) {
     });
   } catch {
     throw new Error(
-      "Nao foi possivel conectar com a API. Verifique se o backend esta publicado e acessivel."
+      "Não foi possível conectar com a API. Verifique se o backend está publicado e acessível."
     );
   }
 
-  if (response.status === 401) {
+  if (response.status === 401 && token) {
     clearStoredSession();
     window.location.href = "/login";
-    throw new Error("Sessao expirada. Faca login novamente.");
+    throw new Error("Sessão expirada. Faça login novamente.");
   }
 
   if (!response.ok) {
-    let message = "Erro na requisicao";
+    let message = "Erro na requisição";
 
     try {
       const contentType = response.headers.get("content-type") || "";

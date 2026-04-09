@@ -12,6 +12,7 @@ namespace FinanceDashboard.Api.Data
 
         public DbSet<User> Users { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
+        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -45,6 +46,22 @@ namespace FinanceDashboard.Api.Data
                     table.HasCheckConstraint(
                         "CK_Transactions_Type",
                         "[Type] IN ('income', 'expense')"));
+            });
+
+            modelBuilder.Entity<PasswordResetToken>(entity =>
+            {
+                entity.Property(token => token.TokenHash)
+                    .HasMaxLength(128);
+
+                entity.HasIndex(token => token.TokenHash)
+                    .IsUnique();
+
+                entity.HasIndex(token => token.UserId);
+
+                entity.HasOne(token => token.User)
+                    .WithMany(user => user.PasswordResetTokens)
+                    .HasForeignKey(token => token.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             base.OnModelCreating(modelBuilder);

@@ -62,7 +62,15 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="form-label text-dark fw-medium">Senha</label>
+              <div className="d-flex justify-content-between align-items-center">
+                <label className="form-label text-dark fw-medium">Senha</label>
+                <Link
+                  to="/forgot-password"
+                  className="small text-decoration-none fw-semibold mb-2"
+                >
+                  Esqueci minha senha
+                </Link>
+              </div>
               <input
                 type="password"
                 className="form-control finova-input"

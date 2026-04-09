@@ -2,6 +2,7 @@ using FinanceDashboard.Api.Data;
 using FinanceDashboard.Api.Models;
 using FinanceDashboard.Api.Services.Auth;
 using FinanceDashboard.Api.Services.CurrentUser;
+using FinanceDashboard.Api.Services.Email;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -23,7 +24,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<PasswordHasher>();
 builder.Services.AddScoped<JwTokenService>();
+builder.Services.AddScoped<PasswordResetTokenService>();
 builder.Services.AddScoped<CurrentUserService>();
+builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddHttpContextAccessor();
 

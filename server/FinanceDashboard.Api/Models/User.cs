@@ -8,5 +8,6 @@ namespace FinanceDashboard.Api.Models
         public string PasswordHash { get; set; } = string.Empty;
 
         public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
+        public ICollection<PasswordResetToken> PasswordResetTokens { get; set; } = new List<PasswordResetToken>();
     }
 }

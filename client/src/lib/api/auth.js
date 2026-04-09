@@ -18,6 +18,20 @@ export async function registerRequest(name, email, password) {
   });
 }
 
+export function forgotPasswordRequest(email) {
+  return apiRequest("/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export function resetPasswordRequest(token, newPassword) {
+  return apiRequest("/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify({ token, newPassword }),
+  });
+}
+
 export function clearStoredSession() {
   localStorage.removeItem("token");
   localStorage.removeItem("user");

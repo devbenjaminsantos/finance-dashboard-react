@@ -1,43 +1,51 @@
 # Deploy no Azure
 
-Este projeto usa tres recursos separados no Azure:
+Este projeto usa três recursos separados no Azure:
 
 - frontend React/Vite em `Azure Static Web Apps`
 - backend ASP.NET Core em `Azure App Service`
 - banco em `Azure SQL Database`
 
-## Recursos sugeridos
+## Recursos
 
 - Grupo de recursos: `rg-finova`
 - Static Web App: `happy-coast-09654c410.2.azurestaticapps.net`
 - App Service: `finova-api`
+- Azure SQL Server: `finovasqlserver.database.windows.net`
+- Azure SQL Database: `finova-db`
 
 ## Frontend
 
-O workflow do frontend esta em `.github/workflows/deploy-web-azure.yml`.
+O workflow real do frontend está em:
 
-Na criacao do `Static Web App`, os campos corretos sao:
+```text
+.github/workflows/azure-static-web-apps-happy-coast-09654c410.yml
+```
+
+Configuração do Static Web Apps:
 
 - `App location`: `client`
 - `Api location`: vazio
 - `Output location`: `dist`
 
-### Secret do GitHub
+Secrets do GitHub Actions:
 
-Em `GitHub > Settings > Secrets and variables > Actions`, configure:
-
-- `AZURE_STATIC_WEB_APPS_API_TOKEN`
+- `AZURE_STATIC_WEB_APPS_API_TOKEN_HAPPY_COAST_09654C410`
 - `VITE_API_URL`
 
-Valor esperado de `VITE_API_URL`:
+Valor atual de `VITE_API_URL`:
 
 ```text
-https://finova-api.azurewebsites.net/api
+https://finova-api-b9g4bpcadyegheed.brazilsouth-01.azurewebsites.net/api
 ```
 
 ## Backend
 
-O workflow da API esta em `.github/workflows/deploy-api-azure.yml`.
+O workflow da API está em:
+
+```text
+.github/workflows/deploy-api-azure.yml
+```
 
 Ele publica o projeto:
 
@@ -45,25 +53,32 @@ Ele publica o projeto:
 server/FinanceDashboard.Api/FinanceDashboard.Api.csproj
 ```
 
-### Secret do GitHub
-
-Em `GitHub > Settings > Secrets and variables > Actions`, configure:
+Secret do GitHub Actions:
 
 - `AZURE_WEBAPP_PUBLISH_PROFILE`
 
 Esse valor vem de:
 
-- `Azure Portal > App Service > Overview > Get publish profile`
+```text
+Azure Portal > App Service > Visão geral > Obter perfil de publicação
+```
 
-## Variaveis da API no App Service
+## Variáveis da API no App Service
 
-No `Azure Portal > App Service > Settings > Environment variables`, configure:
+No `Azure Portal > App Service > Configurações > Variáveis de ambiente`, configure:
 
-- `ConnectionStrings__Default`
 - `Jwt__Key`
 - `Jwt__Issuer`
 - `Jwt__Audience`
 - `Cors__AllowedOrigins__0`
+- `Client__BaseUrl`
+- `Smtp__Host`
+- `Smtp__Port`
+- `Smtp__Username`
+- `Smtp__Password`
+- `Smtp__FromEmail`
+- `Smtp__FromName`
+- `Smtp__EnableSsl`
 
 Valores esperados:
 
@@ -71,42 +86,79 @@ Valores esperados:
 Jwt__Issuer=FinanceDashboard
 Jwt__Audience=FinanceDashboard
 Cors__AllowedOrigins__0=https://happy-coast-09654c410.2.azurestaticapps.net
+Client__BaseUrl=https://happy-coast-09654c410.2.azurestaticapps.net
+Smtp__Port=587
+Smtp__FromName=Finova
+Smtp__EnableSsl=true
 ```
 
-Exemplo de `ConnectionStrings__Default` para Azure SQL:
+Em `Cadeias de conexão`, configure:
+
+- `Nome`: `Default`
+- `Tipo`: `SQLAzure`
+
+Exemplo de valor:
 
 ```text
-Server=tcp:SEU-SERVIDOR.database.windows.net,1433;Initial Catalog=SEU-BANCO;Persist Security Info=False;User ID=SEU-USUARIO;Password=SUA-SENHA;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;
+Server=tcp:finovasqlserver.database.windows.net,1433;Initial Catalog=finova-db;Persist Security Info=False;User ID=finovadmin;Password=SUA-SENHA;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;
 ```
 
-`Jwt__Key` deve ter pelo menos 32 caracteres.
+## Recuperação de senha
 
-## Banco de dados
+O fluxo usa tokens de uso único na tabela `PasswordResetTokens`.
 
-Depois de criar o Azure SQL Database, aplique as migrations a partir da sua maquina:
+Depois de publicar a API, aplique a migration nova:
 
 ```powershell
 cd server\FinanceDashboard.Api
-dotnet ef database update --connection "Server=tcp:SEU-SERVIDOR.database.windows.net,1433;Initial Catalog=SEU-BANCO;Persist Security Info=False;User ID=SEU-USUARIO;Password=SUA-SENHA;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+dotnet ef database update
 ```
 
-## Ordem recomendada
+Para produção, configure SMTP no `App Service`; sem SMTP, o token é gerado, mas o e-mail não será enviado.
 
-1. Criar o App Service `finova-api`
-2. Baixar o publish profile e salvar em `AZURE_WEBAPP_PUBLISH_PROFILE`
-3. Configurar as variaveis do App Service
-4. Criar o Azure SQL Database
-5. Rodar as migrations
-6. Configurar `VITE_API_URL` no GitHub
-7. Fazer push na branch principal para disparar os dois workflows
+Para testes controlados, é possível habilitar temporariamente:
 
-## Validacoes
+```text
+PasswordReset__ExposeResetUrlInResponse=true
+```
 
-Teste estes enderecos depois do deploy:
+Não deixe essa configuração ativa em produção aberta.
+
+## Domínio Customizado
+
+Para trocar o domínio do frontend:
+
+1. Compre ou use um domínio existente.
+2. No `Static Web App`, abra `Custom domains`.
+3. Adicione o domínio desejado.
+4. Configure os registros DNS indicados pelo Azure.
+5. Aguarde a validação e emissão do certificado.
+6. Atualize no `App Service`:
+   - `Cors__AllowedOrigins__0=https://SEU-DOMINIO`
+   - `Client__BaseUrl=https://SEU-DOMINIO`
+7. Atualize links/documentação do projeto.
+
+Se também quiser customizar o domínio da API, configure um domínio separado, por exemplo:
+
+```text
+api.seu-dominio.com
+```
+
+Depois atualize no GitHub Actions:
+
+```text
+VITE_API_URL=https://api.seu-dominio.com/api
+```
+
+## Validações
+
+Teste estes endereços depois do deploy:
 
 - frontend: `https://happy-coast-09654c410.2.azurestaticapps.net`
-- health da API: `https://finova-api.azurewebsites.net/health`
+- health da API: `https://finova-api-b9g4bpcadyegheed.brazilsouth-01.azurewebsites.net/health`
+- recuperação: `/forgot-password`
+- redefinição: `/reset-password?token=...`
 
-## Observacao sobre acesso publico
+## Observação Sobre Acesso Público
 
-O `App Service` deve ficar `Public` no acesso de rede para o frontend conseguir chamar a API. A protecao dos endpoints continua sendo feita pelo JWT da propria aplicacao.
+O `App Service` deve ficar `Public` no acesso de rede para o frontend conseguir chamar a API. A proteção dos endpoints continua sendo feita pelo JWT da própria aplicação.

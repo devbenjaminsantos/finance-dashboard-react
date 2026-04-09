@@ -56,7 +56,7 @@ export async function apiRequest(path, options = {}) {
         }
       }
     } catch {
-      // Mantem a mensagem padrao quando a resposta nao puder ser lida.
+      // Mantém a mensagem padrão quando a resposta não puder ser lida.
     }
 
     throw new Error(message);

@@ -4,6 +4,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { TransactionsProvider } from "./features/transactions/TransactionsProvider";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
+import Profile from "./pages/Profile";
 import Register from "./pages/Register";
 import Transactions from "./pages/Transactions";
 
@@ -32,6 +33,15 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Transactions />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/perfil"
+              element={
+                <ProtectedRoute>
+                  <Profile />
                 </ProtectedRoute>
               }
             />

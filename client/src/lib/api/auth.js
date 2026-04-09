@@ -6,8 +6,7 @@ export async function loginRequest(email, password) {
     body: JSON.stringify({ email, password }),
   });
 
-  localStorage.setItem("token", data.token);
-  localStorage.setItem("user", JSON.stringify(data.user ?? null));
+  persistSession(data.token, data.user ?? null);
 
   return data;
 }
@@ -22,10 +21,22 @@ export async function registerRequest(name, email, password) {
 export function clearStoredSession() {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
+  dispatchSessionChange();
 }
 
 export function logout() {
   clearStoredSession();
+}
+
+export function persistSession(token, user) {
+  localStorage.setItem("token", token);
+  localStorage.setItem("user", JSON.stringify(user ?? null));
+  dispatchSessionChange();
+}
+
+export function setStoredUser(user) {
+  localStorage.setItem("user", JSON.stringify(user ?? null));
+  dispatchSessionChange();
 }
 
 export function getStoredUser() {
@@ -81,4 +92,22 @@ export function hasValidSession() {
   }
 
   return true;
+}
+
+export function getProfile() {
+  return apiRequest("/profile");
+}
+
+export async function updateProfileRequest(payload) {
+  const user = await apiRequest("/profile", {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+
+  setStoredUser(user);
+  return user;
+}
+
+function dispatchSessionChange() {
+  window.dispatchEvent(new Event("finova-session-change"));
 }

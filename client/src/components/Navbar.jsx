@@ -1,13 +1,28 @@
+import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { getStoredUser, hasValidSession, logout } from "../lib/api/auth";
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const hasSession = hasValidSession();
-  const user = getStoredUser();
+  const [hasSession, setHasSession] = useState(() => hasValidSession());
+  const [user, setUser] = useState(() => getStoredUser());
 
   const linkClass = ({ isActive }) =>
     "nav-link px-3" + (isActive ? " fw-semibold text-white" : " text-white-50");
+
+  useEffect(() => {
+    function syncSession() {
+      setHasSession(hasValidSession());
+      setUser(getStoredUser());
+    }
+
+    syncSession();
+    window.addEventListener("finova-session-change", syncSession);
+
+    return () => {
+      window.removeEventListener("finova-session-change", syncSession);
+    };
+  }, []);
 
   function handleLogout() {
     logout();
@@ -45,6 +60,9 @@ export default function Navbar() {
                 </NavLink>
                 <NavLink className={linkClass} to="/transacoes">
                   Transações
+                </NavLink>
+                <NavLink className={linkClass} to="/perfil">
+                  Perfil
                 </NavLink>
 
                 <span className="text-white-50 small ms-lg-3 me-lg-3 mt-2 mt-lg-0">

@@ -11,6 +11,16 @@ export async function loginRequest(email, password) {
   return data;
 }
 
+export async function demoLoginRequest() {
+  const data = await apiRequest("/auth/demo-login", {
+    method: "POST",
+  });
+
+  persistSession(data.token, data.user ?? null);
+
+  return data;
+}
+
 export async function registerRequest(name, email, password) {
   return apiRequest("/auth/register", {
     method: "POST",

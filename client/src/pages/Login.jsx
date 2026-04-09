@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { hasValidSession, loginRequest } from "../lib/api/auth";
+import { demoLoginRequest, hasValidSession, loginRequest } from "../lib/api/auth";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -9,6 +9,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDemoSubmitting, setIsDemoSubmitting] = useState(false);
 
   if (hasValidSession()) {
     return <Navigate to="/" replace />;
@@ -26,6 +27,20 @@ export default function Login() {
       setError(err.message || "Falha ao fazer login.");
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleDemoLogin() {
+    setError("");
+    setIsDemoSubmitting(true);
+
+    try {
+      await demoLoginRequest();
+      navigate("/");
+    } catch (err) {
+      setError(err.message || "Não foi possível abrir a demonstração.");
+    } finally {
+      setIsDemoSubmitting(false);
     }
   }
 
@@ -47,6 +62,26 @@ export default function Login() {
             </p>
           </div>
 
+          <div className="d-grid gap-2 mb-4">
+            <button
+              type="button"
+              className="btn finova-btn-light"
+              onClick={handleDemoLogin}
+              disabled={isSubmitting || isDemoSubmitting}
+            >
+              {isDemoSubmitting ? "Abrindo demonstração..." : "Entrar como demonstração"}
+            </button>
+            <p className="finova-subtitle small mb-0 text-center">
+              Explore uma conta pronta, com dados fictícios e indicadores preenchidos.
+            </p>
+          </div>
+
+          <div className="d-flex align-items-center gap-3 mb-4">
+            <hr className="flex-grow-1" />
+            <span className="finova-subtitle small">ou</span>
+            <hr className="flex-grow-1" />
+          </div>
+
           <form onSubmit={handleSubmit} className="d-grid gap-3">
             <div>
               <label className="form-label text-dark fw-medium">E-mail</label>
@@ -56,7 +91,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seuemail@exemplo.com"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isDemoSubmitting}
                 required
               />
             </div>
@@ -77,7 +112,7 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Digite sua senha"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isDemoSubmitting}
                 required
               />
             </div>
@@ -89,7 +124,7 @@ export default function Login() {
             <button
               type="submit"
               className="btn finova-btn-primary"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isDemoSubmitting}
             >
               {isSubmitting ? "Entrando..." : "Entrar"}
             </button>

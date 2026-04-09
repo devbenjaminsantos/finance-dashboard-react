@@ -3,8 +3,8 @@ using FinanceDashboard.Api.DTOs;
 using FinanceDashboard.Api.Models;
 using FinanceDashboard.Api.Services.Auth;
 using FinanceDashboard.Api.Services.Email;
-using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace FinanceDashboard.Api.Controllers
@@ -111,11 +111,50 @@ namespace FinanceDashboard.Api.Controllers
                 });
             }
 
-            return Ok(new AuthResponse
+            return Ok(ToAuthResponse(user));
+        }
+
+        [HttpPost("demo-login")]
+        public async Task<ActionResult<AuthResponse>> DemoLogin()
+        {
+            if (!_configuration.GetValue("Demo:Enabled", true))
             {
-                Token = _tokenService.GenerateToken(user),
-                User = ToAuthUserResponse(user)
-            });
+                return NotFound(new ProblemDetails
+                {
+                    Title = "Conta demo indisponível.",
+                    Status = StatusCodes.Status404NotFound
+                });
+            }
+
+            var demoEmail = _configuration["Demo:Email"] ?? "demo@finova.app";
+            var normalizedEmail = demoEmail.Trim().ToLowerInvariant();
+
+            var user = await _context.Users
+                .Include(existing => existing.Transactions)
+                .FirstOrDefaultAsync(existing => existing.Email == normalizedEmail);
+
+            if (user is null)
+            {
+                user = new User
+                {
+                    Name = "Conta Demo",
+                    Email = normalizedEmail
+                };
+                user.PasswordHash = _passwordHasher.HashPassword(
+                    user,
+                    _configuration["Demo:Password"] ?? "FinovaDemo@2026");
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+            }
+
+            if (!user.Transactions.Any())
+            {
+                SeedDemoTransactions(user.Id);
+                await _context.SaveChangesAsync();
+            }
+
+            return Ok(ToAuthResponse(user));
         }
 
         [HttpPost("forgot-password")]
@@ -216,6 +255,15 @@ namespace FinanceDashboard.Api.Controllers
             return Ok(new { message = "Senha redefinida com sucesso." });
         }
 
+        private AuthResponse ToAuthResponse(User user)
+        {
+            return new AuthResponse
+            {
+                Token = _tokenService.GenerateToken(user),
+                User = ToAuthUserResponse(user)
+            };
+        }
+
         private static AuthUserResponse ToAuthUserResponse(User user)
         {
             return new AuthUserResponse
@@ -240,6 +288,58 @@ namespace FinanceDashboard.Api.Controllers
                 : requestOrigin ?? "http://localhost:5173";
 
             return $"{baseUrl}/reset-password?token={Uri.EscapeDataString(token)}";
+        }
+
+        private void SeedDemoTransactions(int userId)
+        {
+            var today = DateTime.UtcNow.Date;
+
+            _context.Transactions.AddRange(
+                new Transaction
+                {
+                    UserId = userId,
+                    Description = "Salário",
+                    Category = "Receita fixa",
+                    AmountCents = 720000,
+                    Date = today.AddDays(-5),
+                    Type = "income"
+                },
+                new Transaction
+                {
+                    UserId = userId,
+                    Description = "Mercado do mês",
+                    Category = "Alimentação",
+                    AmountCents = 86540,
+                    Date = today.AddDays(-4),
+                    Type = "expense"
+                },
+                new Transaction
+                {
+                    UserId = userId,
+                    Description = "Aluguel",
+                    Category = "Moradia",
+                    AmountCents = 180000,
+                    Date = today.AddDays(-3),
+                    Type = "expense"
+                },
+                new Transaction
+                {
+                    UserId = userId,
+                    Description = "Freelance dashboard",
+                    Category = "Receita extra",
+                    AmountCents = 125000,
+                    Date = today.AddDays(-2),
+                    Type = "income"
+                },
+                new Transaction
+                {
+                    UserId = userId,
+                    Description = "Assinaturas digitais",
+                    Category = "Assinaturas",
+                    AmountCents = 8990,
+                    Date = today.AddDays(-1),
+                    Type = "expense"
+                });
         }
     }
 }

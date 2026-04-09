@@ -79,6 +79,9 @@ No `Azure Portal > App Service > Configurações > Variáveis de ambiente`, conf
 - `Smtp__FromEmail`
 - `Smtp__FromName`
 - `Smtp__EnableSsl`
+- `Demo__Enabled`
+- `Demo__Email`
+- `Demo__Password`
 
 Valores esperados:
 
@@ -90,7 +93,11 @@ Client__BaseUrl=https://happy-coast-09654c410.2.azurestaticapps.net
 Smtp__Port=587
 Smtp__FromName=Finova
 Smtp__EnableSsl=true
+Demo__Enabled=true
+Demo__Email=demo@finova.app
 ```
+
+`Demo__Password` pode ser uma senha forte interna; o usuário final não precisa digitá-la quando usa o botão de demonstração.
 
 Em `Cadeias de conexão`, configure:
 

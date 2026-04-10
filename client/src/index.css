@@ -3,6 +3,7 @@
   --surface: #ffffff;
   --surface-soft: #f1f5f9;
   --border: #e2e8f0;
+  --nav-border: rgba(255, 255, 255, 0.08);
 
   --text: #0f172a;
   --text-muted: #64748b;
@@ -16,6 +17,24 @@
   --radius-sm: 10px;
   --radius-md: 12px;
   --radius-lg: 16px;
+}
+
+:root[data-theme="dark"] {
+  --bg: #09111f;
+  --surface: #0f172a;
+  --surface-soft: #162133;
+  --border: #243247;
+  --nav-border: rgba(148, 163, 184, 0.18);
+
+  --text: #e5edf8;
+  --text-muted: #94a3b8;
+  --primary: #08101e;
+  --primary-hover: #162133;
+  --success: #22c55e;
+  --success-dark: #4ade80;
+  --danger: #f87171;
+  --shadow-sm: 0 10px 24px rgba(2, 6, 23, 0.28);
+  --shadow-md: 0 18px 40px rgba(2, 6, 23, 0.34);
 }
 
 * {
@@ -33,6 +52,7 @@ body {
   font-family: "Inter", sans-serif;
   background: var(--bg);
   color: var(--text);
+  transition: background 180ms ease, color 180ms ease;
 }
 
 a {
@@ -70,6 +90,8 @@ a {
 
 .finova-input,
 .finova-select {
+  background: var(--surface);
+  color: var(--text);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   min-height: 46px;
@@ -109,6 +131,33 @@ a {
 
 .finova-btn-light:hover {
   background: var(--surface-soft);
+}
+
+.finova-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 40px;
+  padding: 0.45rem 0.75rem;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.finova-theme-toggle:hover,
+.finova-theme-toggle:focus {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.finova-navbar-toggler {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.finova-navbar-toggler .navbar-toggler-icon {
+  filter: invert(1);
 }
 
 .finova-badge-income {
@@ -226,4 +275,43 @@ a {
 
 .finova-goal-progress-bar-danger {
   background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+.text-dark,
+.form-label.text-dark,
+.table .text-dark {
+  color: var(--text) !important;
+}
+
+.text-muted {
+  color: var(--text-muted) !important;
+}
+
+.modal-content,
+.table,
+.table > :not(caption) > * > * {
+  background-color: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.table {
+  --bs-table-bg: var(--surface);
+  --bs-table-color: var(--text);
+  --bs-table-border-color: var(--border);
+  --bs-table-hover-bg: rgba(148, 163, 184, 0.08);
+  --bs-table-hover-color: var(--text);
+}
+
+.btn-close {
+  filter: var(--finova-close-filter, none);
+}
+
+:root[data-theme="dark"] .btn-close {
+  --finova-close-filter: invert(1) grayscale(1) brightness(200%);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted) !important;
 }

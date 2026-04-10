@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { getStoredUser, hasValidSession, logout } from "../lib/api/auth";
+import { useTheme } from "../theme/ThemeProvider";
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const { theme, isDark, toggleTheme } = useTheme();
   const [hasSession, setHasSession] = useState(() => hasValidSession());
   const [user, setUser] = useState(() => getStoredUser());
 
@@ -32,26 +34,39 @@ export default function Navbar() {
   return (
     <nav
       className="navbar navbar-expand-lg border-bottom"
-      style={{ background: "var(--primary)", borderColor: "rgba(255,255,255,0.08)" }}
+      style={{ background: "var(--primary)", borderColor: "var(--nav-border)" }}
     >
       <div className="container">
         <NavLink className="navbar-brand text-white finova-brand" to="/">
           Finova
         </NavLink>
 
-        <button
-          className="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#nav"
-          aria-controls="nav"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span className="navbar-toggler-icon" />
-        </button>
+        <div className="d-flex align-items-center gap-2 order-lg-2 ms-auto">
+          <button
+            type="button"
+            className="btn finova-theme-toggle"
+            onClick={toggleTheme}
+            aria-label={isDark ? "Ativar tema claro" : "Ativar tema escuro"}
+            title={isDark ? "Ativar tema claro" : "Ativar tema escuro"}
+          >
+            <span aria-hidden="true">{isDark ? "☀" : "☾"}</span>
+            <span className="small">{theme === "dark" ? "Claro" : "Escuro"}</span>
+          </button>
 
-        <div className="collapse navbar-collapse" id="nav">
+          <button
+            className="navbar-toggler finova-navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#nav"
+            aria-controls="nav"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <span className="navbar-toggler-icon" />
+          </button>
+        </div>
+
+        <div className="collapse navbar-collapse order-lg-1" id="nav">
           <div className="navbar-nav ms-auto align-items-lg-center">
             {hasSession ? (
               <>
@@ -59,7 +74,7 @@ export default function Navbar() {
                   Dashboard
                 </NavLink>
                 <NavLink className={linkClass} to="/transacoes">
-                  Transações
+                  Transacoes
                 </NavLink>
                 <NavLink className={linkClass} to="/perfil">
                   Perfil

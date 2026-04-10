@@ -12,7 +12,7 @@ import Transactions from "./pages/Transactions";
 
 export default function App() {
   return (
-    <div className="min-vh-100 bg-light">
+    <div className="finova-page">
       <Navbar />
 
       <main className="container py-4">

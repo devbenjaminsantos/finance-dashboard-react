@@ -8,6 +8,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDemoSubmitting, setIsDemoSubmitting] = useState(false);
 
@@ -18,10 +19,12 @@ export default function Login() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    setInfo("");
     setIsSubmitting(true);
 
     try {
       await loginRequest(email, password);
+      setInfo("Login realizado com sucesso. Redirecionando...");
       navigate("/");
     } catch (err) {
       setError(err.message || "Falha ao fazer login.");
@@ -32,13 +35,16 @@ export default function Login() {
 
   async function handleDemoLogin() {
     setError("");
+    setInfo("Preparando a demonstração...");
     setIsDemoSubmitting(true);
 
     try {
       await demoLoginRequest();
+      setInfo("Demonstração pronta. Redirecionando...");
       navigate("/");
     } catch (err) {
       setError(err.message || "Não foi possível abrir a demonstração.");
+      setInfo("");
     } finally {
       setIsDemoSubmitting(false);
     }
@@ -118,7 +124,15 @@ export default function Login() {
             </div>
 
             {error ? (
-              <div className="alert alert-danger py-2 mb-0">{error}</div>
+              <div className="alert alert-danger py-2 mb-0" role="alert">
+                {error}
+              </div>
+            ) : null}
+
+            {!error && info ? (
+              <div className="alert alert-info py-2 mb-0" role="status">
+                {info}
+              </div>
             ) : null}
 
             <button

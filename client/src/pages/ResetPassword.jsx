@@ -89,11 +89,15 @@ export default function ResetPassword() {
             </div>
 
             {error ? (
-              <div className="alert alert-danger py-2 mb-0">{error}</div>
+              <div className="alert alert-danger py-2 mb-0" role="alert">
+                {error}
+              </div>
             ) : null}
 
-            {success ? (
-              <div className="alert alert-success py-2 mb-0">{success}</div>
+            {!error && success ? (
+              <div className="alert alert-success py-2 mb-0" role="status">
+                {success}
+              </div>
             ) : null}
 
             <button
@@ -101,7 +105,7 @@ export default function ResetPassword() {
               className="btn finova-btn-primary"
               disabled={isSubmitting || !!success}
             >
-              {isSubmitting ? "Redefinindo..." : "Redefinir senha"}
+              {isSubmitting ? "Redefinindo senha..." : "Redefinir senha"}
             </button>
           </form>
 

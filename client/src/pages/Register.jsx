@@ -9,6 +9,7 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (hasValidSession()) {
@@ -18,11 +19,13 @@ export default function Register() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    setSuccess("");
     setIsSubmitting(true);
 
     try {
       await registerRequest(name, email, password);
-      navigate("/login");
+      setSuccess("Conta criada com sucesso. Redirecionando para o login...");
+      setTimeout(() => navigate("/login"), 900);
     } catch (err) {
       setError(err.message || "Não foi possível criar sua conta.");
     } finally {
@@ -86,10 +89,19 @@ export default function Register() {
                 disabled={isSubmitting}
                 required
               />
+              <div className="form-text">Use pelo menos 6 caracteres.</div>
             </div>
 
             {error ? (
-              <div className="alert alert-danger py-2 mb-0">{error}</div>
+              <div className="alert alert-danger py-2 mb-0" role="alert">
+                {error}
+              </div>
+            ) : null}
+
+            {!error && success ? (
+              <div className="alert alert-success py-2 mb-0" role="status">
+                {success}
+              </div>
             ) : null}
 
             <button

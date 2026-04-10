@@ -30,6 +30,17 @@ export default function ForgotPassword() {
     }
   }
 
+  const localResetPath = resetUrl
+    ? (() => {
+        try {
+          const parsed = new URL(resetUrl);
+          return `${parsed.pathname}${parsed.search}`;
+        } catch {
+          return "";
+        }
+      })()
+    : "";
+
   return (
     <div className="finova-page d-flex align-items-center justify-content-center px-3">
       <div className="w-100" style={{ maxWidth: 500 }}>
@@ -64,17 +75,17 @@ export default function ForgotPassword() {
             </div>
 
             {error ? (
-              <div className="alert alert-danger py-2 mb-0">{error}</div>
+              <div className="alert alert-danger py-2 mb-0" role="alert">
+                {error}
+              </div>
             ) : null}
 
-            {success ? (
-              <div className="alert alert-success py-2 mb-0">
+            {!error && success ? (
+              <div className="alert alert-success py-2 mb-0" role="status">
                 {success}
-                {resetUrl ? (
+                {localResetPath ? (
                   <div className="mt-2">
-                    <Link to={new URL(resetUrl).pathname + new URL(resetUrl).search}>
-                      Abrir link de redefinição
-                    </Link>
+                    <Link to={localResetPath}>Abrir link de redefinição</Link>
                   </div>
                 ) : null}
               </div>
@@ -85,7 +96,7 @@ export default function ForgotPassword() {
               className="btn finova-btn-primary"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Enviando..." : "Enviar instruções"}
+              {isSubmitting ? "Enviando instruções..." : "Enviar instruções"}
             </button>
           </form>
 

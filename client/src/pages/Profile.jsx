@@ -50,7 +50,9 @@ export default function Profile() {
     }
 
     const wantsToChangePassword =
-      form.currentPassword.trim() || form.newPassword.trim() || form.confirmPassword.trim();
+      form.currentPassword.trim() ||
+      form.newPassword.trim() ||
+      form.confirmPassword.trim();
 
     if (wantsToChangePassword) {
       if (!form.currentPassword.trim()) {
@@ -110,7 +112,10 @@ export default function Profile() {
 
       <div className="finova-card p-4 p-md-5" style={{ maxWidth: 760 }}>
         {isLoading ? (
-          <p className="finova-subtitle mb-0">Carregando perfil...</p>
+          <div className="d-flex align-items-center gap-3">
+            <div className="spinner-border spinner-border-sm text-primary" />
+            <p className="finova-subtitle mb-0">Carregando perfil...</p>
+          </div>
         ) : (
           <form onSubmit={handleSubmit} className="row g-3">
             <div className="col-12 col-md-6">
@@ -179,13 +184,17 @@ export default function Profile() {
 
             {error ? (
               <div className="col-12">
-                <div className="alert alert-danger py-2 mb-0">{error}</div>
+                <div className="alert alert-danger py-2 mb-0" role="alert">
+                  {error}
+                </div>
               </div>
             ) : null}
 
-            {success ? (
+            {!error && success ? (
               <div className="col-12">
-                <div className="alert alert-success py-2 mb-0">{success}</div>
+                <div className="alert alert-success py-2 mb-0" role="status">
+                  {success}
+                </div>
               </div>
             ) : null}
 
@@ -195,7 +204,7 @@ export default function Profile() {
                 className="btn finova-btn-primary px-4"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Salvando..." : "Salvar perfil"}
+                {isSubmitting ? "Salvando alterações..." : "Salvar perfil"}
               </button>
             </div>
           </form>

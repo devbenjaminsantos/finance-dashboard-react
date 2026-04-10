@@ -20,19 +20,23 @@ export async function apiRequest(path, options = {}) {
       headers,
     });
   } catch {
+    // Nota para mim: concentrei aqui o erro de conexao para nao repetir fallback
+    // em cada client de endpoint do frontend.
     throw new Error(
-      "Não foi possível conectar com a API. Verifique se o backend está publicado e acessível."
+      "Nao foi possivel conectar com a API. Verifique se o backend esta publicado e acessivel."
     );
   }
 
   if (response.status === 401 && token) {
+    // Nota para mim: 401 com token significa sessao expirada ou invalida.
+    // Eu limpo tudo e forco o login para evitar UI inconsistente.
     clearStoredSession();
     window.location.href = "/login";
-    throw new Error("Sessão expirada. Faça login novamente.");
+    throw new Error("Sessao expirada. Faca login novamente.");
   }
 
   if (!response.ok) {
-    let message = "Erro na requisição";
+    let message = "Erro na requisicao";
 
     try {
       const contentType = response.headers.get("content-type") || "";
@@ -42,6 +46,8 @@ export async function apiRequest(path, options = {}) {
         contentType.includes("application/problem+json") ||
         contentType.includes("+json")
       ) {
+        // Nota para mim: a API devolve tanto JSON comum quanto ProblemDetails.
+        // Por isso tento ler varias chaves conhecidas antes de usar o fallback.
         const data = await response.json();
         message =
           data?.message ||
@@ -56,7 +62,7 @@ export async function apiRequest(path, options = {}) {
         }
       }
     } catch {
-      // Mantém a mensagem padrão quando a resposta não puder ser lida.
+      // Nota para mim: se a resposta falhar ao ser lida, mantenho a mensagem padrao.
     }
 
     throw new Error(message);
@@ -77,8 +83,11 @@ function resolveApiUrl() {
   }
 
   if (import.meta.env.DEV) {
+    // Nota para mim: no ambiente local o backend ASP.NET sobe nessa porta.
     return "http://localhost:5278/api";
   }
 
+  // Nota para mim: em producao esse fallback so funciona quando existe proxy
+  // ou API integrada no mesmo dominio.
   return "/api";
 }

@@ -49,8 +49,9 @@ export default function Navbar() {
             aria-label={isDark ? "Ativar tema claro" : "Ativar tema escuro"}
             title={isDark ? "Ativar tema claro" : "Ativar tema escuro"}
           >
-            <span aria-hidden="true">{isDark ? "Sun" : "Moon"}</span>
-            <span className="small">{theme === "dark" ? "Claro" : "Escuro"}</span>
+            <span className="finova-theme-toggle-icon" aria-hidden="true">
+              {theme === "dark" ? "☀" : "☾"}
+            </span>
           </button>
 
           <button

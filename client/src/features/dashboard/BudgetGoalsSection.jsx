@@ -35,6 +35,8 @@ function normalizeCategory(value) {
 }
 
 function getGoalTone(progress) {
+  // Nota para mim: esse mapeamento controla o estado visual da meta no card
+  // e me ajuda a deixar o status entendivel sem depender so do texto.
   if (progress >= 1) {
     return "danger";
   }
@@ -139,6 +141,9 @@ export default function BudgetGoalsSection({ transactions }) {
   const [feedback, setFeedback] = useState("");
 
   const availableCategories = useMemo(() => {
+    // Nota para mim: metas foram pensadas apenas para despesas.
+    // Mesmo assim eu junto categorias vindas do banco para suportar historico antigo
+    // ou categorias personalizadas que nao estejam na lista base.
     const categorySet = new Set(EXPENSE_TRANSACTION_CATEGORIES);
 
     for (const transaction of transactions) {
@@ -225,6 +230,8 @@ export default function BudgetGoalsSection({ transactions }) {
       amountCents,
     };
 
+    // Nota para mim: categoria null representa a meta geral do mes.
+    // Com categoria preenchida, a meta vale so para aquele grupo.
     setIsSaving(true);
 
     try {
@@ -271,6 +278,8 @@ export default function BudgetGoalsSection({ transactions }) {
   }
 
   async function handleDelete(id) {
+    // Nota para mim: a exclusao impacta o dashboard na hora.
+    // Deixo a confirmacao para evitar apagar meta por clique acidental.
     if (!window.confirm("Remover esta meta mensal?")) {
       return;
     }

@@ -87,6 +87,8 @@ namespace FinanceDashboard.Api.Controllers
                 });
             }
 
+            // Eu invalido links anteriores antes de gerar um novo.
+            // Assim evito deixar varios links de confirmacao ativos para a mesma conta.
             await InvalidateActiveEmailVerificationTokensAsync(user.Id);
             var verificationUrl = await CreateEmailVerificationTokenAsync(user);
 
@@ -128,6 +130,8 @@ namespace FinanceDashboard.Api.Controllers
 
             if (!user.EmailConfirmed)
             {
+                // Nota para mim: o bloqueio por e-mail nao confirmado vem antes da senha
+                // porque a regra de acesso aqui depende primeiro da conta estar validada.
                 await _auditLogService.WriteAsync(
                     action: "auth.login-blocked-unconfirmed-email",
                     entityType: "User",
@@ -198,6 +202,8 @@ namespace FinanceDashboard.Api.Controllers
 
             if (!user.Transactions.Any())
             {
+                // Nota para mim: a conta demo so e populada quando estiver vazia.
+                // Isso me deixa reutilizar o mesmo usuario sem duplicar movimentacoes.
                 SeedDemoTransactions(user.Id);
                 await _context.SaveChangesAsync();
             }
@@ -222,6 +228,8 @@ namespace FinanceDashboard.Api.Controllers
 
             if (user is null || user.EmailConfirmed)
             {
+                // Nota para mim: a resposta e intencionalmente neutra para nao revelar
+                // se um e-mail existe ou nao no sistema.
                 return Ok(new
                 {
                     message = "Se a conta existir e ainda nao estiver confirmada, enviaremos um novo link."
@@ -306,6 +314,8 @@ namespace FinanceDashboard.Api.Controllers
 
             if (user is null)
             {
+                // Nota para mim: mesmo principio do reenvio de confirmacao.
+                // Nao entrego pistas sobre quais e-mails estao cadastrados.
                 return Ok(response);
             }
 
@@ -319,6 +329,8 @@ namespace FinanceDashboard.Api.Controllers
                 token.UsedAtUtc = now;
             }
 
+            // Nota para mim: sempre invalido tokens ativos antes de criar outro.
+            // Isso reduz confusao com links antigos ainda no e-mail do usuario.
             var rawToken = _tokenUtility.GenerateToken();
             var resetToken = new PasswordResetToken
             {
@@ -478,6 +490,8 @@ namespace FinanceDashboard.Api.Controllers
             var configuredBaseUrl = _configuration["Client:BaseUrl"]?.TrimEnd('/');
             var requestOrigin = Request.Headers.Origin.FirstOrDefault()?.TrimEnd('/');
 
+            // Nota para mim: primeiro tento a URL oficial configurada no ambiente.
+            // Sem ela, aproveito a origem da requisicao e, por ultimo, uso localhost.
             return !string.IsNullOrWhiteSpace(configuredBaseUrl)
                 ? configuredBaseUrl
                 : requestOrigin ?? "http://localhost:5173";
@@ -487,6 +501,8 @@ namespace FinanceDashboard.Api.Controllers
         {
             var today = DateTime.UtcNow.Date;
 
+            // Nota para mim: estes dados foram pensados para preencher dashboard,
+            // categorias, filtros e exportacoes ja no primeiro acesso da demo.
             _context.Transactions.AddRange(
                 new Transaction
                 {

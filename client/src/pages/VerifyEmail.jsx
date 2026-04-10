@@ -32,7 +32,7 @@ export default function VerifyEmail() {
           return;
         }
 
-        setError(requestError.message || "Nao foi possivel confirmar o e-mail.");
+        setError(requestError.message || "Nao foi possivel confirmar o seu e-mail.");
       } finally {
         if (active) {
           setIsSubmitting(false);

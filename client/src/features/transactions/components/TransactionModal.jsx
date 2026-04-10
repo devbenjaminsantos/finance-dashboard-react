@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { parseMoneyToCents } from "../../../lib/format/currency";
-import { TRANSACTION_CATEGORIES as CATEGORIES } from "../../../lib/constants/transactionCategories";
+import { getTransactionCategories } from "../../../lib/constants/transactionCategories";
 
 function todayISO() {
   const d = new Date();
@@ -27,7 +27,7 @@ export default function TransactionModal({
   const [date, setDate] = useState(todayISO());
   const [description, setDescription] = useState("");
   const [type, setType] = useState("expense");
-  const [category, setCategory] = useState(CATEGORIES[0]);
+  const [category, setCategory] = useState(getTransactionCategories("expense")[0]);
   const [amount, setAmount] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -37,6 +37,7 @@ export default function TransactionModal({
     () => (isEdit ? "Editar transacao" : "Nova transacao"),
     [isEdit]
   );
+  const categories = useMemo(() => getTransactionCategories(type), [type]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -44,20 +45,28 @@ export default function TransactionModal({
     if (isEdit && initial) {
       setDate((initial.date || "").slice(0, 10) || todayISO());
       setDescription(initial.description || "");
-      setType(initial.type || "expense");
-      setCategory(initial.category || CATEGORIES[0]);
+      const nextType = initial.type || "expense";
+      const nextCategories = getTransactionCategories(nextType);
+      setType(nextType);
+      setCategory(initial.category || nextCategories[0]);
       setAmount(centsToInput(initial.amountCents));
     } else {
       setDate(todayISO());
       setDescription("");
       setType("expense");
-      setCategory(CATEGORIES[0]);
+      setCategory(getTransactionCategories("expense")[0]);
       setAmount("");
     }
 
     setError("");
     setIsSubmitting(false);
   }, [isOpen, isEdit, initial]);
+
+  useEffect(() => {
+    if (!categories.includes(category)) {
+      setCategory(categories[0]);
+    }
+  }, [categories, category]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -184,7 +193,12 @@ export default function TransactionModal({
                 <select
                   className="form-select finova-select"
                   value={type}
-                  onChange={(e) => setType(e.target.value)}
+                  onChange={(e) => {
+                    const nextType = e.target.value;
+                    const nextCategories = getTransactionCategories(nextType);
+                    setType(nextType);
+                    setCategory(nextCategories[0]);
+                  }}
                 >
                   <option value="expense">Despesa</option>
                   <option value="income">Receita</option>
@@ -198,7 +212,7 @@ export default function TransactionModal({
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                 >
-                  {CATEGORIES.map((item) => (
+                  {categories.map((item) => (
                     <option key={item} value={item}>
                       {item}
                     </option>

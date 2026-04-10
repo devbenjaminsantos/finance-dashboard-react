@@ -5,7 +5,7 @@ import {
   getBudgetGoals,
   updateBudgetGoal,
 } from "../../lib/api/budgetGoals";
-import { TRANSACTION_CATEGORIES } from "../../lib/constants/transactionCategories";
+import { EXPENSE_TRANSACTION_CATEGORIES } from "../../lib/constants/transactionCategories";
 import { formatBRLFromCents, parseMoneyToCents } from "../../lib/format/currency";
 
 function currentMonthISO() {
@@ -139,7 +139,7 @@ export default function BudgetGoalsSection({ transactions }) {
   const [feedback, setFeedback] = useState("");
 
   const availableCategories = useMemo(() => {
-    const categorySet = new Set(TRANSACTION_CATEGORIES);
+    const categorySet = new Set(EXPENSE_TRANSACTION_CATEGORIES);
 
     for (const transaction of transactions) {
       if (transaction.category) {

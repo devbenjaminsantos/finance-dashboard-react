@@ -17,7 +17,7 @@ export default function ResetPassword() {
     setSuccess("");
 
     if (!token) {
-      setError("Link de redefinição inválido.");
+      setError("Link de redefinicao invalido.");
       return;
     }
 
@@ -27,7 +27,7 @@ export default function ResetPassword() {
     }
 
     if (newPassword !== confirmPassword) {
-      setError("A confirmação da senha não confere.");
+      setError("A confirmacao da senha nao confere.");
       return;
     }
 
@@ -35,11 +35,11 @@ export default function ResetPassword() {
 
     try {
       await resetPasswordRequest(token, newPassword);
-      setSuccess("Senha redefinida com sucesso. Você já pode fazer login.");
+      setSuccess("Senha redefinida com sucesso. Voce ja pode fazer login.");
       setNewPassword("");
       setConfirmPassword("");
     } catch (err) {
-      setError(err.message || "Não foi possível redefinir sua senha.");
+      setError(err.message || "Nao foi possivel redefinir sua senha.");
     } finally {
       setIsSubmitting(false);
     }
@@ -57,7 +57,7 @@ export default function ResetPassword() {
           <div className="mb-4 text-center">
             <h2 className="finova-title h4 mb-2">Redefinir senha</h2>
             <p className="finova-subtitle mb-0">
-              O link de redefinição expira em 30 minutos.
+              O link de redefinicao expira em 30 minutos.
             </p>
           </div>
 

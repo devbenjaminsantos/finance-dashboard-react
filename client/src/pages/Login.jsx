@@ -8,9 +8,9 @@ import {
 } from "../lib/api/auth";
 
 const demoHighlights = [
-  "Dashboard preenchido com receitas e despesas realistas",
-  "Categorias organizadas para apresentar os graficos",
-  "Fluxo completo de autenticacao e recuperacao de senha",
+  "Conheca o dashboard com dados prontos e metas ja preenchidas",
+  "Teste filtros, relatorios e fluxos sem criar conta",
+  "Explore autenticacao, recuperacao de senha e perfil em minutos",
 ];
 
 export default function Login() {
@@ -114,16 +114,16 @@ export default function Login() {
             <div className="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-start">
               <div>
                 <div className="small text-uppercase fw-semibold text-primary mb-2">
-                  Previa do produto
+                  Experimente antes de se cadastrar
                 </div>
                 <h3 className="finova-title h5 mb-2">Explore a conta demo</h3>
                 <p className="finova-subtitle mb-3">
-                  Entre em segundos e veja o Finova com dados prontos para apresentacao.
+                  Explore todas as funcionalidades sem criar conta e sem preencher cadastro.
                 </p>
                 <div className="d-grid gap-2">
                   {demoHighlights.map((item) => (
                     <div key={item} className="small text-muted">
-                      • {item}
+                      - {item}
                     </div>
                   ))}
                 </div>

@@ -49,7 +49,7 @@ export default function Navbar() {
             aria-label={isDark ? "Ativar tema claro" : "Ativar tema escuro"}
             title={isDark ? "Ativar tema claro" : "Ativar tema escuro"}
           >
-            <span aria-hidden="true">{isDark ? "☀" : "☾"}</span>
+            <span aria-hidden="true">{isDark ? "Sun" : "Moon"}</span>
             <span className="small">{theme === "dark" ? "Claro" : "Escuro"}</span>
           </button>
 

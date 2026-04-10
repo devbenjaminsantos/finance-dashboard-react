@@ -11,6 +11,9 @@ export default function TransactionsTable({
   isLoading = false,
   isMutating = false,
 }) {
+  const summaryLabel =
+    transactions.length === 1 ? "1 transacao" : `${transactions.length} transacoes`;
+
   if (isLoading) {
     return (
       <div className="finova-card p-4">
@@ -25,9 +28,9 @@ export default function TransactionsTable({
         <div>
           <h2 className="finova-title h5 mb-1">Historico financeiro</h2>
           <p className="finova-subtitle small mb-0">
-            {transactions.length} transacao(oes)
+            {summaryLabel}
             {transactions.length !== totalTransactionsCount
-              ? ` de ${totalTransactionsCount}`
+              ? ` de ${totalTransactionsCount} no total`
               : ""}
           </p>
         </div>

@@ -8,7 +8,7 @@ const PERIOD_OPTIONS = [
   { value: "current-month", label: "Mes atual" },
   { value: "last-3-months", label: "Ultimos 3 meses" },
   { value: "last-6-months", label: "Ultimos 6 meses" },
-  { value: "all", label: "Todos os periodos" },
+  { value: "all", label: "Todo o historico" },
 ];
 
 function SummaryCard({ label, value, tone = "default" }) {
@@ -192,7 +192,7 @@ export default function Dashboard() {
                 Nenhum dado financeiro para o periodo selecionado
               </h2>
               <p className="finova-subtitle mb-0">
-                Ajuste o periodo ou adicione novas transacoes para visualizar seu desempenho.
+                Ajuste o periodo ou adicione novas transacoes para acompanhar o seu desempenho.
               </p>
             </div>
           ) : (

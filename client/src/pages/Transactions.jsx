@@ -3,6 +3,7 @@ import TransactionModal from "../features/transactions/components/TransactionMod
 import TransactionsFilters from "../features/transactions/components/TransactionsFilters";
 import TransactionsTable from "../features/transactions/components/TransactionsTable";
 import { useTransactions } from "../features/transactions/useTransactions";
+import { getTransactionCategories } from "../lib/constants/transactionCategories";
 import { formatBRLFromCents } from "../lib/format/currency";
 import { formatBRDate } from "../lib/format/date";
 import { downloadCsv } from "../lib/export/csv";
@@ -47,9 +48,34 @@ export default function Transactions() {
   }, [q, typeFilter, categoryFilter, month, sortBy]);
 
   const categories = useMemo(() => {
-    const set = new Set(transactions.map((t) => t.category).filter(Boolean));
-    return Array.from(set);
-  }, [transactions]);
+    const baseCategories =
+      typeFilter === "all"
+        ? [
+            ...getTransactionCategories("expense"),
+            ...getTransactionCategories("income"),
+          ]
+        : getTransactionCategories(typeFilter);
+
+    const set = new Set(baseCategories);
+
+    for (const transaction of transactions) {
+      if (!transaction.category) {
+        continue;
+      }
+
+      if (typeFilter === "all" || transaction.type === typeFilter) {
+        set.add(transaction.category);
+      }
+    }
+
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [transactions, typeFilter]);
+
+  useEffect(() => {
+    if (categoryFilter !== "all" && !categories.includes(categoryFilter)) {
+      setCategoryFilter("all");
+    }
+  }, [categories, categoryFilter]);
 
   const filtered = useMemo(() => {
     let list = [...transactions];
@@ -185,8 +211,8 @@ export default function Transactions() {
       title: "Relatorio de transacoes",
       subtitle:
         month
-          ? `Periodo filtrado: ${month} | ${filtered.length} item(ns)`
-          : `Todos os periodos | ${filtered.length} item(ns)`,
+          ? `Periodo filtrado: ${month} | ${filtered.length} registro(s)`
+          : `Todos os periodos | ${filtered.length} registro(s)`,
       columns: ["Data", "Descricao", "Categoria", "Tipo", "Valor", "Centavos"],
       rows: getExportRows(),
     });

@@ -1,6 +1,14 @@
+import { useMemo, useState } from "react";
+import DashboardCharts from "../features/dashboard/DashboardCharts";
 import { useTransactions } from "../features/transactions/useTransactions";
 import { formatBRLFromCents } from "../lib/format/currency";
-import DashboardCharts from "../features/dashboard/DashboardCharts";
+
+const PERIOD_OPTIONS = [
+  { value: "current-month", label: "Mês atual" },
+  { value: "last-3-months", label: "Últimos 3 meses" },
+  { value: "last-6-months", label: "Últimos 6 meses" },
+  { value: "all", label: "Todos os períodos" },
+];
 
 function SummaryCard({ label, value, tone = "default" }) {
   const toneMap = {
@@ -47,18 +55,107 @@ function SummaryCard({ label, value, tone = "default" }) {
   );
 }
 
+function currentMonthISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function lastNMonthsISO(n) {
+  const months = [];
+  const d = new Date();
+  d.setDate(1);
+
+  for (let i = 0; i < n; i++) {
+    months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+    d.setMonth(d.getMonth() - 1);
+  }
+
+  return months.reverse();
+}
+
+function getMonthsForPeriod(period) {
+  switch (period) {
+    case "current-month":
+      return [currentMonthISO()];
+    case "last-3-months":
+      return lastNMonthsISO(3);
+    case "last-6-months":
+      return lastNMonthsISO(6);
+    case "all":
+    default:
+      return [];
+  }
+}
+
 export default function Dashboard() {
-  const { summary, isLoading, transactions } = useTransactions();
+  const { isLoading, transactions } = useTransactions();
+  const [period, setPeriod] = useState("current-month");
+
+  const selectedPeriodLabel = useMemo(
+    () => PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? "Mês atual",
+    [period]
+  );
+
+  const chartMonths = useMemo(
+    () => (period === "all" ? lastNMonthsISO(6) : getMonthsForPeriod(period)),
+    [period]
+  );
+
+  const filteredTransactions = useMemo(() => {
+    if (period === "all") {
+      return transactions;
+    }
+
+    const allowedMonths = new Set(getMonthsForPeriod(period));
+    return transactions.filter((transaction) =>
+      allowedMonths.has((transaction.date || "").slice(0, 7))
+    );
+  }, [transactions, period]);
+
+  const summary = useMemo(() => {
+    let income = 0;
+    let expense = 0;
+
+    for (const transaction of filteredTransactions) {
+      const value = Number(transaction.amountCents) || 0;
+
+      if (transaction.type === "income") {
+        income += value;
+      } else {
+        expense += value;
+      }
+    }
+
+    return {
+      income,
+      expense,
+      balance: income - expense,
+    };
+  }, [filteredTransactions]);
 
   return (
     <section className="finova-section-space">
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 gap-2">
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 gap-3">
         <div>
           <h1 className="finova-title mb-1">Dashboard</h1>
           <p className="finova-subtitle mb-0">
-            Visualize seu saldo, acompanhe receitas e monitore despesas com
-            clareza.
+            Visualize seu saldo, acompanhe receitas e monitore despesas com clareza.
           </p>
+        </div>
+
+        <div style={{ minWidth: 220 }}>
+          <label className="form-label text-dark fw-medium">Período</label>
+          <select
+            className="form-select finova-select"
+            value={period}
+            onChange={(event) => setPeriod(event.target.value)}
+          >
+            {PERIOD_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -86,19 +183,22 @@ export default function Dashboard() {
             />
           </div>
 
-          {transactions.length === 0 ? (
+          {filteredTransactions.length === 0 ? (
             <div className="finova-card p-4">
               <h2 className="finova-subtitle h5 mb-2">
-                Nenhum dado financeiro ainda
+                Nenhum dado financeiro para o período selecionado
               </h2>
               <p className="finova-subtitle mb-0">
-                Adicione sua primeira transação para começar a visualizar seu
-                desempenho financeiro.
+                Ajuste o período ou adicione novas transações para visualizar seu desempenho.
               </p>
             </div>
           ) : (
             <div className="mt-2">
-              <DashboardCharts />
+              <DashboardCharts
+                transactions={filteredTransactions}
+                chartMonths={chartMonths}
+                periodLabel={selectedPeriodLabel}
+              />
             </div>
           )}
         </>

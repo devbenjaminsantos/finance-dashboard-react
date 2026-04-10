@@ -12,7 +12,6 @@ import {
   YAxis,
   Cell,
 } from "recharts";
-import { useTransactions } from "../transactions/useTransactions";
 import { formatBRLFromCents } from "../../lib/format/currency";
 
 function currentMonthISO() {
@@ -26,12 +25,14 @@ function lastNMonthsISO(n = 6) {
   const out = [];
   const d = new Date();
   d.setDate(1);
+
   for (let i = 0; i < n; i++) {
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, "0");
     out.push(`${yyyy}-${mm}`);
     d.setMonth(d.getMonth() - 1);
   }
+
   return out.reverse();
 }
 
@@ -55,12 +56,11 @@ function formatAxisValue(value) {
   return `R$ ${brl.toFixed(0)}`;
 }
 
-function buildExpenseByCategory(transactions, month) {
+function buildExpenseByCategory(transactions) {
   const map = new Map();
 
   for (const t of transactions) {
     if (t.type !== "expense") continue;
-    if (month && !(t.date || "").startsWith(month)) continue;
 
     const cat = t.category || "Outros";
     map.set(cat, (map.get(cat) || 0) + cents(t.amountCents));
@@ -72,33 +72,38 @@ function buildExpenseByCategory(transactions, month) {
 }
 
 function buildIncomeVsExpenseByMonth(transactions, months) {
-  const base = new Map(months.map((m) => [m, { month: m, income: 0, expense: 0 }]));
+  const base = new Map(
+    months.map((month) => [month, { month, income: 0, expense: 0 }])
+  );
 
   for (const t of transactions) {
-    const m = (t.date || "").slice(0, 7);
-    if (!base.has(m)) continue;
+    const month = (t.date || "").slice(0, 7);
 
-    if (t.type === "income") base.get(m).income += cents(t.amountCents);
-    else base.get(m).expense += cents(t.amountCents);
+    if (!base.has(month)) continue;
+
+    if (t.type === "income") {
+      base.get(month).income += cents(t.amountCents);
+    } else {
+      base.get(month).expense += cents(t.amountCents);
+    }
   }
 
-  return months.map((m) => base.get(m));
+  return months.map((month) => base.get(month));
 }
 
-export default function DashboardCharts() {
-  const { transactions } = useTransactions();
-
-  const month = useMemo(() => currentMonthISO(), []);
-  const months = useMemo(() => lastNMonthsISO(6), []);
-
+export default function DashboardCharts({
+  transactions,
+  chartMonths,
+  periodLabel,
+}) {
   const expenseByCategory = useMemo(
-    () => buildExpenseByCategory(transactions, month),
-    [transactions, month]
+    () => buildExpenseByCategory(transactions),
+    [transactions]
   );
 
   const incomeVsExpense = useMemo(
-    () => buildIncomeVsExpenseByMonth(transactions, months),
-    [transactions, months]
+    () => buildIncomeVsExpenseByMonth(transactions, chartMonths),
+    [transactions, chartMonths]
   );
 
   const hasIncomeVsExpenseData = useMemo(
@@ -106,38 +111,50 @@ export default function DashboardCharts() {
     [incomeVsExpense]
   );
 
-  // paleta simples
-  const PIE_COLORS = ["#0d6efd", "#198754", "#dc3545", "#ffc107", "#6f42c1", "#20c997", "#fd7e14", "#6c757d"];
+  const pieColors = [
+    "#0d6efd",
+    "#198754",
+    "#dc3545",
+    "#ffc107",
+    "#6f42c1",
+    "#20c997",
+    "#fd7e14",
+    "#6c757d",
+  ];
 
   const pieLegend = useMemo(
     () =>
-      expenseByCategory.map((x) => ({
-        ...x,
-        label: `${x.name} — ${formatBRLFromCents(x.value)}`,
+      expenseByCategory.map((item) => ({
+        ...item,
+        label: `${item.name} - ${formatBRLFromCents(item.value)}`,
       })),
     [expenseByCategory]
   );
 
+  const categoryCaption =
+    periodLabel === "Todos os períodos"
+      ? "Todas as despesas registradas"
+      : periodLabel;
+
   return (
     <div className="row g-3">
-      {/* Pizza */}
       <div className="col-12 col-lg-5">
         <div className="finova-card h-100">
           <div className="p-4">
             <div className="d-flex justify-content-between align-items-baseline mb-2">
               <h2 className="finova-title h5 mb-0">Despesas por categoria</h2>
-              <span className="text-muted small">{monthLabel(month)}</span>
+              <span className="text-muted small">{categoryCaption}</span>
             </div>
 
             {expenseByCategory.length === 0 ? (
-              <div className="finova-subtitle">Sem despesas registradas no mês atual.</div>
+              <div className="finova-subtitle">
+                Sem despesas registradas no período selecionado.
+              </div>
             ) : (
               <div style={{ width: "100%", height: 320 }}>
                 <ResponsiveContainer>
                   <PieChart>
-                    <Tooltip
-                      formatter={(v) => formatBRLFromCents(v)}
-                    />
+                    <Tooltip formatter={(value) => formatBRLFromCents(value)} />
                     <Pie
                       data={pieLegend}
                       dataKey="value"
@@ -149,7 +166,7 @@ export default function DashboardCharts() {
                       {expenseByCategory.map((_, idx) => (
                         <Cell
                           key={expenseByCategory[idx].name}
-                          fill={PIE_COLORS[idx % PIE_COLORS.length]}
+                          fill={pieColors[idx % pieColors.length]}
                         />
                       ))}
                     </Pie>
@@ -162,12 +179,11 @@ export default function DashboardCharts() {
         </div>
       </div>
 
-      {/* Barras */}
       <div className="col-12 col-lg-7">
         <div className="finova-card h-100">
           <div className="p-4">
-            <h2 className="finova-title h5 mb-2">Receitas vs Despesas</h2>
-            <p className="finova-subtitle small mb-3">Últimos 6 meses</p>
+            <h2 className="finova-title h5 mb-2">Receitas vs despesas</h2>
+            <p className="finova-subtitle small mb-3">{periodLabel}</p>
 
             {hasIncomeVsExpenseData ? (
               <>
@@ -178,7 +194,7 @@ export default function DashboardCharts() {
                       <XAxis dataKey="month" tickFormatter={monthLabel} />
                       <YAxis tickFormatter={formatAxisValue} width={70} />
                       <Tooltip
-                        formatter={(v) => formatBRLFromCents(v)}
+                        formatter={(value) => formatBRLFromCents(value)}
                         labelFormatter={monthLabel}
                       />
                       <Legend />
@@ -189,12 +205,12 @@ export default function DashboardCharts() {
                 </div>
 
                 <div className="text-muted small">
-                  Valores em BRL (centavos → reais). Baseado nas transações salvas no navegador.
+                  Valores em BRL com base nas transações salvas no período selecionado.
                 </div>
               </>
             ) : (
               <div className="finova-subtitle">
-                Sem movimentações suficientes para exibir o comparativo dos últimos meses.
+                Sem movimentações suficientes para exibir o comparativo do período selecionado.
               </div>
             )}
           </div>

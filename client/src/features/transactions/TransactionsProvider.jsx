@@ -50,18 +50,18 @@ export function TransactionsProvider({ children }) {
 
   const addTransaction = useCallback(async (data) => {
     const created = await createTransaction(data);
-    setTransactions((prev) => [created, ...prev]);
+    setTransactions((current) => [created, ...current]);
   }, []);
 
   const removeTransaction = useCallback(async (id) => {
     await deleteTransaction(id);
-    setTransactions((prev) => prev.filter((t) => t.id !== id));
+    setTransactions((current) => current.filter((transaction) => transaction.id !== id));
   }, []);
 
   const updateTransactionItem = useCallback(async (id, data) => {
     const updated = await updateTransaction(id, data);
-    setTransactions((prev) =>
-      prev.map((t) => (t.id === id ? updated : t))
+    setTransactions((current) =>
+      current.map((transaction) => (transaction.id === id ? updated : transaction))
     );
   }, []);
 
@@ -69,10 +69,14 @@ export function TransactionsProvider({ children }) {
     let income = 0;
     let expense = 0;
 
-    for (const t of transactions) {
-      const value = Number(t.amountCents) || 0;
-      if (t.type === "income") income += value;
-      else expense += value;
+    for (const transaction of transactions) {
+      const value = Number(transaction.amountCents) || 0;
+
+      if (transaction.type === "income") {
+        income += value;
+      } else {
+        expense += value;
+      }
     }
 
     return {

@@ -12,7 +12,7 @@ export default function TransactionsTable({
   isMutating = false,
 }) {
   const summaryLabel =
-    transactions.length === 1 ? "1 transacao" : `${transactions.length} transacoes`;
+    transactions.length === 1 ? "1 transação" : `${transactions.length} transações`;
 
   if (isLoading) {
     return (
@@ -80,34 +80,34 @@ export default function TransactionsTable({
             </thead>
 
             <tbody>
-              {transactions.map((t) => (
-                <tr key={t.id}>
-                  <td>{formatBRDate(t.date)}</td>
+              {transactions.map((transaction) => (
+                <tr key={transaction.id}>
+                  <td>{formatBRDate(transaction.date)}</td>
 
                   <td>
-                    <div className="fw-medium text-dark">{t.description}</div>
+                    <div className="fw-medium text-dark">{transaction.description}</div>
                   </td>
 
                   <td>
                     <span className="finova-subtitle">
-                      {t.category || "Sem categoria"}
+                      {transaction.category || "Sem categoria"}
                     </span>
                   </td>
 
                   <td>
                     <span
                       className={
-                        t.type === "income"
+                        transaction.type === "income"
                           ? "finova-badge-income"
                           : "finova-badge-expense"
                       }
                     >
-                      {t.type === "income" ? "Receita" : "Despesa"}
+                      {transaction.type === "income" ? "Receita" : "Despesa"}
                     </span>
                   </td>
 
                   <td className="text-end fw-semibold">
-                    {formatBRLFromCents(t.amountCents)}
+                    {formatBRLFromCents(transaction.amountCents)}
                   </td>
 
                   <td className="text-end">
@@ -115,7 +115,7 @@ export default function TransactionsTable({
                       <button
                         type="button"
                         className="btn finova-btn-light btn-sm"
-                        onClick={() => onEdit(t)}
+                        onClick={() => onEdit(transaction)}
                         disabled={isMutating}
                       >
                         Editar
@@ -124,7 +124,7 @@ export default function TransactionsTable({
                       <button
                         type="button"
                         className="btn btn-sm btn-outline-danger"
-                        onClick={() => onRemove(t.id)}
+                        onClick={() => onRemove(transaction.id)}
                         disabled={isMutating}
                       >
                         Remover

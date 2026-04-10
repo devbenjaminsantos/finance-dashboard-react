@@ -22,7 +22,7 @@ export default function TransactionsFilters({
             className="form-control finova-input"
             placeholder="Buscar por descrição..."
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={(event) => setQ(event.target.value)}
           />
         </div>
 
@@ -31,7 +31,7 @@ export default function TransactionsFilters({
           <select
             className="form-select finova-select"
             value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
+            onChange={(event) => setTypeFilter(event.target.value)}
           >
             <option value="all">Todos</option>
             <option value="income">Receitas</option>
@@ -44,7 +44,7 @@ export default function TransactionsFilters({
           <select
             className="form-select finova-select"
             value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
+            onChange={(event) => setCategoryFilter(event.target.value)}
           >
             <option value="all">Todas</option>
             {categories.map((category) => (
@@ -61,7 +61,7 @@ export default function TransactionsFilters({
             type="month"
             className="form-control finova-input"
             value={month}
-            onChange={(e) => setMonth(e.target.value)}
+            onChange={(event) => setMonth(event.target.value)}
           />
         </div>
 
@@ -70,7 +70,7 @@ export default function TransactionsFilters({
           <select
             className="form-select finova-select"
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
+            onChange={(event) => setSortBy(event.target.value)}
           >
             <option value="date_desc">Mais recentes</option>
             <option value="date_asc">Mais antigas</option>

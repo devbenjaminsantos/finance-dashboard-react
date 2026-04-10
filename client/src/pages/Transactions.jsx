@@ -82,21 +82,21 @@ export default function Transactions() {
 
     if (q.trim()) {
       const search = q.trim().toLowerCase();
-      list = list.filter((t) =>
-        (t.description || "").toLowerCase().includes(search)
+      list = list.filter((transaction) =>
+        (transaction.description || "").toLowerCase().includes(search)
       );
     }
 
     if (typeFilter !== "all") {
-      list = list.filter((t) => t.type === typeFilter);
+      list = list.filter((transaction) => transaction.type === typeFilter);
     }
 
     if (categoryFilter !== "all") {
-      list = list.filter((t) => t.category === categoryFilter);
+      list = list.filter((transaction) => transaction.category === categoryFilter);
     }
 
     if (month) {
-      list = list.filter((t) => (t.date || "").startsWith(month));
+      list = list.filter((transaction) => (transaction.date || "").startsWith(month));
     }
 
     switch (sortBy) {
@@ -105,14 +105,12 @@ export default function Transactions() {
         break;
       case "amount_desc":
         list.sort(
-          (a, b) =>
-            (Number(b.amountCents) || 0) - (Number(a.amountCents) || 0)
+          (a, b) => (Number(b.amountCents) || 0) - (Number(a.amountCents) || 0)
         );
         break;
       case "amount_asc":
         list.sort(
-          (a, b) =>
-            (Number(a.amountCents) || 0) - (Number(b.amountCents) || 0)
+          (a, b) => (Number(a.amountCents) || 0) - (Number(b.amountCents) || 0)
         );
         break;
       case "date_desc":
@@ -125,14 +123,20 @@ export default function Transactions() {
   }, [transactions, q, typeFilter, categoryFilter, month, sortBy]);
 
   function openCreate() {
-    if (isMutating) return;
+    if (isMutating) {
+      return;
+    }
+
     setMode("create");
     setSelected(null);
     setIsOpen(true);
   }
 
   function openEdit(transaction) {
-    if (isMutating) return;
+    if (isMutating) {
+      return;
+    }
+
     setMode("edit");
     setSelected(transaction);
     setIsOpen(true);
@@ -144,6 +148,7 @@ export default function Transactions() {
 
   async function handleSubmit(data) {
     setIsMutating(true);
+
     try {
       if (mode === "edit" && selected) {
         await updateTransaction(selected.id, data);
@@ -156,13 +161,16 @@ export default function Transactions() {
   }
 
   async function handleRemove(id) {
-    if (confirm("Remover esta transação?")) {
-      setIsMutating(true);
-      try {
-        await removeTransaction(id);
-      } finally {
-        setIsMutating(false);
-      }
+    if (!window.confirm("Remover esta transação?")) {
+      return;
+    }
+
+    setIsMutating(true);
+
+    try {
+      await removeTransaction(id);
+    } finally {
+      setIsMutating(false);
     }
   }
 

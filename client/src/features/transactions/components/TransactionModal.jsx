@@ -3,15 +3,18 @@ import { parseMoneyToCents } from "../../../lib/format/currency";
 import { getTransactionCategories } from "../../../lib/constants/transactionCategories";
 
 function todayISO() {
-  const d = new Date();
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
+  const date = new Date();
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}`;
 }
 
 function centsToInput(value) {
-  if (!Number.isFinite(Number(value))) return "";
+  if (!Number.isFinite(Number(value))) {
+    return "";
+  }
+
   return (Number(value) / 100).toFixed(2).replace(".", ",");
 }
 
@@ -40,13 +43,16 @@ export default function TransactionModal({
   const categories = useMemo(() => getTransactionCategories(type), [type]);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      return;
+    }
 
     if (isEdit && initial) {
-      setDate((initial.date || "").slice(0, 10) || todayISO());
-      setDescription(initial.description || "");
       const nextType = initial.type || "expense";
       const nextCategories = getTransactionCategories(nextType);
+
+      setDate((initial.date || "").slice(0, 10) || todayISO());
+      setDescription(initial.description || "");
       setType(nextType);
       setCategory(initial.category || nextCategories[0]);
       setAmount(centsToInput(initial.amountCents));
@@ -69,7 +75,9 @@ export default function TransactionModal({
   }, [categories, category]);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      return;
+    }
 
     descriptionInputRef.current?.focus();
 
@@ -89,8 +97,8 @@ export default function TransactionModal({
     };
   }, [isOpen, isSubmitting, onClose]);
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  async function handleSubmit(event) {
+    event.preventDefault();
     setError("");
     setIsSubmitting(true);
 
@@ -124,14 +132,16 @@ export default function TransactionModal({
       });
 
       onClose();
-    } catch (err) {
-      setError(err.message || "Não foi possível salvar a transação.");
+    } catch (requestError) {
+      setError(requestError.message || "Não foi possível salvar a transação.");
     } finally {
       setIsSubmitting(false);
     }
   }
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <div
@@ -172,7 +182,7 @@ export default function TransactionModal({
                   type="date"
                   className="form-control finova-input"
                   value={date}
-                  onChange={(e) => setDate(e.target.value)}
+                  onChange={(event) => setDate(event.target.value)}
                 />
               </div>
 
@@ -183,7 +193,7 @@ export default function TransactionModal({
                   type="text"
                   className="form-control finova-input"
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={(event) => setDescription(event.target.value)}
                   placeholder="Ex: Mercado do mês"
                 />
               </div>
@@ -193,8 +203,8 @@ export default function TransactionModal({
                 <select
                   className="form-select finova-select"
                   value={type}
-                  onChange={(e) => {
-                    const nextType = e.target.value;
+                  onChange={(event) => {
+                    const nextType = event.target.value;
                     const nextCategories = getTransactionCategories(nextType);
                     setType(nextType);
                     setCategory(nextCategories[0]);
@@ -210,7 +220,7 @@ export default function TransactionModal({
                 <select
                   className="form-select finova-select"
                   value={category}
-                  onChange={(e) => setCategory(e.target.value)}
+                  onChange={(event) => setCategory(event.target.value)}
                 >
                   {categories.map((item) => (
                     <option key={item} value={item}>
@@ -226,7 +236,7 @@ export default function TransactionModal({
                   type="text"
                   className="form-control finova-input"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  onChange={(event) => setAmount(event.target.value)}
                   placeholder="150,00"
                   inputMode="decimal"
                 />

@@ -8,7 +8,7 @@ import {
 } from "../lib/api/auth";
 
 const demoHighlights = [
-  "Conheca o dashboard com dados prontos e metas já preenchidas",
+  "Conheça o dashboard com dados prontos e metas já preenchidas",
   "Teste filtros, relatórios e fluxos sem criar conta",
   "Explore autenticação, recuperação de senha e perfil em minutos",
 ];

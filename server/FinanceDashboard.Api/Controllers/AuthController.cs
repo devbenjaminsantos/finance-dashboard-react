@@ -82,7 +82,7 @@ namespace FinanceDashboard.Api.Controllers
             {
                 return Conflict(new ProblemDetails
                 {
-                    Title = "E-mail ja cadastrado.",
+                    Title = "E-mail já cadastrado.",
                     Status = StatusCodes.Status409Conflict
                 });
             }
@@ -98,7 +98,7 @@ namespace FinanceDashboard.Api.Controllers
             }
             catch (Exception exception)
             {
-                _logger.LogWarning(exception, "Nao foi possivel enviar o e-mail de confirmacao.");
+                _logger.LogWarning(exception, "Não foi possível enviar o e-mail de confirmação.");
             }
 
             await _auditLogService.WriteAsync(
@@ -106,7 +106,7 @@ namespace FinanceDashboard.Api.Controllers
                 entityType: "User",
                 entityId: user.Id.ToString(),
                 userId: user.Id,
-                summary: "Conta criada e aguardando confirmacao de e-mail.");
+                summary: "Conta criada e aguardando confirmação de e-mail.");
 
             return StatusCode(StatusCodes.Status201Created, ToAuthUserResponse(user));
         }
@@ -123,21 +123,21 @@ namespace FinanceDashboard.Api.Controllers
             {
                 return NotFound(new ProblemDetails
                 {
-                    Title = "Usuario nao encontrado.",
+                    Title = "Usuário não encontrado.",
                     Status = StatusCodes.Status404NotFound
                 });
             }
 
             if (!user.EmailConfirmed)
             {
-                // Nota para mim: o bloqueio por e-mail nao confirmado vem antes da senha
+                // O bloqueio por e-mail não confirmado vem antes da senha
                 // porque a regra de acesso aqui depende primeiro da conta estar validada.
                 await _auditLogService.WriteAsync(
                     action: "auth.login-blocked-unconfirmed-email",
                     entityType: "User",
                     entityId: user.Id.ToString(),
                     userId: user.Id,
-                    summary: "Tentativa de login bloqueada por e-mail nao confirmado.");
+                    summary: "Tentativa de login bloqueada por e-mail não confirmado.");
 
                 return StatusCode(StatusCodes.Status403Forbidden, new ProblemDetails
                 {
@@ -172,7 +172,7 @@ namespace FinanceDashboard.Api.Controllers
             {
                 return NotFound(new ProblemDetails
                 {
-                    Title = "Conta demo indisponivel.",
+                    Title = "Conta demo indisponível.",
                     Status = StatusCodes.Status404NotFound
                 });
             }
@@ -202,8 +202,8 @@ namespace FinanceDashboard.Api.Controllers
 
             if (!user.Transactions.Any())
             {
-                // Nota para mim: a conta demo so e populada quando estiver vazia.
-                // Isso me deixa reutilizar o mesmo usuario sem duplicar movimentacoes.
+                // A conta demo sé é populada quando estiver vazia.
+                // Isso me deixa reutilizar o mesmo usuário sem duplicar movimentações.
                 SeedDemoTransactions(user.Id);
                 await _context.SaveChangesAsync();
             }
@@ -213,7 +213,7 @@ namespace FinanceDashboard.Api.Controllers
                 entityType: "User",
                 entityId: user.Id.ToString(),
                 userId: user.Id,
-                summary: "Acesso via conta demonstracao.");
+                summary: "Acesso via conta demonstração.");
 
             return Ok(ToAuthResponse(user));
         }
@@ -228,11 +228,11 @@ namespace FinanceDashboard.Api.Controllers
 
             if (user is null || user.EmailConfirmed)
             {
-                // Nota para mim: a resposta e intencionalmente neutra para nao revelar
-                // se um e-mail existe ou nao no sistema.
+                // A resposta é intencionalmente neutra para não revelar
+                // se um e-mail existe ou não no sistema.
                 return Ok(new
                 {
-                    message = "Se a conta existir e ainda nao estiver confirmada, enviaremos um novo link."
+                    message = "Se a conta existir e ainda não estiver confirmada, enviaremos um novo link."
                 });
             }
 
@@ -245,7 +245,7 @@ namespace FinanceDashboard.Api.Controllers
             }
             catch (Exception exception)
             {
-                _logger.LogWarning(exception, "Nao foi possivel reenviar o e-mail de confirmacao.");
+                _logger.LogWarning(exception, "Não foi possível reenviar o e-mail de confirmação.");
             }
 
             await _auditLogService.WriteAsync(
@@ -253,11 +253,11 @@ namespace FinanceDashboard.Api.Controllers
                 entityType: "User",
                 entityId: user.Id.ToString(),
                 userId: user.Id,
-                summary: "Novo e-mail de confirmacao enviado.");
+                summary: "Novo e-mail de confirmação enviado.");
 
             return Ok(new
             {
-                message = "Se a conta existir e ainda nao estiver confirmada, enviaremos um novo link."
+                message = "Se a conta existir e ainda não estiver confirmada, enviaremos um novo link."
             });
         }
 
@@ -278,7 +278,7 @@ namespace FinanceDashboard.Api.Controllers
             {
                 return BadRequest(new ProblemDetails
                 {
-                    Title = "Link de confirmacao invalido ou expirado.",
+                    Title = "Link de confirmação inválido ou expirado.",
                     Status = StatusCodes.Status400BadRequest
                 });
             }
@@ -295,7 +295,7 @@ namespace FinanceDashboard.Api.Controllers
 
             return Ok(new
             {
-                message = "E-mail confirmado com sucesso. Agora voce ja pode entrar."
+                message = "E-mail confirmado com sucesso. Agora você já pode entrar."
             });
         }
 
@@ -304,7 +304,7 @@ namespace FinanceDashboard.Api.Controllers
         {
             var response = new ForgotPasswordResponse
             {
-                Message = "Se o e-mail estiver cadastrado, enviaremos as instrucoes de redefinicao."
+                Message = "Se o e-mail estiver cadastrado, enviaremos as instruções de redefinição."
             };
 
             var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
@@ -314,8 +314,8 @@ namespace FinanceDashboard.Api.Controllers
 
             if (user is null)
             {
-                // Nota para mim: mesmo principio do reenvio de confirmacao.
-                // Nao entrego pistas sobre quais e-mails estao cadastrados.
+                // Mesmo princípio do reenvio de confirmação.
+                // Não entrego pistas sobre quais e-mails estão cadastrados.
                 return Ok(response);
             }
 
@@ -329,8 +329,8 @@ namespace FinanceDashboard.Api.Controllers
                 token.UsedAtUtc = now;
             }
 
-            // Nota para mim: sempre invalido tokens ativos antes de criar outro.
-            // Isso reduz confusao com links antigos ainda no e-mail do usuario.
+            // Sempre invalido tokens ativos antes de criar outro.
+            // Isso reduz confusão com links antigos ainda no e-mail do usuário.
             var rawToken = _tokenUtility.GenerateToken();
             var resetToken = new PasswordResetToken
             {
@@ -351,7 +351,7 @@ namespace FinanceDashboard.Api.Controllers
             }
             catch (Exception exception)
             {
-                _logger.LogWarning(exception, "Nao foi possivel enviar e-mail de redefinicao de senha.");
+                _logger.LogWarning(exception, "Não foi possível enviar e-mail de redefinição de senha.");
             }
 
             await _auditLogService.WriteAsync(
@@ -359,7 +359,7 @@ namespace FinanceDashboard.Api.Controllers
                 entityType: "User",
                 entityId: user.Id.ToString(),
                 userId: user.Id,
-                summary: "Solicitacao de redefinicao de senha registrada.");
+                summary: "Solicitação de redefinição de senha registrada.");
 
             if (_environment.IsDevelopment() || _configuration.GetValue("PasswordReset:ExposeResetUrlInResponse", false))
             {
@@ -386,7 +386,7 @@ namespace FinanceDashboard.Api.Controllers
             {
                 return BadRequest(new ProblemDetails
                 {
-                    Title = "Link de redefinicao invalido ou expirado.",
+                    Title = "Link de redefinição inválido ou expirado.",
                     Status = StatusCodes.Status400BadRequest
                 });
             }
@@ -490,8 +490,8 @@ namespace FinanceDashboard.Api.Controllers
             var configuredBaseUrl = _configuration["Client:BaseUrl"]?.TrimEnd('/');
             var requestOrigin = Request.Headers.Origin.FirstOrDefault()?.TrimEnd('/');
 
-            // Nota para mim: primeiro tento a URL oficial configurada no ambiente.
-            // Sem ela, aproveito a origem da requisicao e, por ultimo, uso localhost.
+            // Primeiro tento a URL oficial configurada no ambiente.
+            // Sem ela, aproveito a origem da requisição e, por último, uso localhost.
             return !string.IsNullOrWhiteSpace(configuredBaseUrl)
                 ? configuredBaseUrl
                 : requestOrigin ?? "http://localhost:5173";
@@ -501,13 +501,13 @@ namespace FinanceDashboard.Api.Controllers
         {
             var today = DateTime.UtcNow.Date;
 
-            // Nota para mim: estes dados foram pensados para preencher dashboard,
-            // categorias, filtros e exportacoes ja no primeiro acesso da demo.
+            // Estes dados foram pensados para preencher dashboard,
+            // categorias, filtros e exportações já no primeiro acesso da demo.
             _context.Transactions.AddRange(
                 new Transaction
                 {
                     UserId = userId,
-                    Description = "Salario",
+                    Description = "Salário",
                     Category = "Receita fixa",
                     AmountCents = 720000,
                     Date = today.AddDays(-5),
@@ -516,8 +516,8 @@ namespace FinanceDashboard.Api.Controllers
                 new Transaction
                 {
                     UserId = userId,
-                    Description = "Mercado do mes",
-                    Category = "Alimentacao",
+                    Description = "Mercado do mês",
+                    Category = "Alimentação",
                     AmountCents = 86540,
                     Date = today.AddDays(-4),
                     Type = "expense"
@@ -534,7 +534,7 @@ namespace FinanceDashboard.Api.Controllers
                 new Transaction
                 {
                     UserId = userId,
-                    Description = "Freelance dashboard",
+                    Description = "Freelance",
                     Category = "Receita extra",
                     AmountCents = 125000,
                     Date = today.AddDays(-2),

@@ -3,6 +3,7 @@ import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { TransactionsProvider } from "./features/transactions/TransactionsProvider";
 import Dashboard from "./pages/Dashboard";
+import AuditLogs from "./pages/AuditLogs";
 import ForgotPassword from "./pages/ForgotPassword";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
@@ -35,7 +36,7 @@ export default function App() {
             />
 
             <Route
-              path="/transacoes"
+              path="/transações"
               element={
                 <ProtectedRoute>
                   <Transactions />
@@ -48,6 +49,15 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Profile />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/auditoria"
+              element={
+                <ProtectedRoute>
+                  <AuditLogs />
                 </ProtectedRoute>
               }
             />

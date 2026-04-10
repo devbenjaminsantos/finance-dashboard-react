@@ -16,7 +16,7 @@ export function exportTransactionsToPdf({
   const reportWindow = window.open("", "_blank", "noopener,noreferrer,width=1080,height=900");
 
   if (!reportWindow) {
-    throw new Error("Nao foi possivel abrir a janela de impressao. Verifique se o navegador bloqueou pop-ups.");
+    throw new Error("Não foi possível abrir a janela de impressão. Verifique se o navegador bloqueou pop-ups.");
   }
 
   const tableHeader = columns
@@ -142,7 +142,7 @@ export function exportTransactionsToPdf({
 
         ${
           rows.length === 0
-            ? `<div class="empty">Nenhuma transacao encontrada para os filtros selecionados.</div>`
+            ? `<div class="empty">Nenhuma transação encontrada para os filtros selecionados.</div>`
             : `<table>
                 <thead>
                   <tr>${tableHeader}</tr>

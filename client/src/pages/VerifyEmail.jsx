@@ -14,7 +14,7 @@ export default function VerifyEmail() {
 
     async function verify() {
       if (!token) {
-        setError("Link de confirmacao invalido.");
+        setError("Link de confirmação inválido.");
         setIsSubmitting(false);
         return;
       }
@@ -32,7 +32,7 @@ export default function VerifyEmail() {
           return;
         }
 
-        setError(requestError.message || "Nao foi possivel confirmar o seu e-mail.");
+        setError(requestError.message || "Não foi possível confirmar o seu e-mail.");
       } finally {
         if (active) {
           setIsSubmitting(false);
@@ -58,7 +58,7 @@ export default function VerifyEmail() {
         </div>
 
         <div className="finova-card p-4 p-md-5 text-center">
-          <h2 className="finova-title h4 mb-3">Confirmacao de e-mail</h2>
+          <h2 className="finova-title h4 mb-3">Confirmação de e-mail</h2>
 
           {isSubmitting ? (
             <div className="alert alert-info py-2 mb-0" role="status">

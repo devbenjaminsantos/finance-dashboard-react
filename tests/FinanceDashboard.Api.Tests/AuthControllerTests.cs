@@ -26,7 +26,7 @@ public class AuthControllerTests
 
         context.Users.Add(new User
         {
-            Name = "Ja Existe",
+            Name = "Já Existe",
             Email = "user@finova.app",
             EmailConfirmed = true,
             PasswordHash = HashPassword("SenhaSegura123!")
@@ -35,7 +35,7 @@ public class AuthControllerTests
 
         var result = await controller.Register(new RegisterRequest
         {
-            Name = "Novo Usuario",
+            Name = "Novo Usuário",
             Email = "USER@finova.app",
             Password = "SenhaSegura123!"
         });
@@ -44,7 +44,7 @@ public class AuthControllerTests
         var problem = Assert.IsType<ProblemDetails>(conflict.Value);
 
         Assert.Equal(StatusCodes.Status409Conflict, conflict.StatusCode);
-        Assert.Equal("E-mail ja cadastrado.", problem.Title);
+        Assert.Equal("E-mail já cadastrado.", problem.Title);
     }
 
     [Fact]
@@ -56,7 +56,7 @@ public class AuthControllerTests
 
         var result = await controller.Register(new RegisterRequest
         {
-            Name = "Novo Usuario",
+            Name = "Novo Usuário",
             Email = "novo@finova.app",
             Password = "SenhaSegura123!"
         });
@@ -145,7 +145,7 @@ public class AuthControllerTests
 
         await controller.Register(new RegisterRequest
         {
-            Name = "Novo Usuario",
+            Name = "Novo Usuário",
             Email = "novo@finova.app",
             Password = "SenhaSegura123!"
         });

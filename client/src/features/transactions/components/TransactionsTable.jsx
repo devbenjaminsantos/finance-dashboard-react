@@ -17,7 +17,7 @@ export default function TransactionsTable({
   if (isLoading) {
     return (
       <div className="finova-card p-4">
-        <p className="finova-subtitle mb-0">Carregando transacoes...</p>
+        <p className="finova-subtitle mb-0">Carregando transações...</p>
       </div>
     );
   }
@@ -26,7 +26,7 @@ export default function TransactionsTable({
     <div className="finova-card p-4">
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
         <div>
-          <h2 className="finova-title h5 mb-1">Historico financeiro</h2>
+          <h2 className="finova-title h5 mb-1">Histórico financeiro</h2>
           <p className="finova-subtitle small mb-0">
             {summaryLabel}
             {transactions.length !== totalTransactionsCount
@@ -58,11 +58,11 @@ export default function TransactionsTable({
 
       {transactions.length === 0 ? (
         <div className="text-center py-5">
-          <h3 className="finova-title h6 mb-2">Nenhuma transacao encontrada</h3>
+          <h3 className="finova-title h6 mb-2">Nenhuma transação encontrada</h3>
           <p className="finova-subtitle mb-0">
             {totalTransactionsCount === 0
-              ? "Adicione sua primeira movimentacao para comecar a acompanhar seu saldo."
-              : "Tente ajustar ou limpar os filtros para visualizar outras movimentacoes."}
+              ? "Adicione sua primeira movimentação para começar a acompanhar seu saldo."
+              : "Tente ajustar ou limpar os filtros para visualizar outras movimentações."}
           </p>
         </div>
       ) : (
@@ -71,11 +71,11 @@ export default function TransactionsTable({
             <thead>
               <tr>
                 <th>Data</th>
-                <th>Descricao</th>
+                <th>Descrição</th>
                 <th>Categoria</th>
                 <th>Tipo</th>
                 <th className="text-end">Valor</th>
-                <th className="text-end">Acoes</th>
+                <th className="text-end">Ações</th>
               </tr>
             </thead>
 

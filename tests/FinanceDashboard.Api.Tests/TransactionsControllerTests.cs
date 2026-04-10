@@ -28,8 +28,8 @@ public class TransactionsControllerTests
         var payload = Assert.IsAssignableFrom<IReadOnlyList<TransactionResponse>>(ok.Value);
 
         Assert.Equal(2, payload.Count);
-        Assert.All(payload, item => Assert.Contains(item.Description, new[] { "Mercado", "Salario" }));
-        Assert.DoesNotContain(payload, item => item.Description == "Outro usuario");
+        Assert.All(payload, item => Assert.Contains(item.Description, new[] { "Mercado", "Salário" }));
+        Assert.DoesNotContain(payload, item => item.Description == "Outro usuário");
     }
 
     [Fact]
@@ -75,7 +75,7 @@ public class TransactionsControllerTests
 
         var result = await controller.Update(foreignTransaction.Id, new TransactionUpdateRequest
         {
-            Description = "Nao deveria alterar",
+            Description = "Não deveria alterar",
             Category = "Outros",
             AmountCents = 1000,
             Date = new DateTime(2026, 4, 10),
@@ -99,7 +99,7 @@ public class TransactionsControllerTests
         var result = await controller.Update(ownedTransaction.Id, new TransactionUpdateRequest
         {
             Description = "Mercado atualizado",
-            Category = "Alimentacao",
+            Category = "Alimentação",
             AmountCents = 92000,
             Date = new DateTime(2026, 4, 9),
             Type = "expense"
@@ -110,7 +110,7 @@ public class TransactionsControllerTests
         var entity = await context.Transactions.SingleAsync(transaction => transaction.Id == ownedTransaction.Id);
 
         Assert.Equal("Mercado atualizado", entity.Description);
-        Assert.Equal("Alimentacao", entity.Category);
+        Assert.Equal("Alimentação", entity.Category);
         Assert.Equal(92000, entity.AmountCents);
         Assert.Equal("Mercado atualizado", payload.Description);
         Assert.Contains(context.AuditLogs, log => log.Action == "transaction.updated" && log.EntityId == ownedTransaction.Id.ToString());
@@ -198,7 +198,7 @@ public class TransactionsControllerTests
             {
                 UserId = 1,
                 Description = "Mercado",
-                Category = "Alimentacao",
+                Category = "Alimentação",
                 AmountCents = 85000,
                 Date = new DateTime(2026, 4, 8),
                 Type = "expense"
@@ -206,7 +206,7 @@ public class TransactionsControllerTests
             new Transaction
             {
                 UserId = 1,
-                Description = "Salario",
+                Description = "Salário",
                 Category = "Receita fixa",
                 AmountCents = 700000,
                 Date = new DateTime(2026, 4, 5),
@@ -215,7 +215,7 @@ public class TransactionsControllerTests
             new Transaction
             {
                 UserId = 2,
-                Description = "Outro usuario",
+                Description = "Outro usuário",
                 Category = "Transporte",
                 AmountCents = 21000,
                 Date = new DateTime(2026, 4, 7),

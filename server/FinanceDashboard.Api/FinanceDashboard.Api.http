@@ -2,12 +2,12 @@
 @contentType = application/json
 @authToken = COLE_SEU_JWT_AQUI
 
-### Registrar usuario
+### Registrar usuário
 POST {{FinanceDashboard.Api_HostAddress}}/api/auth/register
 Content-Type: {{contentType}}
 
 {
-  "name": "Usuario Teste",
+  "name": "Usuário Teste",
   "email": "teste@finova.local",
   "password": "SenhaForte123"
 }
@@ -21,12 +21,12 @@ Content-Type: {{contentType}}
   "password": "SenhaForte123"
 }
 
-### Listar transacoes
+### Listar transações
 GET {{FinanceDashboard.Api_HostAddress}}/api/transactions
 Authorization: Bearer {{authToken}}
 Accept: {{contentType}}
 
-### Criar transacao
+### Criar transação
 POST {{FinanceDashboard.Api_HostAddress}}/api/transactions
 Authorization: Bearer {{authToken}}
 Content-Type: {{contentType}}

@@ -115,7 +115,7 @@ namespace FinanceDashboard.Api.Controllers
                 entityType: "Transaction",
                 entityId: transaction.Id.ToString(),
                 userId: userId,
-                summary: $"Transacao atualizada: {transaction.Description} ({transaction.Type}).");
+                summary: $"Transação atualizada: {transaction.Description} ({transaction.Type}).");
 
             return Ok(ToResponse(transaction));
         }
@@ -140,7 +140,7 @@ namespace FinanceDashboard.Api.Controllers
                 entityType: "Transaction",
                 entityId: id.ToString(),
                 userId: userId,
-                summary: $"Transacao removida: {transaction.Description} ({transaction.Type}).");
+                summary: $"Transação removida: {transaction.Description} ({transaction.Type}).");
 
             return NoContent();
         }

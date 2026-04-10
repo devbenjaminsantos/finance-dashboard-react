@@ -1,18 +1,18 @@
 export const EXPENSE_TRANSACTION_CATEGORIES = [
-  "Alimentacao",
+  "Alimentação",
   "Transporte",
   "Moradia",
   "Lazer",
-  "Saude",
-  "Educacao",
+  "Saúde",
+  "Educação",
   "Assinaturas",
   "Outros",
 ];
 
 export const INCOME_TRANSACTION_CATEGORIES = [
-  "Salario",
+  "Salário",
   "Freelancer",
-  "Comissao",
+  "Comissão",
   "Investimentos",
   "Reembolso",
   "Vendas",

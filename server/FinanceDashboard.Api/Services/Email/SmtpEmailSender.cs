@@ -16,16 +16,16 @@ namespace FinanceDashboard.Api.Services.Email
         {
             return SendAsync(
                 toEmail,
-                "Redefinicao de senha - Finova",
+                "Redefinição de senha - Finova",
                 $"""
-                Ola, {name}.
+                Olá, {name}.
 
-                Recebemos uma solicitacao para redefinir sua senha no Finova.
+                Recebemos uma solicitação para redefinir sua senha no Finova.
 
                 Acesse o link abaixo para criar uma nova senha:
                 {resetUrl}
 
-                Se voce nao solicitou essa alteracao, ignore este e-mail.
+                Se voce não solicitou essa alteração, ignore este e-mail.
                 """);
         }
 
@@ -33,16 +33,16 @@ namespace FinanceDashboard.Api.Services.Email
         {
             return SendAsync(
                 toEmail,
-                "Confirmacao de e-mail - Finova",
+                "Confirmação de e-mail - Finova",
                 $"""
-                Ola, {name}.
+                Olá, {name}.
 
                 Confirme seu e-mail para ativar sua conta no Finova.
 
-                Acesse o link abaixo para concluir a confirmacao:
+                Acesse o link abaixo para concluir a confirmação:
                 {verificationUrl}
 
-                Se voce nao criou esta conta, ignore este e-mail.
+                Se voce não criou esta conta, ignore este e-mail.
                 """);
         }
 
@@ -53,7 +53,7 @@ namespace FinanceDashboard.Api.Services.Email
 
             if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(fromEmail))
             {
-                throw new InvalidOperationException("SMTP nao configurado.");
+                throw new InvalidOperationException("SMTP não configurado.");
             }
 
             var port = _configuration.GetValue("Smtp:Port", 587);

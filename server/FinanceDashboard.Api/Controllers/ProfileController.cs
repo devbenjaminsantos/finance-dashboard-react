@@ -137,7 +137,7 @@ namespace FinanceDashboard.Api.Controllers
                 entityId: user.Id.ToString(),
                 userId: user.Id,
                 summary: changedPassword
-                    ? "Perfil atualizado com alteracao de senha."
+                    ? "Perfil atualizado com alteração de senha."
                     : "Perfil atualizado.");
 
             return Ok(ToAuthUserResponse(user));

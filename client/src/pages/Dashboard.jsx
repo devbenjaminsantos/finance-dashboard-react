@@ -5,10 +5,10 @@ import { useTransactions } from "../features/transactions/useTransactions";
 import { formatBRLFromCents } from "../lib/format/currency";
 
 const PERIOD_OPTIONS = [
-  { value: "current-month", label: "Mes atual" },
-  { value: "last-3-months", label: "Ultimos 3 meses" },
-  { value: "last-6-months", label: "Ultimos 6 meses" },
-  { value: "all", label: "Todo o historico" },
+  { value: "current-month", label: "Mês atual" },
+  { value: "last-3-months", label: "Últimos 3 meses" },
+  { value: "last-6-months", label: "Últimos 6 meses" },
+  { value: "all", label: "Todo o histórico" },
 ];
 
 function SummaryCard({ label, value, tone = "default" }) {
@@ -93,7 +93,7 @@ export default function Dashboard() {
   const [period, setPeriod] = useState("current-month");
 
   const selectedPeriodLabel = useMemo(
-    () => PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? "Mes atual",
+    () => PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? "Mês atual",
     [period]
   );
 
@@ -145,7 +145,7 @@ export default function Dashboard() {
         </div>
 
         <div style={{ minWidth: 220 }}>
-          <label className="form-label text-dark fw-medium">Periodo</label>
+          <label className="form-label text-dark fw-medium">Período</label>
           <select
             className="form-select finova-select"
             value={period}
@@ -189,10 +189,10 @@ export default function Dashboard() {
           {filteredTransactions.length === 0 ? (
             <div className="finova-card p-4">
               <h2 className="finova-subtitle h5 mb-2">
-                Nenhum dado financeiro para o periodo selecionado
+                Nenhum dado financeiro para o período selecionado
               </h2>
               <p className="finova-subtitle mb-0">
-                Ajuste o periodo ou adicione novas transacoes para acompanhar o seu desempenho.
+                Ajuste o período ou adicione novas transações para acompanhar o seu desempenho.
               </p>
             </div>
           ) : (

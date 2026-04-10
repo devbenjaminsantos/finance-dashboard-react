@@ -20,7 +20,7 @@ export default function TransactionsFilters({
           <input
             type="text"
             className="form-control finova-input"
-            placeholder="Buscar por descricao..."
+            placeholder="Buscar por descrição..."
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
@@ -56,7 +56,7 @@ export default function TransactionsFilters({
         </div>
 
         <div className="col-6 col-lg-2">
-          <label className="form-label text-dark fw-medium">Mes</label>
+          <label className="form-label text-dark fw-medium">Mês</label>
           <input
             type="month"
             className="form-control finova-input"

@@ -8,9 +8,9 @@ import {
 } from "../lib/api/auth";
 
 const demoHighlights = [
-  "Conheca o dashboard com dados prontos e metas ja preenchidas",
-  "Teste filtros, relatorios e fluxos sem criar conta",
-  "Explore autenticacao, recuperacao de senha e perfil em minutos",
+  "Conheca o dashboard com dados prontos e metas já preenchidas",
+  "Teste filtros, relatórios e fluxos sem criar conta",
+  "Explore autenticação, recuperação de senha e perfil em minutos",
 ];
 
 export default function Login() {
@@ -50,15 +50,15 @@ export default function Login() {
 
   async function handleDemoLogin() {
     setError("");
-    setInfo("Preparando a demonstracao...");
+    setInfo("Preparando a demonstração...");
     setIsDemoSubmitting(true);
 
     try {
       await demoLoginRequest();
-      setInfo("Demonstracao pronta. Redirecionando...");
+      setInfo("Demonstração pronta. Redirecionando...");
       navigate("/");
     } catch (requestError) {
-      setError(requestError.message || "Nao foi possivel abrir a demonstracao.");
+      setError(requestError.message || "Não foi possível abrir a demonstração .");
       setInfo("");
     } finally {
       setIsDemoSubmitting(false);
@@ -76,10 +76,10 @@ export default function Login() {
       const response = await resendEmailVerificationRequest(email);
       setInfo(
         response.message ||
-          "Se a conta existir e ainda nao estiver confirmada, enviaremos um novo link."
+          "Se a conta existir e ainda não estiver confirmada, enviaremos um novo link."
       );
     } catch (requestError) {
-      setError(requestError.message || "Nao foi possivel reenviar a confirmacao.");
+      setError(requestError.message || "Não foi possível reenviar a confirmação.");
     } finally {
       setIsResendingVerification(false);
     }
@@ -99,7 +99,7 @@ export default function Login() {
           <div className="mb-4 text-center">
             <h2 className="finova-title h4 mb-2">Entrar</h2>
             <p className="finova-subtitle mb-0">
-              Acesse sua conta para visualizar suas transacoes.
+              Acesse sua conta para visualizar suas transações.
             </p>
           </div>
 
@@ -135,7 +135,7 @@ export default function Login() {
                 onClick={handleDemoLogin}
                 disabled={isSubmitting || isDemoSubmitting || isResendingVerification}
               >
-                {isDemoSubmitting ? "Abrindo demonstracao..." : "Entrar como demonstracao"}
+                {isDemoSubmitting ? "Abrindo demonstração..." : "Entrar como demonstração"}
               </button>
             </div>
           </div>
@@ -192,8 +192,8 @@ export default function Login() {
                     disabled={isResendingVerification}
                   >
                     {isResendingVerification
-                      ? "Reenviando confirmacao..."
-                      : "Reenviar e-mail de confirmacao"}
+                      ? "Reenviando confirmação..."
+                      : "Reenviar e-mail de confirmação"}
                   </button>
                 ) : null}
               </div>
@@ -216,7 +216,7 @@ export default function Login() {
 
           <div className="text-center mt-4">
             <span className="finova-subtitle small">
-              Ainda nao tem uma conta?{" "}
+              Ainda não tem uma conta?{" "}
               <Link to="/register" className="text-decoration-none fw-semibold">
                 Criar conta
               </Link>

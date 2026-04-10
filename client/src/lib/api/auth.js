@@ -18,8 +18,8 @@ export async function demoLoginRequest() {
     method: "POST",
   });
 
-  // Nota para mim: a demo reaproveita o mesmo fluxo da conta real.
-  // Isso evita criar excecoes de navegacao so para o modo demonstracao.
+  // A demo reaproveita o mesmo fluxo da conta real.
+  // Isso evita criar exceções de navegação só para o modo demonstração.
   persistSession(data.token, data.user ?? null);
 
   return data;
@@ -68,8 +68,8 @@ export function clearStoredSession() {
   localStorage.removeItem("user");
 
   if (hadToken || hadUser) {
-    // Nota para mim: so disparo o evento se algo mudou de verdade.
-    // Isso evita loops desnecessarios nos componentes que escutam a sessao.
+    // Só disparo o evento se algo mudou de verdade.
+    // Isso evita loops desnecessários nos componentes que escutam a sessão.
     dispatchSessionChange();
   }
 }
@@ -100,7 +100,7 @@ export function getStoredUser() {
     const parsed = JSON.parse(raw);
 
     if (!parsed || typeof parsed !== "object") {
-      // Nota para mim: se o user salvo estiver corrompido, prefiro derrubar a sessao
+      // Se o user salvo estiver corrompido, prefiro derrubar a sessão
       // inteira em vez de manter estado parcial.
       clearStoredSession();
       return null;
@@ -129,8 +129,8 @@ export function isTokenExpired(token) {
     const normalized = payloadBase64.replace(/-/g, "+").replace(/_/g, "/");
     const payload = JSON.parse(atob(normalized));
 
-    // Nota para mim: valido o exp no cliente para cortar sessao vencida
-    // sem depender de uma chamada extra ao backend.
+    // Valido o exp no cliente para cortar sessão vencida
+    // sem depender de uma chamada extra ao back-end.
     return !payload?.exp || payload.exp * 1000 < Date.now();
   } catch {
     return true;
@@ -144,7 +144,7 @@ export function hasValidSession() {
     const user = localStorage.getItem("user");
 
     if (user !== null) {
-      // Nota para mim: isso cobre o caso em que sobrou user salvo sem token valido.
+      // Isso cobre o caso em que sobrou user salvo sem token válido.
       clearStoredSession();
     }
 
@@ -169,8 +169,8 @@ export async function updateProfileRequest(payload) {
     body: JSON.stringify(payload),
   });
 
-  // Nota para mim: quando nome ou dados do perfil mudam, atualizo o user salvo
-  // para a navbar refletir a mudanca sem novo login.
+  // Quando nome ou dados do perfil mudam, atualizo o user salvo
+  // para a navbar refletir a mudança sem novo login.
   setStoredUser(user);
   return user;
 }

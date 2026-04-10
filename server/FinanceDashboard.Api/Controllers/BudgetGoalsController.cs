@@ -64,7 +64,7 @@ namespace FinanceDashboard.Api.Controllers
                 return Conflict(new ProblemDetails
                 {
                     Status = StatusCodes.Status409Conflict,
-                    Title = "Ja existe uma meta para esta categoria neste mes."
+                    Title = "Já existe uma meta para esta categoria neste mês."
                 });
             }
 
@@ -114,7 +114,7 @@ namespace FinanceDashboard.Api.Controllers
                 return Conflict(new ProblemDetails
                 {
                     Status = StatusCodes.Status409Conflict,
-                    Title = "Ja existe uma meta para esta categoria neste mes."
+                    Title = "Já existe uma meta para esta categoria neste mês."
                 });
             }
 
@@ -177,7 +177,7 @@ namespace FinanceDashboard.Api.Controllers
 
             if (!MonthRegex.IsMatch(normalized))
             {
-                throw new BadHttpRequestException("Informe um mes valido no formato yyyy-MM.");
+                throw new BadHttpRequestException("Informe um mês válido no formato yyyy-MM.");
             }
 
             return normalized;
@@ -195,7 +195,7 @@ namespace FinanceDashboard.Api.Controllers
 
         private static string DescribeGoalScope(string category)
         {
-            return string.IsNullOrWhiteSpace(category) ? "orcamento geral" : category;
+            return string.IsNullOrWhiteSpace(category) ? "orçamento geral" : category;
         }
     }
 }

@@ -20,23 +20,23 @@ export async function apiRequest(path, options = {}) {
       headers,
     });
   } catch {
-    // Concentrei aqui o erro de conexao para nao repetir fallback
-    // em cada client de endpoint do frontend.
+    // Concentrei aqui o erro de conexão para não repetir fallback
+    // em cada client de endpoint do front-end.
     throw new Error(
-      "Nao foi possivel conectar com a API. Verifique se o backend esta publicado e acessivel."
+      "Não foi possível conectar com a API. Verifique se o back-end está publicado e acessível."
     );
   }
 
   if (response.status === 401 && token) {
-    // Nota para mim: 401 com token significa sessao expirada ou invalida.
-    // Eu limpo tudo e forco o login para evitar UI inconsistente.
+    // 401 com token significa sessão expirada ou inválida.
+    // Eu limpo tudo e forço o login para evitar UI inconsistente.
     clearStoredSession();
     window.location.href = "/login";
-    throw new Error("Sessao expirada. Faca login novamente.");
+    throw new Error("Sessão expirada. Faça login novamente.");
   }
 
   if (!response.ok) {
-    let message = "Erro na requisicao";
+    let message = "Erro na requisição";
 
     try {
       const contentType = response.headers.get("content-type") || "";
@@ -46,8 +46,8 @@ export async function apiRequest(path, options = {}) {
         contentType.includes("application/problem+json") ||
         contentType.includes("+json")
       ) {
-        // Nota para mim: a API devolve tanto JSON comum quanto ProblemDetails.
-        // Por isso tento ler varias chaves conhecidas antes de usar o fallback.
+        // A API devolve tanto JSON comum quanto ProblemDetails.
+        // Por isso tento ler várias chaves conhecidas antes de usar o fallback.
         const data = await response.json();
         message =
           data?.message ||
@@ -62,7 +62,7 @@ export async function apiRequest(path, options = {}) {
         }
       }
     } catch {
-      // Nota para mim: se a resposta falhar ao ser lida, mantenho a mensagem padrao.
+      // Se a resposta falhar ao ser lida, mantenho a mensagem padrão.
     }
 
     throw new Error(message);
@@ -83,11 +83,11 @@ function resolveApiUrl() {
   }
 
   if (import.meta.env.DEV) {
-    // Nota para mim: no ambiente local o backend ASP.NET sobe nessa porta.
+    // No ambiente local o back-end ASP.NET sobe nessa porta.
     return "http://localhost:5278/api";
   }
 
-  // Nota para mim: em producao esse fallback so funciona quando existe proxy
-  // ou API integrada no mesmo dominio.
+  // Em produção esse fallback só funciona quando existe proxy
+  // ou API integrada no mesmo domínio.
   return "/api";
 }

@@ -1,6 +1,7 @@
 using FinanceDashboard.Api.Data;
 using FinanceDashboard.Api.DTOs;
 using FinanceDashboard.Api.Models;
+using FinanceDashboard.Api.Services.Audit;
 using FinanceDashboard.Api.Services.Auth;
 using FinanceDashboard.Api.Services.Email;
 using Microsoft.AspNetCore.Mvc;
@@ -14,6 +15,7 @@ namespace FinanceDashboard.Api.Controllers
     public class AuthController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly AuditLogService _auditLogService;
         private readonly PasswordHasher _passwordHasher;
         private readonly JwTokenService _tokenService;
         private readonly PasswordResetTokenService _tokenUtility;
@@ -24,6 +26,7 @@ namespace FinanceDashboard.Api.Controllers
 
         public AuthController(
             AppDbContext context,
+            AuditLogService auditLogService,
             PasswordHasher passwordHasher,
             JwTokenService tokenService,
             PasswordResetTokenService tokenUtility,
@@ -33,6 +36,7 @@ namespace FinanceDashboard.Api.Controllers
             ILogger<AuthController> logger)
         {
             _context = context;
+            _auditLogService = auditLogService;
             _passwordHasher = passwordHasher;
             _tokenService = tokenService;
             _tokenUtility = tokenUtility;
@@ -95,6 +99,13 @@ namespace FinanceDashboard.Api.Controllers
                 _logger.LogWarning(exception, "Nao foi possivel enviar o e-mail de confirmacao.");
             }
 
+            await _auditLogService.WriteAsync(
+                action: "auth.registered",
+                entityType: "User",
+                entityId: user.Id.ToString(),
+                userId: user.Id,
+                summary: "Conta criada e aguardando confirmacao de e-mail.");
+
             return StatusCode(StatusCodes.Status201Created, ToAuthUserResponse(user));
         }
 
@@ -117,6 +128,13 @@ namespace FinanceDashboard.Api.Controllers
 
             if (!user.EmailConfirmed)
             {
+                await _auditLogService.WriteAsync(
+                    action: "auth.login-blocked-unconfirmed-email",
+                    entityType: "User",
+                    entityId: user.Id.ToString(),
+                    userId: user.Id,
+                    summary: "Tentativa de login bloqueada por e-mail nao confirmado.");
+
                 return StatusCode(StatusCodes.Status403Forbidden, new ProblemDetails
                 {
                     Title = "Confirme seu e-mail antes de entrar.",
@@ -132,6 +150,13 @@ namespace FinanceDashboard.Api.Controllers
                     Status = StatusCodes.Status401Unauthorized
                 });
             }
+
+            await _auditLogService.WriteAsync(
+                action: "auth.login-succeeded",
+                entityType: "User",
+                entityId: user.Id.ToString(),
+                userId: user.Id,
+                summary: "Login realizado com sucesso.");
 
             return Ok(ToAuthResponse(user));
         }
@@ -177,6 +202,13 @@ namespace FinanceDashboard.Api.Controllers
                 await _context.SaveChangesAsync();
             }
 
+            await _auditLogService.WriteAsync(
+                action: "auth.demo-login",
+                entityType: "User",
+                entityId: user.Id.ToString(),
+                userId: user.Id,
+                summary: "Acesso via conta demonstracao.");
+
             return Ok(ToAuthResponse(user));
         }
 
@@ -207,6 +239,13 @@ namespace FinanceDashboard.Api.Controllers
             {
                 _logger.LogWarning(exception, "Nao foi possivel reenviar o e-mail de confirmacao.");
             }
+
+            await _auditLogService.WriteAsync(
+                action: "auth.verification-resent",
+                entityType: "User",
+                entityId: user.Id.ToString(),
+                userId: user.Id,
+                summary: "Novo e-mail de confirmacao enviado.");
 
             return Ok(new
             {
@@ -239,6 +278,12 @@ namespace FinanceDashboard.Api.Controllers
             verificationToken.User.EmailConfirmed = true;
             verificationToken.UsedAtUtc = now;
             await _context.SaveChangesAsync();
+            await _auditLogService.WriteAsync(
+                action: "auth.email-confirmed",
+                entityType: "User",
+                entityId: verificationToken.User.Id.ToString(),
+                userId: verificationToken.User.Id,
+                summary: "E-mail confirmado com sucesso.");
 
             return Ok(new
             {
@@ -297,6 +342,13 @@ namespace FinanceDashboard.Api.Controllers
                 _logger.LogWarning(exception, "Nao foi possivel enviar e-mail de redefinicao de senha.");
             }
 
+            await _auditLogService.WriteAsync(
+                action: "auth.password-reset-requested",
+                entityType: "User",
+                entityId: user.Id.ToString(),
+                userId: user.Id,
+                summary: "Solicitacao de redefinicao de senha registrada.");
+
             if (_environment.IsDevelopment() || _configuration.GetValue("PasswordReset:ExposeResetUrlInResponse", false))
             {
                 response.ResetUrl = resetUrl;
@@ -340,6 +392,12 @@ namespace FinanceDashboard.Api.Controllers
             resetToken.UsedAtUtc = now;
 
             await _context.SaveChangesAsync();
+            await _auditLogService.WriteAsync(
+                action: "auth.password-reset-completed",
+                entityType: "User",
+                entityId: resetToken.User.Id.ToString(),
+                userId: resetToken.User.Id,
+                summary: "Senha redefinida com sucesso.");
 
             return Ok(new { message = "Senha redefinida com sucesso." });
         }

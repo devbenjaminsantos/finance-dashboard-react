@@ -1,6 +1,7 @@
 using FinanceDashboard.Api.Data;
 using FinanceDashboard.Api.DTOs;
 using FinanceDashboard.Api.Models;
+using FinanceDashboard.Api.Services.Audit;
 using FinanceDashboard.Api.Services.CurrentUser;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,12 +15,17 @@ namespace FinanceDashboard.Api.Controllers
     public class TransactionsController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly AuditLogService _auditLogService;
         private readonly CurrentUserService _currentUserService;
 
-        public TransactionsController(AppDbContext context, CurrentUserService currentUserService)
+        public TransactionsController(
+            AppDbContext context,
+            CurrentUserService currentUserService,
+            AuditLogService auditLogService)
         {
             _context = context;
             _currentUserService = currentUserService;
+            _auditLogService = auditLogService;
         }
 
         [HttpGet]
@@ -71,6 +77,12 @@ namespace FinanceDashboard.Api.Controllers
 
             _context.Transactions.Add(transaction);
             await _context.SaveChangesAsync();
+            await _auditLogService.WriteAsync(
+                action: "transaction.created",
+                entityType: "Transaction",
+                entityId: transaction.Id.ToString(),
+                userId: userId,
+                summary: $"Transacao criada: {transaction.Description} ({transaction.Type}).");
 
             return CreatedAtAction(
                 nameof(GetById),
@@ -98,6 +110,12 @@ namespace FinanceDashboard.Api.Controllers
             transaction.Type = dto.Type.Trim().ToLowerInvariant();
 
             await _context.SaveChangesAsync();
+            await _auditLogService.WriteAsync(
+                action: "transaction.updated",
+                entityType: "Transaction",
+                entityId: transaction.Id.ToString(),
+                userId: userId,
+                summary: $"Transacao atualizada: {transaction.Description} ({transaction.Type}).");
 
             return Ok(ToResponse(transaction));
         }
@@ -117,6 +135,12 @@ namespace FinanceDashboard.Api.Controllers
 
             _context.Transactions.Remove(transaction);
             await _context.SaveChangesAsync();
+            await _auditLogService.WriteAsync(
+                action: "transaction.deleted",
+                entityType: "Transaction",
+                entityId: id.ToString(),
+                userId: userId,
+                summary: $"Transacao removida: {transaction.Description} ({transaction.Type}).");
 
             return NoContent();
         }

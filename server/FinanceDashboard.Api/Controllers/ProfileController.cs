@@ -1,6 +1,7 @@
 using FinanceDashboard.Api.Data;
 using FinanceDashboard.Api.DTOs;
 using FinanceDashboard.Api.Models;
+using FinanceDashboard.Api.Services.Audit;
 using FinanceDashboard.Api.Services.Auth;
 using FinanceDashboard.Api.Services.CurrentUser;
 using Microsoft.AspNetCore.Authorization;
@@ -15,17 +16,20 @@ namespace FinanceDashboard.Api.Controllers
     public class ProfileController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly AuditLogService _auditLogService;
         private readonly CurrentUserService _currentUserService;
         private readonly PasswordHasher _passwordHasher;
 
         public ProfileController(
             AppDbContext context,
             CurrentUserService currentUserService,
-            PasswordHasher passwordHasher)
+            PasswordHasher passwordHasher,
+            AuditLogService auditLogService)
         {
             _context = context;
             _currentUserService = currentUserService;
             _passwordHasher = passwordHasher;
+            _auditLogService = auditLogService;
         }
 
         [HttpGet]
@@ -80,6 +84,7 @@ namespace FinanceDashboard.Api.Controllers
             var wantsToChangePassword =
                 !string.IsNullOrWhiteSpace(dto.CurrentPassword) ||
                 !string.IsNullOrWhiteSpace(dto.NewPassword);
+            var changedPassword = false;
 
             if (wantsToChangePassword)
             {
@@ -120,11 +125,20 @@ namespace FinanceDashboard.Api.Controllers
                 }
 
                 user.PasswordHash = _passwordHasher.HashPassword(user, dto.NewPassword);
+                changedPassword = true;
             }
 
             user.Name = name;
 
             await _context.SaveChangesAsync();
+            await _auditLogService.WriteAsync(
+                action: changedPassword ? "profile.updated-with-password" : "profile.updated",
+                entityType: "User",
+                entityId: user.Id.ToString(),
+                userId: user.Id,
+                summary: changedPassword
+                    ? "Perfil atualizado com alteracao de senha."
+                    : "Perfil atualizado.");
 
             return Ok(ToAuthUserResponse(user));
         }

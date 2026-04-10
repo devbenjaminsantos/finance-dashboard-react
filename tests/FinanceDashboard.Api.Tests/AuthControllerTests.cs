@@ -2,6 +2,7 @@ using FinanceDashboard.Api.Controllers;
 using FinanceDashboard.Api.Data;
 using FinanceDashboard.Api.DTOs;
 using FinanceDashboard.Api.Models;
+using FinanceDashboard.Api.Services.Audit;
 using FinanceDashboard.Api.Services.Auth;
 using FinanceDashboard.Api.Services.Email;
 using Microsoft.AspNetCore.Hosting;
@@ -68,6 +69,7 @@ public class AuthControllerTests
         Assert.Equal("novo@finova.app", user.Email);
         Assert.False(user.EmailConfirmed);
         Assert.Single(context.EmailVerificationTokens);
+        Assert.Contains(context.AuditLogs, log => log.Action == "auth.registered" && log.UserId == user.Id);
         Assert.NotNull(emailSender.LastVerificationUrl);
         Assert.Equal(payload.Email, user.Email);
     }
@@ -100,6 +102,7 @@ public class AuthControllerTests
 
         Assert.Equal(StatusCodes.Status403Forbidden, forbidden.StatusCode);
         Assert.Equal("Confirme seu e-mail antes de entrar.", problem.Title);
+        Assert.Contains(context.AuditLogs, log => log.Action == "auth.login-blocked-unconfirmed-email");
     }
 
     [Fact]
@@ -130,6 +133,7 @@ public class AuthControllerTests
 
         Assert.False(string.IsNullOrWhiteSpace(payload.Token));
         Assert.Equal(user.Email, payload.User.Email);
+        Assert.Contains(context.AuditLogs, log => log.Action == "auth.login-succeeded" && log.UserId == user.Id);
     }
 
     [Fact]
@@ -159,6 +163,7 @@ public class AuthControllerTests
 
         Assert.True(user.EmailConfirmed);
         Assert.NotNull(verificationToken.UsedAtUtc);
+        Assert.Contains(context.AuditLogs, log => log.Action == "auth.email-confirmed" && log.UserId == user.Id);
         Assert.NotNull(ok.Value);
     }
 
@@ -285,6 +290,7 @@ public class AuthControllerTests
 
         var controller = new AuthController(
             context,
+            new AuditLogService(context, new HttpContextAccessor()),
             CreatePasswordHasher(),
             new JwTokenService(configuration),
             new PasswordResetTokenService(),

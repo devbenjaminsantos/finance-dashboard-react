@@ -15,6 +15,7 @@ namespace FinanceDashboard.Api.Data
         public DbSet<BudgetGoal> BudgetGoals { get; set; }
         public DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; }
         public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -97,6 +98,31 @@ namespace FinanceDashboard.Api.Data
                     .WithMany(user => user.EmailVerificationTokens)
                     .HasForeignKey(token => token.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<AuditLog>(entity =>
+            {
+                entity.Property(log => log.Action)
+                    .HasMaxLength(80);
+
+                entity.Property(log => log.EntityType)
+                    .HasMaxLength(80);
+
+                entity.Property(log => log.EntityId)
+                    .HasMaxLength(64);
+
+                entity.Property(log => log.Summary)
+                    .HasMaxLength(400);
+
+                entity.Property(log => log.IpAddress)
+                    .HasMaxLength(64);
+
+                entity.HasIndex(log => new { log.UserId, log.CreatedAtUtc });
+
+                entity.HasOne(log => log.User)
+                    .WithMany(user => user.AuditLogs)
+                    .HasForeignKey(log => log.UserId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
             base.OnModelCreating(modelBuilder);

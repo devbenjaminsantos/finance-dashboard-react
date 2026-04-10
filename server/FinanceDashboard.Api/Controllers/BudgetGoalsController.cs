@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using FinanceDashboard.Api.Data;
 using FinanceDashboard.Api.DTOs.BudgetGoals;
 using FinanceDashboard.Api.Models;
+using FinanceDashboard.Api.Services.Audit;
 using FinanceDashboard.Api.Services.CurrentUser;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,12 +18,17 @@ namespace FinanceDashboard.Api.Controllers
         private static readonly Regex MonthRegex = new(@"^\d{4}-(0[1-9]|1[0-2])$", RegexOptions.Compiled);
 
         private readonly AppDbContext _context;
+        private readonly AuditLogService _auditLogService;
         private readonly CurrentUserService _currentUserService;
 
-        public BudgetGoalsController(AppDbContext context, CurrentUserService currentUserService)
+        public BudgetGoalsController(
+            AppDbContext context,
+            CurrentUserService currentUserService,
+            AuditLogService auditLogService)
         {
             _context = context;
             _currentUserService = currentUserService;
+            _auditLogService = auditLogService;
         }
 
         [HttpGet]
@@ -72,6 +78,12 @@ namespace FinanceDashboard.Api.Controllers
 
             _context.BudgetGoals.Add(goal);
             await _context.SaveChangesAsync();
+            await _auditLogService.WriteAsync(
+                action: "budget-goal.created",
+                entityType: "BudgetGoal",
+                entityId: goal.Id.ToString(),
+                userId: userId,
+                summary: $"Meta criada para {goal.Month} ({DescribeGoalScope(goal.Category)}).");
 
             return CreatedAtAction(nameof(GetAll), new { month = goal.Month }, ToResponse(goal));
         }
@@ -111,6 +123,12 @@ namespace FinanceDashboard.Api.Controllers
             goal.AmountCents = dto.AmountCents;
 
             await _context.SaveChangesAsync();
+            await _auditLogService.WriteAsync(
+                action: "budget-goal.updated",
+                entityType: "BudgetGoal",
+                entityId: goal.Id.ToString(),
+                userId: userId,
+                summary: $"Meta atualizada para {goal.Month} ({DescribeGoalScope(goal.Category)}).");
 
             return Ok(ToResponse(goal));
         }
@@ -130,6 +148,12 @@ namespace FinanceDashboard.Api.Controllers
 
             _context.BudgetGoals.Remove(goal);
             await _context.SaveChangesAsync();
+            await _auditLogService.WriteAsync(
+                action: "budget-goal.deleted",
+                entityType: "BudgetGoal",
+                entityId: id.ToString(),
+                userId: userId,
+                summary: $"Meta removida de {goal.Month} ({DescribeGoalScope(goal.Category)}).");
 
             return NoContent();
         }
@@ -167,6 +191,11 @@ namespace FinanceDashboard.Api.Controllers
             }
 
             return category.Trim();
+        }
+
+        private static string DescribeGoalScope(string category)
+        {
+            return string.IsNullOrWhiteSpace(category) ? "orcamento geral" : category;
         }
     }
 }

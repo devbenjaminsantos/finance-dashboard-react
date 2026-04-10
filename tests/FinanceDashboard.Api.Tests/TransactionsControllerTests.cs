@@ -3,6 +3,7 @@ using FinanceDashboard.Api.Controllers;
 using FinanceDashboard.Api.Data;
 using FinanceDashboard.Api.DTOs;
 using FinanceDashboard.Api.Models;
+using FinanceDashboard.Api.Services.Audit;
 using FinanceDashboard.Api.Services.CurrentUser;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -58,6 +59,7 @@ public class TransactionsControllerTests
         Assert.Equal(dto.AmountCents, entity.AmountCents);
         Assert.Equal(dto.Type, entity.Type);
         Assert.Equal(entity.Id, payload.Id);
+        Assert.Contains(context.AuditLogs, log => log.Action == "transaction.created" && log.UserId == 7);
     }
 
     [Fact]
@@ -111,6 +113,7 @@ public class TransactionsControllerTests
         Assert.Equal("Alimentacao", entity.Category);
         Assert.Equal(92000, entity.AmountCents);
         Assert.Equal("Mercado atualizado", payload.Description);
+        Assert.Contains(context.AuditLogs, log => log.Action == "transaction.updated" && log.EntityId == ownedTransaction.Id.ToString());
     }
 
     [Fact]
@@ -128,6 +131,7 @@ public class TransactionsControllerTests
 
         Assert.IsType<NoContentResult>(result);
         Assert.DoesNotContain(context.Transactions, transaction => transaction.Id == ownedTransaction.Id);
+        Assert.Contains(context.AuditLogs, log => log.Action == "transaction.deleted" && log.EntityId == ownedTransaction.Id.ToString());
     }
 
     [Fact]
@@ -176,7 +180,8 @@ public class TransactionsControllerTests
 
         var controller = new TransactionsController(
             context,
-            new CurrentUserService(accessor));
+            new CurrentUserService(accessor),
+            new AuditLogService(context, accessor));
 
         controller.ControllerContext = new ControllerContext
         {

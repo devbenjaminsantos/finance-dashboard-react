@@ -36,6 +36,18 @@ export function TransactionsProvider({ children }) {
     loadAll();
   }, [loadAll]);
 
+  useEffect(() => {
+    function handleSessionChange() {
+      loadAll();
+    }
+
+    window.addEventListener("finova-session-change", handleSessionChange);
+
+    return () => {
+      window.removeEventListener("finova-session-change", handleSessionChange);
+    };
+  }, [loadAll]);
+
   const addTransaction = useCallback(async (data) => {
     const created = await createTransaction(data);
     setTransactions((prev) => [created, ...prev]);

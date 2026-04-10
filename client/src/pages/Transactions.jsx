@@ -6,6 +6,7 @@ import { useTransactions } from "../features/transactions/useTransactions";
 import { formatBRLFromCents } from "../lib/format/currency";
 import { formatBRDate } from "../lib/format/date";
 import { downloadCsv } from "../lib/export/csv";
+import { exportTransactionsToPdf } from "../lib/export/pdf";
 import { loadJSON, saveJSON } from "../lib/storage/jsonStorage";
 
 const FILTERS_KEY = "fd_tx_filters_v1";
@@ -155,21 +156,40 @@ export default function Transactions() {
     });
   }
 
-  function exportFilteredTransactions() {
+  function getExportRows() {
+    return filtered.map((transaction) => [
+      formatBRDate(transaction.date),
+      transaction.description || "",
+      transaction.category || "Sem categoria",
+      transaction.type === "income" ? "Receita" : "Despesa",
+      formatBRLFromCents(transaction.amountCents),
+      Number(transaction.amountCents) || 0,
+    ]);
+  }
+
+  function exportFilteredTransactionsCsv() {
     const rows = [
       ["Data", "Descricao", "Categoria", "Tipo", "Valor", "Valor em centavos"],
-      ...filtered.map((transaction) => [
-        formatBRDate(transaction.date),
-        transaction.description || "",
-        transaction.category || "Sem categoria",
-        transaction.type === "income" ? "Receita" : "Despesa",
-        formatBRLFromCents(transaction.amountCents),
-        Number(transaction.amountCents) || 0,
-      ]),
+      ...getExportRows(),
     ];
 
     const monthLabel = month || "todos";
     downloadCsv(`finova-transacoes-${monthLabel}.csv`, rows);
+  }
+
+  function exportFilteredTransactionsPdf() {
+    const monthLabel = month || "todos";
+
+    exportTransactionsToPdf({
+      filename: `finova-transacoes-${monthLabel}.pdf`,
+      title: "Relatorio de transacoes",
+      subtitle:
+        month
+          ? `Periodo filtrado: ${month} | ${filtered.length} item(ns)`
+          : `Todos os periodos | ${filtered.length} item(ns)`,
+      columns: ["Data", "Descricao", "Categoria", "Tipo", "Valor", "Centavos"],
+      rows: getExportRows(),
+    });
   }
 
   return (
@@ -220,7 +240,8 @@ export default function Transactions() {
           totalTransactionsCount={transactions.length}
           onEdit={openEdit}
           onRemove={handleRemove}
-          onExport={exportFilteredTransactions}
+          onExportCsv={exportFilteredTransactionsCsv}
+          onExportPdf={exportFilteredTransactionsPdf}
           isLoading={isLoading}
           isMutating={isMutating}
         />

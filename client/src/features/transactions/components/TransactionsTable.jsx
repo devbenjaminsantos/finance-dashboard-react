@@ -6,7 +6,8 @@ export default function TransactionsTable({
   totalTransactionsCount,
   onEdit,
   onRemove,
-  onExport,
+  onExportCsv,
+  onExportPdf,
   isLoading = false,
   isMutating = false,
 }) {
@@ -20,7 +21,7 @@ export default function TransactionsTable({
 
   return (
     <div className="finova-card p-4">
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
         <div>
           <h2 className="finova-title h5 mb-1">Historico financeiro</h2>
           <p className="finova-subtitle small mb-0">
@@ -31,14 +32,25 @@ export default function TransactionsTable({
           </p>
         </div>
 
-        <button
-          type="button"
-          className="btn finova-btn-light"
-          onClick={onExport}
-          disabled={transactions.length === 0}
-        >
-          Exportar CSV
-        </button>
+        <div className="d-flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="btn finova-btn-light"
+            onClick={onExportCsv}
+            disabled={transactions.length === 0}
+          >
+            Exportar CSV
+          </button>
+
+          <button
+            type="button"
+            className="btn finova-btn-light"
+            onClick={onExportPdf}
+            disabled={transactions.length === 0}
+          >
+            Exportar PDF
+          </button>
+        </div>
       </div>
 
       {transactions.length === 0 ? (

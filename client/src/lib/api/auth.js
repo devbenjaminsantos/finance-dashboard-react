@@ -28,6 +28,20 @@ export async function registerRequest(name, email, password) {
   });
 }
 
+export function verifyEmailRequest(token) {
+  return apiRequest("/auth/verify-email", {
+    method: "POST",
+    body: JSON.stringify({ token }),
+  });
+}
+
+export function resendEmailVerificationRequest(email) {
+  return apiRequest("/auth/resend-email-verification", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
 export function forgotPasswordRequest(email) {
   return apiRequest("/auth/forgot-password", {
     method: "POST",

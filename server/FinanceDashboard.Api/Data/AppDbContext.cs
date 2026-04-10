@@ -13,6 +13,7 @@ namespace FinanceDashboard.Api.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<BudgetGoal> BudgetGoals { get; set; }
+        public DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; }
         public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -78,6 +79,22 @@ namespace FinanceDashboard.Api.Data
 
                 entity.HasOne(token => token.User)
                     .WithMany(user => user.PasswordResetTokens)
+                    .HasForeignKey(token => token.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<EmailVerificationToken>(entity =>
+            {
+                entity.Property(token => token.TokenHash)
+                    .HasMaxLength(128);
+
+                entity.HasIndex(token => token.TokenHash)
+                    .IsUnique();
+
+                entity.HasIndex(token => token.UserId);
+
+                entity.HasOne(token => token.User)
+                    .WithMany(user => user.EmailVerificationTokens)
                     .HasForeignKey(token => token.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
             });

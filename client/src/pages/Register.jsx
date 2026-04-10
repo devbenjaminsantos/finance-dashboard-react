@@ -1,10 +1,8 @@
 import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { hasValidSession, registerRequest } from "../lib/api/auth";
 
 export default function Register() {
-  const navigate = useNavigate();
-
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,18 +14,22 @@ export default function Register() {
     return <Navigate to="/" replace />;
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  async function handleSubmit(event) {
+    event.preventDefault();
     setError("");
     setSuccess("");
     setIsSubmitting(true);
 
     try {
       await registerRequest(name, email, password);
-      setSuccess("Conta criada com sucesso. Redirecionando para o login...");
-      setTimeout(() => navigate("/login"), 900);
-    } catch (err) {
-      setError(err.message || "Não foi possível criar sua conta.");
+      setSuccess(
+        "Conta criada com sucesso. Confira seu e-mail e confirme o cadastro antes de entrar."
+      );
+      setName("");
+      setEmail("");
+      setPassword("");
+    } catch (requestError) {
+      setError(requestError.message || "Nao foi possivel criar sua conta.");
     } finally {
       setIsSubmitting(false);
     }
@@ -58,7 +60,7 @@ export default function Register() {
                 type="text"
                 className="form-control finova-input"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(event) => setName(event.target.value)}
                 placeholder="Seu nome"
                 disabled={isSubmitting}
                 required
@@ -71,7 +73,7 @@ export default function Register() {
                 type="email"
                 className="form-control finova-input"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(event) => setEmail(event.target.value)}
                 placeholder="seuemail@exemplo.com"
                 disabled={isSubmitting}
                 required
@@ -84,12 +86,12 @@ export default function Register() {
                 type="password"
                 className="form-control finova-input"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(event) => setPassword(event.target.value)}
                 placeholder="Crie uma senha"
                 disabled={isSubmitting}
                 required
               />
-              <div className="form-text">Use pelo menos 6 caracteres.</div>
+              <div className="form-text">Use pelo menos 8 caracteres.</div>
             </div>
 
             {error ? (
@@ -115,7 +117,7 @@ export default function Register() {
 
           <div className="text-center mt-4">
             <span className="finova-subtitle small">
-              Já tem uma conta?{" "}
+              Ja tem uma conta?{" "}
               <Link to="/login" className="text-decoration-none fw-semibold">
                 Entrar
               </Link>

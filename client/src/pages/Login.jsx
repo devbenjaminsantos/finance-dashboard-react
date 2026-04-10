@@ -1,11 +1,16 @@
 import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { demoLoginRequest, hasValidSession, loginRequest } from "../lib/api/auth";
+import {
+  demoLoginRequest,
+  hasValidSession,
+  loginRequest,
+  resendEmailVerificationRequest,
+} from "../lib/api/auth";
 
 const demoHighlights = [
   "Dashboard preenchido com receitas e despesas realistas",
-  "Categorias organizadas para apresentar os gráficos",
-  "Fluxo completo de autenticação e recuperação de senha",
+  "Categorias organizadas para apresentar os graficos",
+  "Fluxo completo de autenticacao e recuperacao de senha",
 ];
 
 export default function Login() {
@@ -17,13 +22,17 @@ export default function Login() {
   const [info, setInfo] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDemoSubmitting, setIsDemoSubmitting] = useState(false);
+  const [isResendingVerification, setIsResendingVerification] = useState(false);
 
   if (hasValidSession()) {
     return <Navigate to="/" replace />;
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  const shouldShowResendVerification =
+    error.toLowerCase().includes("confirme seu e-mail") && email.trim();
+
+  async function handleSubmit(event) {
+    event.preventDefault();
     setError("");
     setInfo("");
     setIsSubmitting(true);
@@ -32,8 +41,8 @@ export default function Login() {
       await loginRequest(email, password);
       setInfo("Login realizado com sucesso. Redirecionando...");
       navigate("/");
-    } catch (err) {
-      setError(err.message || "Falha ao fazer login.");
+    } catch (requestError) {
+      setError(requestError.message || "Falha ao fazer login.");
     } finally {
       setIsSubmitting(false);
     }
@@ -41,18 +50,38 @@ export default function Login() {
 
   async function handleDemoLogin() {
     setError("");
-    setInfo("Preparando a demonstração...");
+    setInfo("Preparando a demonstracao...");
     setIsDemoSubmitting(true);
 
     try {
       await demoLoginRequest();
-      setInfo("Demonstração pronta. Redirecionando...");
+      setInfo("Demonstracao pronta. Redirecionando...");
       navigate("/");
-    } catch (err) {
-      setError(err.message || "Não foi possível abrir a demonstração.");
+    } catch (requestError) {
+      setError(requestError.message || "Nao foi possivel abrir a demonstracao.");
       setInfo("");
     } finally {
       setIsDemoSubmitting(false);
+    }
+  }
+
+  async function handleResendVerification() {
+    if (!email.trim()) {
+      return;
+    }
+
+    setIsResendingVerification(true);
+
+    try {
+      const response = await resendEmailVerificationRequest(email);
+      setInfo(
+        response.message ||
+          "Se a conta existir e ainda nao estiver confirmada, enviaremos um novo link."
+      );
+    } catch (requestError) {
+      setError(requestError.message || "Nao foi possivel reenviar a confirmacao.");
+    } finally {
+      setIsResendingVerification(false);
     }
   }
 
@@ -70,7 +99,7 @@ export default function Login() {
           <div className="mb-4 text-center">
             <h2 className="finova-title h4 mb-2">Entrar</h2>
             <p className="finova-subtitle mb-0">
-              Acesse sua conta para visualizar suas transações.
+              Acesse sua conta para visualizar suas transacoes.
             </p>
           </div>
 
@@ -85,11 +114,11 @@ export default function Login() {
             <div className="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-start">
               <div>
                 <div className="small text-uppercase fw-semibold text-primary mb-2">
-                  Prévia do produto
+                  Previa do produto
                 </div>
                 <h3 className="finova-title h5 mb-2">Explore a conta demo</h3>
                 <p className="finova-subtitle mb-3">
-                  Entre em segundos e veja o Finova com dados prontos para apresentação.
+                  Entre em segundos e veja o Finova com dados prontos para apresentacao.
                 </p>
                 <div className="d-grid gap-2">
                   {demoHighlights.map((item) => (
@@ -104,9 +133,9 @@ export default function Login() {
                 type="button"
                 className="btn finova-btn-primary px-4"
                 onClick={handleDemoLogin}
-                disabled={isSubmitting || isDemoSubmitting}
+                disabled={isSubmitting || isDemoSubmitting || isResendingVerification}
               >
-                {isDemoSubmitting ? "Abrindo demonstração..." : "Entrar como demonstração"}
+                {isDemoSubmitting ? "Abrindo demonstracao..." : "Entrar como demonstracao"}
               </button>
             </div>
           </div>
@@ -124,9 +153,9 @@ export default function Login() {
                 type="email"
                 className="form-control finova-input"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(event) => setEmail(event.target.value)}
                 placeholder="seuemail@exemplo.com"
-                disabled={isSubmitting || isDemoSubmitting}
+                disabled={isSubmitting || isDemoSubmitting || isResendingVerification}
                 required
               />
             </div>
@@ -145,16 +174,28 @@ export default function Login() {
                 type="password"
                 className="form-control finova-input"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(event) => setPassword(event.target.value)}
                 placeholder="Digite sua senha"
-                disabled={isSubmitting || isDemoSubmitting}
+                disabled={isSubmitting || isDemoSubmitting || isResendingVerification}
                 required
               />
             </div>
 
             {error ? (
               <div className="alert alert-danger py-2 mb-0" role="alert">
-                {error}
+                <div>{error}</div>
+                {shouldShowResendVerification ? (
+                  <button
+                    type="button"
+                    className="btn btn-link px-0 mt-2 text-decoration-none fw-semibold"
+                    onClick={handleResendVerification}
+                    disabled={isResendingVerification}
+                  >
+                    {isResendingVerification
+                      ? "Reenviando confirmacao..."
+                      : "Reenviar e-mail de confirmacao"}
+                  </button>
+                ) : null}
               </div>
             ) : null}
 
@@ -167,7 +208,7 @@ export default function Login() {
             <button
               type="submit"
               className="btn finova-btn-primary"
-              disabled={isSubmitting || isDemoSubmitting}
+              disabled={isSubmitting || isDemoSubmitting || isResendingVerification}
             >
               {isSubmitting ? "Entrando..." : "Entrar"}
             </button>
@@ -175,7 +216,7 @@ export default function Login() {
 
           <div className="text-center mt-4">
             <span className="finova-subtitle small">
-              Ainda não tem uma conta?{" "}
+              Ainda nao tem uma conta?{" "}
               <Link to="/register" className="text-decoration-none fw-semibold">
                 Criar conta
               </Link>

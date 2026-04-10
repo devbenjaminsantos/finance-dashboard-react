@@ -12,14 +12,48 @@ namespace FinanceDashboard.Api.Services.Email
             _configuration = configuration;
         }
 
-        public async Task SendPasswordResetEmailAsync(string toEmail, string name, string resetUrl)
+        public Task SendPasswordResetEmailAsync(string toEmail, string name, string resetUrl)
+        {
+            return SendAsync(
+                toEmail,
+                "Redefinicao de senha - Finova",
+                $"""
+                Ola, {name}.
+
+                Recebemos uma solicitacao para redefinir sua senha no Finova.
+
+                Acesse o link abaixo para criar uma nova senha:
+                {resetUrl}
+
+                Se voce nao solicitou essa alteracao, ignore este e-mail.
+                """);
+        }
+
+        public Task SendEmailVerificationAsync(string toEmail, string name, string verificationUrl)
+        {
+            return SendAsync(
+                toEmail,
+                "Confirmacao de e-mail - Finova",
+                $"""
+                Ola, {name}.
+
+                Confirme seu e-mail para ativar sua conta no Finova.
+
+                Acesse o link abaixo para concluir a confirmacao:
+                {verificationUrl}
+
+                Se voce nao criou esta conta, ignore este e-mail.
+                """);
+        }
+
+        private async Task SendAsync(string toEmail, string subject, string body)
         {
             var host = _configuration["Smtp:Host"];
             var fromEmail = _configuration["Smtp:FromEmail"];
 
             if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(fromEmail))
             {
-                throw new InvalidOperationException("SMTP não configurado.");
+                throw new InvalidOperationException("SMTP nao configurado.");
             }
 
             var port = _configuration.GetValue("Smtp:Port", 587);
@@ -31,17 +65,8 @@ namespace FinanceDashboard.Api.Services.Email
             using var message = new MailMessage
             {
                 From = new MailAddress(fromEmail, fromName),
-                Subject = "Redefinição de senha - Finova",
-                Body = $"""
-                    Olá, {name}.
-
-                    Recebemos uma solicitação para redefinir sua senha no Finova.
-
-                    Acesse o link abaixo para criar uma nova senha:
-                    {resetUrl}
-
-                    Se você não solicitou essa alteração, ignore este e-mail.
-                    """,
+                Subject = subject,
+                Body = body,
                 IsBodyHtml = false
             };
 

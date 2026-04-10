@@ -43,9 +43,15 @@ export function resetPasswordRequest(token, newPassword) {
 }
 
 export function clearStoredSession() {
+  const hadToken = localStorage.getItem("token") !== null;
+  const hadUser = localStorage.getItem("user") !== null;
+
   localStorage.removeItem("token");
   localStorage.removeItem("user");
-  dispatchSessionChange();
+
+  if (hadToken || hadUser) {
+    dispatchSessionChange();
+  }
 }
 
 export function logout() {
@@ -110,7 +116,17 @@ export function isTokenExpired(token) {
 export function hasValidSession() {
   const token = getStoredToken();
 
-  if (!token || isTokenExpired(token)) {
+  if (!token) {
+    const user = localStorage.getItem("user");
+
+    if (user !== null) {
+      clearStoredSession();
+    }
+
+    return false;
+  }
+
+  if (isTokenExpired(token)) {
     clearStoredSession();
     return false;
   }

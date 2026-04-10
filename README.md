@@ -37,10 +37,10 @@ Crie o arquivo `server/.env` com base em `server/.env.example` e defina `SA_PASS
 
 Depois suba o SQL Server:
 
-```bash
+
+
 cd server
 docker compose up -d
-```
 
 ### 3. Backend
 
@@ -55,11 +55,8 @@ Voce tambem pode usar variaveis de ambiente no lugar do arquivo:
 
 Depois rode a API:
 
-```bash
 cd server/FinanceDashboard.Api
 dotnet run
-```
-
 A API sobe por padrao em `http://localhost:5278`.
 
 ## Fluxo de desenvolvimento

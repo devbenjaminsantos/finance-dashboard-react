@@ -2,6 +2,12 @@ import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { demoLoginRequest, hasValidSession, loginRequest } from "../lib/api/auth";
 
+const demoHighlights = [
+  "Dashboard preenchido com receitas e despesas realistas",
+  "Categorias organizadas para apresentar os gráficos",
+  "Fluxo completo de autenticação e recuperação de senha",
+];
+
 export default function Login() {
   const navigate = useNavigate();
 
@@ -52,7 +58,7 @@ export default function Login() {
 
   return (
     <div className="finova-page d-flex align-items-center justify-content-center px-3">
-      <div className="w-100" style={{ maxWidth: 460 }}>
+      <div className="w-100" style={{ maxWidth: 540 }}>
         <div className="text-center mb-4">
           <h1 className="finova-title finova-brand mb-2">Finova</h1>
           <p className="finova-subtitle mb-0">
@@ -68,23 +74,46 @@ export default function Login() {
             </p>
           </div>
 
-          <div className="d-grid gap-2 mb-4">
-            <button
-              type="button"
-              className="btn finova-btn-light"
-              onClick={handleDemoLogin}
-              disabled={isSubmitting || isDemoSubmitting}
-            >
-              {isDemoSubmitting ? "Abrindo demonstração..." : "Entrar como demonstração"}
-            </button>
-            <p className="finova-subtitle small mb-0 text-center">
-              Explore uma conta pronta, com dados fictícios e indicadores preenchidos.
-            </p>
+          <div
+            className="p-4 rounded-4 mb-4"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(13,110,253,0.10), rgba(25,135,84,0.08))",
+              border: "1px solid rgba(13,110,253,0.12)",
+            }}
+          >
+            <div className="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-start">
+              <div>
+                <div className="small text-uppercase fw-semibold text-primary mb-2">
+                  Prévia do produto
+                </div>
+                <h3 className="finova-title h5 mb-2">Explore a conta demo</h3>
+                <p className="finova-subtitle mb-3">
+                  Entre em segundos e veja o Finova com dados prontos para apresentação.
+                </p>
+                <div className="d-grid gap-2">
+                  {demoHighlights.map((item) => (
+                    <div key={item} className="small text-muted">
+                      • {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="btn finova-btn-primary px-4"
+                onClick={handleDemoLogin}
+                disabled={isSubmitting || isDemoSubmitting}
+              >
+                {isDemoSubmitting ? "Abrindo demonstração..." : "Entrar como demonstração"}
+              </button>
+            </div>
           </div>
 
           <div className="d-flex align-items-center gap-3 mb-4">
             <hr className="flex-grow-1" />
-            <span className="finova-subtitle small">ou</span>
+            <span className="finova-subtitle small">ou use sua conta</span>
             <hr className="flex-grow-1" />
           </div>
 

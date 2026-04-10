@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { useTransactions } from "../features/transactions/useTransactions";
 import TransactionModal from "../features/transactions/components/TransactionModal";
 import TransactionsFilters from "../features/transactions/components/TransactionsFilters";
 import TransactionsTable from "../features/transactions/components/TransactionsTable";
+import { useTransactions } from "../features/transactions/useTransactions";
+import { formatBRLFromCents } from "../lib/format/currency";
+import { formatBRDate } from "../lib/format/date";
+import { downloadCsv } from "../lib/export/csv";
 import { loadJSON, saveJSON } from "../lib/storage/jsonStorage";
 
 const FILTERS_KEY = "fd_tx_filters_v1";
@@ -30,9 +33,7 @@ export default function Transactions() {
 
   const [q, setQ] = useState(() => saved.q);
   const [typeFilter, setTypeFilter] = useState(() => saved.typeFilter);
-  const [categoryFilter, setCategoryFilter] = useState(
-    () => saved.categoryFilter
-  );
+  const [categoryFilter, setCategoryFilter] = useState(() => saved.categoryFilter);
   const [month, setMonth] = useState(() => saved.month);
   const [sortBy, setSortBy] = useState(() => saved.sortBy);
   const [isOpen, setIsOpen] = useState(false);
@@ -128,7 +129,7 @@ export default function Transactions() {
   }
 
   async function handleRemove(id) {
-    if (confirm("Remover esta transação?")) {
+    if (confirm("Remover esta transacao?")) {
       setIsMutating(true);
       try {
         await removeTransaction(id);
@@ -154,14 +155,30 @@ export default function Transactions() {
     });
   }
 
+  function exportFilteredTransactions() {
+    const rows = [
+      ["Data", "Descricao", "Categoria", "Tipo", "Valor", "Valor em centavos"],
+      ...filtered.map((transaction) => [
+        formatBRDate(transaction.date),
+        transaction.description || "",
+        transaction.category || "Sem categoria",
+        transaction.type === "income" ? "Receita" : "Despesa",
+        formatBRLFromCents(transaction.amountCents),
+        Number(transaction.amountCents) || 0,
+      ]),
+    ];
+
+    const monthLabel = month || "todos";
+    downloadCsv(`finova-transacoes-${monthLabel}.csv`, rows);
+  }
+
   return (
     <section className="finova-section-space">
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 gap-3">
         <div>
-          <h1 className="finova-title mb-1">Transações</h1>
+          <h1 className="finova-title mb-1">Transacoes</h1>
           <p className="finova-subtitle mb-0">
-            Gerencie receitas e despesas com controle total do seu fluxo
-            financeiro.
+            Gerencie receitas e despesas com controle total do seu fluxo financeiro.
           </p>
         </div>
 
@@ -170,7 +187,7 @@ export default function Transactions() {
           onClick={openCreate}
           disabled={isMutating}
         >
-          Nova transação
+          Nova transacao
         </button>
       </div>
 
@@ -203,6 +220,7 @@ export default function Transactions() {
           totalTransactionsCount={transactions.length}
           onEdit={openEdit}
           onRemove={handleRemove}
+          onExport={exportFilteredTransactions}
           isLoading={isLoading}
           isMutating={isMutating}
         />

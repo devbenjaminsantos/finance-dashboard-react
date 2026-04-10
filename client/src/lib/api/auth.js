@@ -6,7 +6,7 @@ export async function loginRequest(email, password) {
     body: JSON.stringify({ email, password }),
   });
 
-  // Nota para mim: salvo token e user juntos para atualizar navbar, guards e requests
+  // Salvo token e user juntos para atualizar navbar, guards e requests
   // autenticados imediatamente depois do login.
   persistSession(data.token, data.user ?? null);
 

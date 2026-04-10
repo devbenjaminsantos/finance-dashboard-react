@@ -230,7 +230,7 @@ export default function BudgetGoalsSection({ transactions }) {
       amountCents,
     };
 
-    // Nota para mim: categoria null representa a meta geral do mes.
+    // Categoria null representa a meta geral do mes.
     // Com categoria preenchida, a meta vale so para aquele grupo.
     setIsSaving(true);
 

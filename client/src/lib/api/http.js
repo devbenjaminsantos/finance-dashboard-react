@@ -20,7 +20,7 @@ export async function apiRequest(path, options = {}) {
       headers,
     });
   } catch {
-    // Nota para mim: concentrei aqui o erro de conexao para nao repetir fallback
+    // Concentrei aqui o erro de conexao para nao repetir fallback
     // em cada client de endpoint do frontend.
     throw new Error(
       "Nao foi possivel conectar com a API. Verifique se o backend esta publicado e acessivel."

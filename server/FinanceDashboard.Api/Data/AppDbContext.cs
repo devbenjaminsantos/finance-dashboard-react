@@ -12,6 +12,7 @@ namespace FinanceDashboard.Api.Data
 
         public DbSet<User> Users { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
+        public DbSet<BudgetGoal> BudgetGoals { get; set; }
         public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -46,6 +47,23 @@ namespace FinanceDashboard.Api.Data
                     table.HasCheckConstraint(
                         "CK_Transactions_Type",
                         "[Type] IN ('income', 'expense')"));
+            });
+
+            modelBuilder.Entity<BudgetGoal>(entity =>
+            {
+                entity.Property(goal => goal.Month)
+                    .HasMaxLength(7);
+
+                entity.Property(goal => goal.Category)
+                    .HasMaxLength(60);
+
+                entity.HasIndex(goal => new { goal.UserId, goal.Month, goal.Category })
+                    .IsUnique();
+
+                entity.HasOne(goal => goal.User)
+                    .WithMany(user => user.BudgetGoals)
+                    .HasForeignKey(goal => goal.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<PasswordResetToken>(entity =>

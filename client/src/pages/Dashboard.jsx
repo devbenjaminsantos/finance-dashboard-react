@@ -1,13 +1,14 @@
 import { useMemo, useState } from "react";
+import BudgetGoalsSection from "../features/dashboard/BudgetGoalsSection";
 import DashboardCharts from "../features/dashboard/DashboardCharts";
 import { useTransactions } from "../features/transactions/useTransactions";
 import { formatBRLFromCents } from "../lib/format/currency";
 
 const PERIOD_OPTIONS = [
-  { value: "current-month", label: "Mês atual" },
-  { value: "last-3-months", label: "Últimos 3 meses" },
-  { value: "last-6-months", label: "Últimos 6 meses" },
-  { value: "all", label: "Todos os períodos" },
+  { value: "current-month", label: "Mes atual" },
+  { value: "last-3-months", label: "Ultimos 3 meses" },
+  { value: "last-6-months", label: "Ultimos 6 meses" },
+  { value: "all", label: "Todos os periodos" },
 ];
 
 function SummaryCard({ label, value, tone = "default" }) {
@@ -92,7 +93,7 @@ export default function Dashboard() {
   const [period, setPeriod] = useState("current-month");
 
   const selectedPeriodLabel = useMemo(
-    () => PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? "Mês atual",
+    () => PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? "Mes atual",
     [period]
   );
 
@@ -144,7 +145,7 @@ export default function Dashboard() {
         </div>
 
         <div style={{ minWidth: 220 }}>
-          <label className="form-label text-dark fw-medium">Período</label>
+          <label className="form-label text-dark fw-medium">Periodo</label>
           <select
             className="form-select finova-select"
             value={period}
@@ -183,13 +184,15 @@ export default function Dashboard() {
             />
           </div>
 
+          <BudgetGoalsSection transactions={transactions} />
+
           {filteredTransactions.length === 0 ? (
             <div className="finova-card p-4">
               <h2 className="finova-subtitle h5 mb-2">
-                Nenhum dado financeiro para o período selecionado
+                Nenhum dado financeiro para o periodo selecionado
               </h2>
               <p className="finova-subtitle mb-0">
-                Ajuste o período ou adicione novas transações para visualizar seu desempenho.
+                Ajuste o periodo ou adicione novas transacoes para visualizar seu desempenho.
               </p>
             </div>
           ) : (

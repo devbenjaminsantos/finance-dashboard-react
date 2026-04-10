@@ -1,16 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { parseMoneyToCents } from "../../../lib/format/currency";
-
-const CATEGORIES = [
-  "Alimentação",
-  "Transporte",
-  "Moradia",
-  "Lazer",
-  "Saúde",
-  "Educação",
-  "Assinaturas",
-  "Outros",
-];
+import { TRANSACTION_CATEGORIES as CATEGORIES } from "../../../lib/constants/transactionCategories";
 
 function todayISO() {
   const d = new Date();
@@ -44,7 +34,7 @@ export default function TransactionModal({
   const descriptionInputRef = useRef(null);
 
   const title = useMemo(
-    () => (isEdit ? "Editar transação" : "Nova transação"),
+    () => (isEdit ? "Editar transacao" : "Nova transacao"),
     [isEdit]
   );
 
@@ -98,7 +88,7 @@ export default function TransactionModal({
     const amountCents = parseMoneyToCents(amount);
 
     if (!description.trim()) {
-      setError("Informe uma descrição.");
+      setError("Informe uma descricao.");
       setIsSubmitting(false);
       return;
     }
@@ -110,7 +100,7 @@ export default function TransactionModal({
     }
 
     if (!Number.isFinite(amountCents) || amountCents <= 0) {
-      setError("Informe um valor válido (ex: 150,00).");
+      setError("Informe um valor valido (ex: 150,00).");
       setIsSubmitting(false);
       return;
     }
@@ -126,7 +116,7 @@ export default function TransactionModal({
 
       onClose();
     } catch (err) {
-      setError(err.message || "Não foi possível salvar a transação.");
+      setError(err.message || "Nao foi possivel salvar a transacao.");
     } finally {
       setIsSubmitting(false);
     }
@@ -153,7 +143,7 @@ export default function TransactionModal({
             <div>
               <h2 className="finova-title h4 mb-1">{title}</h2>
               <p className="finova-subtitle small mb-0">
-                Preencha os dados da movimentação financeira.
+                Preencha os dados da movimentacao financeira.
               </p>
             </div>
 
@@ -178,14 +168,14 @@ export default function TransactionModal({
               </div>
 
               <div className="col-12 col-md-8">
-                <label className="form-label text-dark fw-medium">Descrição</label>
+                <label className="form-label text-dark fw-medium">Descricao</label>
                 <input
                   ref={descriptionInputRef}
                   type="text"
                   className="form-control finova-input"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Ex: Mercado do mês"
+                  placeholder="Ex: Mercado do mes"
                 />
               </div>
 
@@ -252,8 +242,8 @@ export default function TransactionModal({
                   {isSubmitting
                     ? "Salvando..."
                     : isEdit
-                      ? "Salvar alterações"
-                      : "Adicionar transação"}
+                      ? "Salvar alteracoes"
+                      : "Adicionar transacao"}
                 </button>
               </div>
             </form>

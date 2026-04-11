@@ -220,8 +220,11 @@ export default function TransactionModal({
           <div className="modal-body px-4 pb-4 pt-3">
             <form onSubmit={handleSubmit} className="row g-3">
               <div className="col-12 col-md-4">
-                <label className="form-label text-dark fw-medium">Data</label>
+                <label className="form-label text-dark fw-medium" htmlFor="transaction-date">
+                  Data
+                </label>
                 <input
+                  id="transaction-date"
                   type="date"
                   className="form-control finova-input"
                   value={date}
@@ -230,8 +233,14 @@ export default function TransactionModal({
               </div>
 
               <div className="col-12 col-md-8">
-                <label className="form-label text-dark fw-medium">Descrição</label>
+                <label
+                  className="form-label text-dark fw-medium"
+                  htmlFor="transaction-description"
+                >
+                  Descrição
+                </label>
                 <input
+                  id="transaction-description"
                   ref={descriptionInputRef}
                   type="text"
                   className="form-control finova-input"
@@ -242,8 +251,11 @@ export default function TransactionModal({
               </div>
 
               <div className="col-12 col-md-4">
-                <label className="form-label text-dark fw-medium">Tipo</label>
+                <label className="form-label text-dark fw-medium" htmlFor="transaction-type">
+                  Tipo
+                </label>
                 <select
+                  id="transaction-type"
                   className="form-select finova-select"
                   value={type}
                   onChange={(event) => {
@@ -259,8 +271,11 @@ export default function TransactionModal({
               </div>
 
               <div className="col-12 col-md-4">
-                <label className="form-label text-dark fw-medium">Categoria</label>
+                <label className="form-label text-dark fw-medium" htmlFor="transaction-category">
+                  Categoria
+                </label>
                 <select
+                  id="transaction-category"
                   className="form-select finova-select"
                   value={category}
                   onChange={(event) => setCategory(event.target.value)}
@@ -274,8 +289,11 @@ export default function TransactionModal({
               </div>
 
               <div className="col-12 col-md-4">
-                <label className="form-label text-dark fw-medium">Valor</label>
+                <label className="form-label text-dark fw-medium" htmlFor="transaction-amount">
+                  Valor
+                </label>
                 <input
+                  id="transaction-amount"
                   type="text"
                   className="form-control finova-input"
                   value={amount}
@@ -317,8 +335,14 @@ export default function TransactionModal({
 
                   {isRecurring ? (
                     <div className="col-12 col-md-6">
-                      <label className="form-label text-dark fw-medium">Repetir até</label>
+                      <label
+                        className="form-label text-dark fw-medium"
+                        htmlFor="transaction-recurrence-end-date"
+                      >
+                        Repetir até
+                      </label>
                       <input
+                        id="transaction-recurrence-end-date"
                         type="date"
                         className="form-control finova-input"
                         value={recurrenceEndDate}
@@ -334,7 +358,8 @@ export default function TransactionModal({
               ) : initial?.isRecurring ? (
                 <div className="col-12">
                   <div className="alert alert-info py-2 mb-0">
-                    Este lançamento faz parte de uma série mensal. Nesta versão, a edição afeta apenas esta ocorrência.
+                    Este lançamento faz parte de uma série mensal. Nesta versão, a edição afeta
+                    apenas esta ocorrência.
                   </div>
                 </div>
               ) : null}

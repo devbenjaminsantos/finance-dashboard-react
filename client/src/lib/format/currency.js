@@ -13,13 +13,14 @@ export function parseMoneyToCents(input) {
   let s = String(input).trim();
   if (!s) return NaN;
 
-  // remove R$, espaços e caracteres estranhos (mantém dígitos, ponto, vírgula, sinal)
+  // remove R$, espacos e caracteres estranhos (mantem digitos, ponto, virgula e sinal)
   s = s.replace(/[R$\s]/g, "").replace(/[^\d,.-]/g, "");
+  if (!s) return NaN;
 
   const lastComma = s.lastIndexOf(",");
   const lastDot = s.lastIndexOf(".");
 
-  // define qual é o separador decimal (o que aparece por último)
+  // define qual e o separador decimal (o que aparece por ultimo)
   let decimalSep = null;
   if (lastComma !== -1 || lastDot !== -1) {
     decimalSep = lastComma > lastDot ? "," : ".";
@@ -27,12 +28,9 @@ export function parseMoneyToCents(input) {
 
   if (decimalSep) {
     const thousandsSep = decimalSep === "," ? "." : ",";
-    // remove separadores de milhar
     s = s.split(thousandsSep).join("");
-    // troca decimal pra ponto
     if (decimalSep === ",") s = s.replace(",", ".");
   } else {
-    // sem decimal: remove qualquer separador
     s = s.replace(/[.,]/g, "");
   }
 

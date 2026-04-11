@@ -3,6 +3,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   Legend,
   Pie,
   PieChart,
@@ -10,31 +11,8 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-  Cell,
 } from "recharts";
 import { formatBRLFromCents } from "../../lib/format/currency";
-
-function currentMonthISO() {
-  const d = new Date();
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  return `${yyyy}-${mm}`;
-}
-
-function lastNMonthsISO(n = 6) {
-  const out = [];
-  const d = new Date();
-  d.setDate(1);
-
-  for (let i = 0; i < n; i++) {
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    out.push(`${yyyy}-${mm}`);
-    d.setMonth(d.getMonth() - 1);
-  }
-
-  return out.reverse();
-}
 
 function monthLabel(yyyyMM) {
   const [y, m] = yyyyMM.split("-");
@@ -138,10 +116,10 @@ export default function DashboardCharts({
 
   return (
     <div className="row g-3">
-      <div className="col-12 col-lg-5">
-        <div className="finova-card h-100">
+      <div className="col-12 col-lg-5" style={{ minWidth: 0 }}>
+        <div className="finova-card h-100" style={{ minWidth: 0 }}>
           <div className="p-4">
-            <div className="d-flex justify-content-between align-items-baseline mb-2">
+            <div className="d-flex justify-content-between align-items-baseline mb-2 gap-2 flex-wrap">
               <h2 className="finova-title h5 mb-0">Despesas por categoria</h2>
               <span className="text-muted small">{categoryCaption}</span>
             </div>
@@ -151,8 +129,8 @@ export default function DashboardCharts({
                 Sem despesas registradas no período selecionado.
               </div>
             ) : (
-              <div style={{ width: "100%", height: 320 }}>
-                <ResponsiveContainer>
+              <div className="finova-chart-shell">
+                <ResponsiveContainer width="100%" height="100%" debounce={100}>
                   <PieChart>
                     <Tooltip formatter={(value) => formatBRLFromCents(value)} />
                     <Pie
@@ -163,9 +141,9 @@ export default function DashboardCharts({
                       outerRadius={100}
                       paddingAngle={2}
                     >
-                      {expenseByCategory.map((_, idx) => (
+                      {expenseByCategory.map((item, idx) => (
                         <Cell
-                          key={expenseByCategory[idx].name}
+                          key={item.name}
                           fill={pieColors[idx % pieColors.length]}
                         />
                       ))}
@@ -179,16 +157,16 @@ export default function DashboardCharts({
         </div>
       </div>
 
-      <div className="col-12 col-lg-7">
-        <div className="finova-card h-100">
+      <div className="col-12 col-lg-7" style={{ minWidth: 0 }}>
+        <div className="finova-card h-100" style={{ minWidth: 0 }}>
           <div className="p-4">
             <h2 className="finova-title h5 mb-2">Receitas vs despesas</h2>
             <p className="finova-subtitle small mb-3">{periodLabel}</p>
 
             {hasIncomeVsExpenseData ? (
               <>
-                <div style={{ width: "100%", height: 320 }}>
-                  <ResponsiveContainer>
+                <div className="finova-chart-shell">
+                  <ResponsiveContainer width="100%" height="100%" debounce={100}>
                     <BarChart data={incomeVsExpense} margin={{ left: 10, right: 10 }}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="month" tickFormatter={monthLabel} />
@@ -205,12 +183,14 @@ export default function DashboardCharts({
                 </div>
 
                 <div className="text-muted small">
-                  Valores em BRL com base nas transações salvas no período selecionado.
+                  Valores em BRL com base nas transações salvas no período
+                  selecionado.
                 </div>
               </>
             ) : (
               <div className="finova-subtitle">
-                Sem movimentações suficientes para exibir o comparativo do período selecionado.
+                Sem movimentações suficientes para exibir o comparativo do
+                período selecionado.
               </div>
             )}
           </div>

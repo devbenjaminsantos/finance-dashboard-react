@@ -21,5 +21,9 @@ namespace FinanceDashboard.Api.DTOs
         [Required]
         [RegularExpression("^(income|expense)$")]
         public string Type { get; set; } = string.Empty;
+
+        public bool IsRecurring { get; set; }
+
+        public DateTime? RecurrenceEndDate { get; set; }
     }
 }

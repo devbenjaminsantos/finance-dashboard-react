@@ -65,29 +65,50 @@ namespace FinanceDashboard.Api.Controllers
         {
             var userId = _currentUserService.GetRequiredUserId();
 
-            var transaction = new Transaction
+            if (!TryBuildOccurrenceDates(dto, out var occurrenceDates, out var validationError))
             {
-                Description = dto.Description.Trim(),
-                Category = dto.Category.Trim(),
-                AmountCents = dto.AmountCents,
-                Date = dto.Date,
-                Type = dto.Type.Trim().ToLowerInvariant(),
-                UserId = userId
-            };
+                ModelState.AddModelError(nameof(dto.RecurrenceEndDate), validationError);
+                return ValidationProblem(ModelState);
+            }
 
-            _context.Transactions.Add(transaction);
+            var recurrenceGroupId = dto.IsRecurring
+                ? Guid.NewGuid().ToString("N")
+                : null;
+
+            var transactions = occurrenceDates
+                .Select(date => new Transaction
+                {
+                    Description = dto.Description.Trim(),
+                    Category = dto.Category.Trim(),
+                    AmountCents = dto.AmountCents,
+                    Date = date,
+                    Type = dto.Type.Trim().ToLowerInvariant(),
+                    IsRecurring = dto.IsRecurring,
+                    RecurrenceEndDate = dto.IsRecurring ? dto.RecurrenceEndDate?.Date : null,
+                    RecurrenceGroupId = recurrenceGroupId,
+                    UserId = userId
+                })
+                .ToList();
+
+            _context.Transactions.AddRange(transactions);
             await _context.SaveChangesAsync();
+
+            var firstTransaction = transactions[0];
+            var summary = dto.IsRecurring
+                ? $"Série recorrente criada: {firstTransaction.Description} ({transactions.Count} lançamentos mensais)."
+                : $"Transação criada: {firstTransaction.Description} ({firstTransaction.Type}).";
+
             await _auditLogService.WriteAsync(
                 action: "transaction.created",
                 entityType: "Transaction",
-                entityId: transaction.Id.ToString(),
+                entityId: firstTransaction.Id.ToString(),
                 userId: userId,
-                summary: $"Transacao criada: {transaction.Description} ({transaction.Type}).");
+                summary: summary);
 
             return CreatedAtAction(
                 nameof(GetById),
-                new { id = transaction.Id },
-                ToResponse(transaction));
+                new { id = firstTransaction.Id },
+                ToResponse(firstTransaction));
         }
 
         [HttpPut("{id:int}")]
@@ -106,7 +127,7 @@ namespace FinanceDashboard.Api.Controllers
             transaction.Description = dto.Description.Trim();
             transaction.Category = dto.Category.Trim();
             transaction.AmountCents = dto.AmountCents;
-            transaction.Date = dto.Date;
+            transaction.Date = dto.Date.Date;
             transaction.Type = dto.Type.Trim().ToLowerInvariant();
 
             await _context.SaveChangesAsync();
@@ -145,6 +166,55 @@ namespace FinanceDashboard.Api.Controllers
             return NoContent();
         }
 
+        private static bool TryBuildOccurrenceDates(
+            TransactionRequest dto,
+            out List<DateTime> occurrenceDates,
+            out string validationError)
+        {
+            occurrenceDates = new List<DateTime>();
+            validationError = string.Empty;
+
+            var startDate = dto.Date.Date;
+
+            if (!dto.IsRecurring)
+            {
+                occurrenceDates.Add(startDate);
+                return true;
+            }
+
+            if (!dto.RecurrenceEndDate.HasValue)
+            {
+                validationError = "Informe até quando a recorrência mensal deve ser gerada.";
+                return false;
+            }
+
+            var endDate = dto.RecurrenceEndDate.Value.Date;
+            var minimumEndDate = startDate.AddMonths(1);
+
+            if (endDate < minimumEndDate)
+            {
+                validationError = "A recorrência mensal precisa alcançar pelo menos o próximo mês.";
+                return false;
+            }
+
+            var currentDate = startDate;
+
+            while (currentDate <= endDate)
+            {
+                occurrenceDates.Add(currentDate);
+
+                if (occurrenceDates.Count > 60)
+                {
+                    validationError = "Limite de 60 lançamentos recorrentes por série.";
+                    return false;
+                }
+
+                currentDate = currentDate.AddMonths(1);
+            }
+
+            return true;
+        }
+
         private static TransactionResponse ToResponse(Transaction transaction)
         {
             return new TransactionResponse
@@ -154,7 +224,10 @@ namespace FinanceDashboard.Api.Controllers
                 Category = transaction.Category,
                 AmountCents = transaction.AmountCents,
                 Date = transaction.Date,
-                Type = transaction.Type
+                Type = transaction.Type,
+                IsRecurring = transaction.IsRecurring,
+                RecurrenceEndDate = transaction.RecurrenceEndDate,
+                RecurrenceGroupId = transaction.RecurrenceGroupId
             };
         }
     }

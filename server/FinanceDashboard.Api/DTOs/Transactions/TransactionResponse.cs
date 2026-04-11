@@ -8,5 +8,8 @@ namespace FinanceDashboard.Api.DTOs
         public long AmountCents { get; set; }
         public DateTime Date { get; set; }
         public string Type { get; set; } = string.Empty;
+        public bool IsRecurring { get; set; }
+        public DateTime? RecurrenceEndDate { get; set; }
+        public string? RecurrenceGroupId { get; set; }
     }
 }

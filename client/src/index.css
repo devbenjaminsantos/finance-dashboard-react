@@ -218,6 +218,7 @@ a {
 }
 
 .finova-badge-primary,
+.finova-badge-neutral,
 .finova-badge-warning,
 .finova-badge-danger {
   display: inline-flex;
@@ -232,6 +233,12 @@ a {
   background: var(--info-bg);
   color: var(--info);
   border: 1px solid rgba(37, 99, 235, 0.18);
+}
+
+.finova-badge-neutral {
+  background: var(--surface-soft);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
 }
 
 .finova-badge-warning {

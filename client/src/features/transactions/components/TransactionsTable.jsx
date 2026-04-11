@@ -86,6 +86,11 @@ export default function TransactionsTable({
 
                   <td>
                     <div className="fw-medium text-dark">{transaction.description}</div>
+                    {transaction.isRecurring ? (
+                      <div className="mt-1">
+                        <span className="finova-badge-neutral">Recorrente mensal</span>
+                      </div>
+                    ) : null}
                   </td>
 
                   <td>

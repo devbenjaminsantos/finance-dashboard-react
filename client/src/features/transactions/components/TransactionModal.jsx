@@ -10,6 +10,25 @@ function todayISO() {
   return `${yyyy}-${mm}-${dd}`;
 }
 
+function addMonthsISO(dateString, monthsToAdd) {
+  if (!dateString) {
+    return "";
+  }
+
+  const date = new Date(`${dateString}T00:00:00`);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  date.setMonth(date.getMonth() + monthsToAdd);
+
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 function centsToInput(value) {
   if (!Number.isFinite(Number(value))) {
     return "";
@@ -32,6 +51,8 @@ export default function TransactionModal({
   const [type, setType] = useState("expense");
   const [category, setCategory] = useState(getTransactionCategories("expense")[0]);
   const [amount, setAmount] = useState("");
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const descriptionInputRef = useRef(null);
@@ -41,6 +62,7 @@ export default function TransactionModal({
     [isEdit]
   );
   const categories = useMemo(() => getTransactionCategories(type), [type]);
+  const minimumRecurrenceEndDate = useMemo(() => addMonthsISO(date, 1), [date]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -56,12 +78,18 @@ export default function TransactionModal({
       setType(nextType);
       setCategory(initial.category || nextCategories[0]);
       setAmount(centsToInput(initial.amountCents));
+      setIsRecurring(Boolean(initial.isRecurring));
+      setRecurrenceEndDate((initial.recurrenceEndDate || "").slice(0, 10));
     } else {
-      setDate(todayISO());
+      const baseDate = todayISO();
+
+      setDate(baseDate);
       setDescription("");
       setType("expense");
       setCategory(getTransactionCategories("expense")[0]);
       setAmount("");
+      setIsRecurring(false);
+      setRecurrenceEndDate(addMonthsISO(baseDate, 1));
     }
 
     setError("");
@@ -122,6 +150,20 @@ export default function TransactionModal({
       return;
     }
 
+    if (isRecurring) {
+      if (!recurrenceEndDate) {
+        setError("Informe até quando a recorrência mensal deve ser gerada.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (minimumRecurrenceEndDate && recurrenceEndDate < minimumRecurrenceEndDate) {
+        setError("A recorrência mensal precisa alcançar pelo menos o próximo mês.");
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     try {
       await onSubmit({
         date,
@@ -129,6 +171,8 @@ export default function TransactionModal({
         type,
         category,
         amountCents,
+        isRecurring,
+        recurrenceEndDate: isRecurring ? recurrenceEndDate : null,
       });
 
       onClose();
@@ -240,6 +284,60 @@ export default function TransactionModal({
                   inputMode="decimal"
                 />
               </div>
+
+              {!isEdit ? (
+                <>
+                  <div className="col-12">
+                    <div className="form-check">
+                      <input
+                        id="transaction-recurring"
+                        type="checkbox"
+                        className="form-check-input"
+                        checked={isRecurring}
+                        onChange={(event) => {
+                          const checked = event.target.checked;
+                          setIsRecurring(checked);
+
+                          if (checked && !recurrenceEndDate) {
+                            setRecurrenceEndDate(addMonthsISO(date, 1));
+                          }
+                        }}
+                      />
+                      <label
+                        className="form-check-label text-dark fw-medium"
+                        htmlFor="transaction-recurring"
+                      >
+                        Recorrência mensal
+                      </label>
+                    </div>
+                    <p className="form-text mb-0">
+                      Use para salário, aluguel, condomínio, assinaturas e outros lançamentos fixos.
+                    </p>
+                  </div>
+
+                  {isRecurring ? (
+                    <div className="col-12 col-md-6">
+                      <label className="form-label text-dark fw-medium">Repetir até</label>
+                      <input
+                        type="date"
+                        className="form-control finova-input"
+                        value={recurrenceEndDate}
+                        min={minimumRecurrenceEndDate}
+                        onChange={(event) => setRecurrenceEndDate(event.target.value)}
+                      />
+                      <p className="form-text mb-0">
+                        A série será gerada de mês em mês, mantendo o dia base informado.
+                      </p>
+                    </div>
+                  ) : null}
+                </>
+              ) : initial?.isRecurring ? (
+                <div className="col-12">
+                  <div className="alert alert-info py-2 mb-0">
+                    Este lançamento faz parte de uma série mensal. Nesta versão, a edição afeta apenas esta ocorrência.
+                  </div>
+                </div>
+              ) : null}
 
               {error ? (
                 <div className="col-12">

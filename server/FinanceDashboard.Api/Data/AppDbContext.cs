@@ -45,10 +45,15 @@ namespace FinanceDashboard.Api.Data
                 entity.Property(transaction => transaction.Type)
                     .HasMaxLength(20);
 
+                entity.Property(transaction => transaction.RecurrenceGroupId)
+                    .HasMaxLength(40);
+
                 entity.ToTable(table =>
                     table.HasCheckConstraint(
                         "CK_Transactions_Type",
                         "[Type] IN ('income', 'expense')"));
+
+                entity.HasIndex(transaction => new { transaction.UserId, transaction.RecurrenceGroupId });
             });
 
             modelBuilder.Entity<BudgetGoal>(entity =>

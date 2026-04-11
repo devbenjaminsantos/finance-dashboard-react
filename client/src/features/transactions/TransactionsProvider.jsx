@@ -49,9 +49,9 @@ export function TransactionsProvider({ children }) {
   }, [loadAll]);
 
   const addTransaction = useCallback(async (data) => {
-    const created = await createTransaction(data);
-    setTransactions((current) => [created, ...current]);
-  }, []);
+    await createTransaction(data);
+    await loadAll();
+  }, [loadAll]);
 
   const removeTransaction = useCallback(async (id) => {
     await deleteTransaction(id);

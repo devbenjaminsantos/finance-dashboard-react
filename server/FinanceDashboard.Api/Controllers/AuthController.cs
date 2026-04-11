@@ -58,7 +58,7 @@ namespace FinanceDashboard.Api.Controllers
             {
                 return Conflict(new ProblemDetails
                 {
-                    Title = "E-mail ja cadastrado.",
+                    Title = "E-mail já cadastrado.",
                     Status = StatusCodes.Status409Conflict
                 });
             }

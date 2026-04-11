@@ -5,14 +5,14 @@ import { useTransactions } from "../features/transactions/useTransactions";
 import { formatBRLFromCents } from "../lib/format/currency";
 
 const PERIOD_OPTIONS = [
-  { value: "current-month", label: "Mes atual" },
-  { value: "last-3-months", label: "Ultimos 3 meses" },
-  { value: "last-6-months", label: "Ultimos 6 meses" },
-  { value: "all", label: "Todo o historico" },
+  { value: "current-month", label: "Mês atual" },
+  { value: "last-3-months", label: "Últimos 3 meses" },
+  { value: "last-6-months", label: "Últimos 6 meses" },
+  { value: "all", label: "Todo o histórico" },
 ];
 
 const COMPARISON_RANGE_OPTIONS = [
-  { value: 1, label: "1 mes" },
+  { value: 1, label: "1 mês" },
   { value: 3, label: "3 meses" },
   { value: 6, label: "6 meses" },
 ];
@@ -83,7 +83,7 @@ function ComparisonCard({
         : "finova-badge-primary";
 
   const toneText =
-    delta > 0 ? "Subiu" : delta < 0 ? "Caiu" : "Sem variacao";
+    delta > 0 ? "Subiu" : delta < 0 ? "Caiu" : "Sem variação";
 
   return (
     <div className="col-12 col-md-4">
@@ -104,13 +104,48 @@ function ComparisonCard({
           {hasPreviousData ? (
             <span className="fw-semibold">
               {percentChange > 0 ? "+" : ""}
-              {percentChange}% em relacao a {previousRangeLabel}
+              {percentChange}% em relação a {previousRangeLabel}
             </span>
           ) : (
             <span className="finova-subtitle">
               Sem base anterior suficiente para comparar {currentRangeLabel}.
             </span>
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CategoryInsightCard({ title, category, value, tone }) {
+  const badgeClass =
+    tone === "up"
+      ? "finova-badge-expense"
+      : tone === "down"
+        ? "finova-badge-income"
+        : "finova-badge-primary";
+
+  const badgeText =
+    tone === "up"
+      ? "Maior peso"
+      : tone === "down"
+        ? "Maior alívio"
+        : "Sem destaque";
+
+  return (
+    <div className="col-12 col-md-6">
+      <div className="finova-card-soft h-100 p-4">
+        <div className="d-flex justify-content-between align-items-start gap-2 mb-3">
+          <div>
+            <div className="finova-subtitle small mb-1">{title}</div>
+            <div className="finova-title h5 mb-1">{category || "Sem categoria dominante"}</div>
+            <div className="finova-subtitle small">
+              {value > 0
+                ? formatBRLFromCents(value)
+                : "Ainda não há despesas suficientes para destacar uma categoria."}
+            </div>
+          </div>
+          <span className={badgeClass}>{badgeText}</span>
         </div>
       </div>
     </div>
@@ -184,13 +219,54 @@ function summarizeTransactions(transactions) {
   };
 }
 
+function buildExpenseTotalsByCategory(transactions) {
+  const totals = new Map();
+
+  for (const transaction of transactions) {
+    if (transaction.type !== "expense") {
+      continue;
+    }
+
+    const category = transaction.category || "Outros";
+    totals.set(category, (totals.get(category) || 0) + (Number(transaction.amountCents) || 0));
+  }
+
+  return totals;
+}
+
+function getCategoryLeaders(currentTransactions, previousTransactions) {
+  const currentTotals = buildExpenseTotalsByCategory(currentTransactions);
+  const previousTotals = buildExpenseTotalsByCategory(previousTransactions);
+  const allCategories = new Set([...currentTotals.keys(), ...previousTotals.keys()]);
+
+  let biggestIncrease = { category: "", value: 0 };
+  let biggestDrop = { category: "", value: 0 };
+
+  for (const category of allCategories) {
+    const delta = (currentTotals.get(category) || 0) - (previousTotals.get(category) || 0);
+
+    if (delta > biggestIncrease.value) {
+      biggestIncrease = { category, value: delta };
+    }
+
+    if (delta < biggestDrop.value) {
+      biggestDrop = { category, value: Math.abs(delta) };
+    }
+  }
+
+  return {
+    biggestIncrease,
+    biggestDrop,
+  };
+}
+
 export default function Dashboard() {
   const { isLoading, transactions } = useTransactions();
   const [period, setPeriod] = useState("current-month");
   const [comparisonRange, setComparisonRange] = useState(3);
 
   const selectedPeriodLabel = useMemo(
-    () => PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? "Mes atual",
+    () => PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? "Mês atual",
     [period]
   );
 
@@ -240,6 +316,7 @@ export default function Dashboard() {
       previousRangeLabel: `${selectedComparisonRangeLabel} anteriores`,
       current: summarizeTransactions(currentTransactions),
       previous: summarizeTransactions(previousTransactions),
+      categoryLeaders: getCategoryLeaders(currentTransactions, previousTransactions),
     };
   }, [transactions, comparisonRange, selectedComparisonRangeLabel]);
 
@@ -254,7 +331,7 @@ export default function Dashboard() {
         </div>
 
         <div style={{ minWidth: 220 }}>
-          <label className="form-label text-dark fw-medium">Periodo</label>
+          <label className="form-label text-dark fw-medium">Período</label>
           <select
             className="form-select finova-select"
             value={period}
@@ -298,13 +375,13 @@ export default function Dashboard() {
               <div>
                 <h2 className="finova-title h5 mb-1">Comparativo entre meses</h2>
                 <p className="finova-subtitle mb-0">
-                  Compare a janela atual com a imediatamente anterior para identificar mudancas
-                  mais rapido.
+                  Compare a janela atual com a imediatamente anterior para identificar mudanças
+                  mais rápido.
                 </p>
               </div>
 
               <div style={{ minWidth: 180 }}>
-                <label className="form-label text-dark fw-medium">Janela de comparacao</label>
+                <label className="form-label text-dark fw-medium">Janela de comparação</label>
                 <select
                   className="form-select finova-select"
                   value={comparisonRange}
@@ -319,7 +396,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="row g-3">
+            <div className="row g-3 mb-3">
               <ComparisonCard
                 label="Receitas na janela atual"
                 currentValue={monthComparison.current.income}
@@ -342,6 +419,21 @@ export default function Dashboard() {
                 previousRangeLabel={monthComparison.previousRangeLabel}
               />
             </div>
+
+            <div className="row g-3">
+              <CategoryInsightCard
+                title="Categoria que mais pesou"
+                category={monthComparison.categoryLeaders.biggestIncrease.category}
+                value={monthComparison.categoryLeaders.biggestIncrease.value}
+                tone="up"
+              />
+              <CategoryInsightCard
+                title="Categoria que mais aliviou"
+                category={monthComparison.categoryLeaders.biggestDrop.category}
+                value={monthComparison.categoryLeaders.biggestDrop.value}
+                tone="down"
+              />
+            </div>
           </div>
 
           <BudgetGoalsSection transactions={transactions} />
@@ -349,10 +441,10 @@ export default function Dashboard() {
           {filteredTransactions.length === 0 ? (
             <div className="finova-card p-4">
               <h2 className="finova-subtitle h5 mb-2">
-                Nenhum dado financeiro para o periodo selecionado
+                Nenhum dado financeiro para o período selecionado
               </h2>
               <p className="finova-subtitle mb-0">
-                Ajuste o periodo ou adicione novas transacoes para acompanhar o seu desempenho.
+                Ajuste o período ou adicione novas transações para acompanhar o seu desempenho.
               </p>
             </div>
           ) : (

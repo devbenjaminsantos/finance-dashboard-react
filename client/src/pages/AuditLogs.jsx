@@ -16,15 +16,15 @@ function formatActionLabel(action) {
   const labels = {
     "auth.registered": "Conta criada",
     "auth.login-succeeded": "Login realizado",
-    "auth.login-blocked-unconfirmed-email": "Login bloqueado por e-mail nao confirmado",
+    "auth.login-blocked-unconfirmed-email": "Login bloqueado por e-mail não confirmado",
     "auth.demo-login": "Acesso pela conta demo",
-    "auth.verification-resent": "Reenvio de confirmacao de e-mail",
+    "auth.verification-resent": "Reenvio de confirmação de e-mail",
     "auth.email-confirmed": "E-mail confirmado",
-    "auth.password-reset-requested": "Recuperacao de senha solicitada",
+    "auth.password-reset-requested": "Recuperação de senha solicitada",
     "auth.password-reset-completed": "Senha redefinida",
-    "transaction.created": "Transacao criada",
-    "transaction.updated": "Transacao atualizada",
-    "transaction.deleted": "Transacao removida",
+    "transaction.created": "Transação criada",
+    "transaction.updated": "Transação atualizada",
+    "transaction.deleted": "Transação removida",
     "budget-goal.created": "Meta criada",
     "budget-goal.updated": "Meta atualizada",
     "budget-goal.deleted": "Meta removida",
@@ -68,7 +68,7 @@ export default function AuditLogs() {
         }
       } catch (requestError) {
         if (active) {
-          setError(requestError.message || "Nao foi possivel carregar o historico.");
+          setError(requestError.message || "Não foi possível carregar o histórico.");
         }
       } finally {
         if (active) {
@@ -90,9 +90,9 @@ export default function AuditLogs() {
     <section className="finova-section-space">
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 gap-3">
         <div>
-          <h1 className="finova-title mb-1">Historico de atividades</h1>
+          <h1 className="finova-title mb-1">Histórico de atividades</h1>
           <p className="finova-subtitle mb-0">
-            Consulte as acoes mais importantes realizadas na sua conta.
+            Consulte as ações mais importantes realizadas na sua conta.
           </p>
         </div>
 
@@ -103,9 +103,9 @@ export default function AuditLogs() {
             value={limit}
             onChange={(event) => setLimit(Number(event.target.value))}
           >
-            <option value={25}>Ultimos 25 registros</option>
-            <option value={50}>Ultimos 50 registros</option>
-            <option value={100}>Ultimos 100 registros</option>
+            <option value={25}>Últimos 25 registros</option>
+            <option value={50}>Últimos 50 registros</option>
+            <option value={100}>Últimos 100 registros</option>
           </select>
         </div>
       </div>
@@ -114,7 +114,7 @@ export default function AuditLogs() {
         {isLoading ? (
           <div className="d-flex align-items-center gap-3">
             <div className="spinner-border spinner-border-sm text-primary" />
-            <p className="finova-subtitle mb-0">Carregando historico...</p>
+            <p className="finova-subtitle mb-0">Carregando histórico...</p>
           </div>
         ) : error ? (
           <div className="alert alert-danger py-2 mb-0" role="alert">
@@ -124,7 +124,7 @@ export default function AuditLogs() {
           <div className="text-center py-4">
             <h2 className="finova-title h6 mb-2">Nenhum registro encontrado</h2>
             <p className="finova-subtitle mb-0">
-              As acoes importantes da conta aparecerao aqui conforme voce usa o sistema.
+              As ações importantes da conta aparecerão aqui conforme você usa o sistema.
             </p>
           </div>
         ) : (

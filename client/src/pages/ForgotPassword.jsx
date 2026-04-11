@@ -20,11 +20,11 @@ export default function ForgotPassword() {
       const response = await forgotPasswordRequest(email);
       setSuccess(
         response.message ||
-          "Se o e-mail estiver cadastrado, enviaremos as instrucoes de redefinicao."
+          "Se o e-mail estiver cadastrado, enviaremos as instruções de redefinição."
       );
       setResetUrl(response.resetUrl || "");
     } catch (err) {
-      setError(err.message || "Nao foi possivel solicitar a redefinicao.");
+      setError(err.message || "Não foi possível solicitar a redefinição.");
     } finally {
       setIsSubmitting(false);
     }
@@ -47,7 +47,7 @@ export default function ForgotPassword() {
         <div className="text-center mb-4">
           <h1 className="finova-title finova-brand mb-2">Finova</h1>
           <p className="finova-subtitle mb-0">
-            Informe seu e-mail para receber um link de redefinicao.
+            Informe seu e-mail para receber um link de redefinição.
           </p>
         </div>
 
@@ -55,7 +55,7 @@ export default function ForgotPassword() {
           <div className="mb-4 text-center">
             <h2 className="finova-title h4 mb-2">Recuperar senha</h2>
             <p className="finova-subtitle mb-0">
-              Enviaremos as instrucoes se encontrarmos uma conta vinculada ao
+              Enviaremos as instruções se encontrarmos uma conta vinculada ao
               e-mail informado.
             </p>
           </div>
@@ -85,7 +85,7 @@ export default function ForgotPassword() {
                 {success}
                 {localResetPath ? (
                   <div className="mt-2">
-                    <Link to={localResetPath}>Abrir link de redefinicao</Link>
+                    <Link to={localResetPath}>Abrir link de redefinição</Link>
                   </div>
                 ) : null}
               </div>
@@ -96,7 +96,7 @@ export default function ForgotPassword() {
               className="btn finova-btn-primary"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Enviando instrucoes..." : "Enviar instrucoes"}
+              {isSubmitting ? "Enviando instruções..." : "Enviar instruções"}
             </button>
           </form>
 

@@ -29,7 +29,7 @@ export default function Register() {
       setEmail("");
       setPassword("");
     } catch (requestError) {
-      setError(requestError.message || "Nao foi possivel criar a sua conta.");
+      setError(requestError.message || "Não foi possível criar a sua conta.");
     } finally {
       setIsSubmitting(false);
     }
@@ -117,7 +117,7 @@ export default function Register() {
 
           <div className="text-center mt-4">
             <span className="finova-subtitle small">
-              Ja possui uma conta?{" "}
+              Já possui uma conta?{" "}
               <Link to="/login" className="text-decoration-none fw-semibold">
                 Entrar
               </Link>

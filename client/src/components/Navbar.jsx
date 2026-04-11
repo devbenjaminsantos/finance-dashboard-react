@@ -75,7 +75,7 @@ export default function Navbar() {
                   Dashboard
                 </NavLink>
                 <NavLink className={linkClass} to="/transacoes">
-                  Transacoes
+                  Transações
                 </NavLink>
                 <NavLink className={linkClass} to="/auditoria">
                   Auditoria

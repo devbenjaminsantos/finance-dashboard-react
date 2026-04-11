@@ -37,7 +37,7 @@ export default function TransactionModal({
   const descriptionInputRef = useRef(null);
 
   const title = useMemo(
-    () => (isEdit ? "Editar transacao" : "Nova transacao"),
+    () => (isEdit ? "Editar transação" : "Nova transação"),
     [isEdit]
   );
   const categories = useMemo(() => getTransactionCategories(type), [type]);
@@ -105,7 +105,7 @@ export default function TransactionModal({
     const amountCents = parseMoneyToCents(amount);
 
     if (!description.trim()) {
-      setError("Informe uma descricao.");
+      setError("Informe uma descrição.");
       setIsSubmitting(false);
       return;
     }
@@ -117,7 +117,7 @@ export default function TransactionModal({
     }
 
     if (!Number.isFinite(amountCents) || amountCents <= 0) {
-      setError("Informe um valor valido (ex: 150,00).");
+      setError("Informe um valor válido (ex: 150,00).");
       setIsSubmitting(false);
       return;
     }
@@ -133,7 +133,7 @@ export default function TransactionModal({
 
       onClose();
     } catch (requestError) {
-      setError(requestError.message || "Nao foi possivel salvar a transacao.");
+      setError(requestError.message || "Não foi possível salvar a transação.");
     } finally {
       setIsSubmitting(false);
     }
@@ -161,7 +161,7 @@ export default function TransactionModal({
             <div>
               <h2 className="finova-title h4 mb-1">{title}</h2>
               <p className="finova-subtitle small mb-0">
-                Preencha os dados da movimentacao financeira.
+                Preencha os dados da movimentação financeira.
               </p>
             </div>
 
@@ -186,14 +186,14 @@ export default function TransactionModal({
               </div>
 
               <div className="col-12 col-md-8">
-                <label className="form-label text-dark fw-medium">Descricao</label>
+                <label className="form-label text-dark fw-medium">Descrição</label>
                 <input
                   ref={descriptionInputRef}
                   type="text"
                   className="form-control finova-input"
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
-                  placeholder="Ex: Mercado do mes"
+                  placeholder="Ex: Mercado do mês"
                 />
               </div>
 
@@ -266,8 +266,8 @@ export default function TransactionModal({
                     {isSubmitting
                       ? "Salvando..."
                       : isEdit
-                        ? "Salvar alteracoes"
-                        : "Adicionar transacao"}
+                        ? "Salvar alterações"
+                        : "Adicionar transação"}
                   </button>
                 </div>
               </div>

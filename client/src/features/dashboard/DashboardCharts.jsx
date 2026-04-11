@@ -110,7 +110,7 @@ export default function DashboardCharts({
   );
 
   const categoryCaption =
-    periodLabel === "Todos os periodos"
+    periodLabel === "Todos os períodos"
       ? "Todas as despesas registradas"
       : periodLabel;
 
@@ -126,7 +126,7 @@ export default function DashboardCharts({
 
             {expenseByCategory.length === 0 ? (
               <div className="finova-subtitle">
-                Sem despesas registradas no periodo selecionado.
+                Sem despesas registradas no período selecionado.
               </div>
             ) : (
               <div className="finova-chart-shell">
@@ -183,14 +183,14 @@ export default function DashboardCharts({
                 </div>
 
                 <div className="text-muted small">
-                  Valores em BRL com base nas transacoes salvas no periodo
+                  Valores em BRL com base nas transações salvas no período
                   selecionado.
                 </div>
               </>
             ) : (
               <div className="finova-subtitle">
-                Sem movimentacoes suficientes para exibir o comparativo do
-                periodo selecionado.
+                Sem movimentações suficientes para exibir o comparativo do
+                período selecionado.
               </div>
             )}
           </div>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { parseMoneyToCents } from "../../../lib/format/currency";
 import { getTransactionCategories } from "../../../lib/constants/transactionCategories";
+import { parseMoneyToCents } from "../../../lib/format/currency";
 
 function todayISO() {
   const date = new Date();
@@ -37,7 +37,7 @@ export default function TransactionModal({
   const descriptionInputRef = useRef(null);
 
   const title = useMemo(
-    () => (isEdit ? "Editar transação" : "Nova transação"),
+    () => (isEdit ? "Editar transacao" : "Nova transacao"),
     [isEdit]
   );
   const categories = useMemo(() => getTransactionCategories(type), [type]);
@@ -105,7 +105,7 @@ export default function TransactionModal({
     const amountCents = parseMoneyToCents(amount);
 
     if (!description.trim()) {
-      setError("Informe uma descrição.");
+      setError("Informe uma descricao.");
       setIsSubmitting(false);
       return;
     }
@@ -117,7 +117,7 @@ export default function TransactionModal({
     }
 
     if (!Number.isFinite(amountCents) || amountCents <= 0) {
-      setError("Informe um valor válido (ex: 150,00).");
+      setError("Informe um valor valido (ex: 150,00).");
       setIsSubmitting(false);
       return;
     }
@@ -133,7 +133,7 @@ export default function TransactionModal({
 
       onClose();
     } catch (requestError) {
-      setError(requestError.message || "Não foi possível salvar a transação.");
+      setError(requestError.message || "Nao foi possivel salvar a transacao.");
     } finally {
       setIsSubmitting(false);
     }
@@ -145,11 +145,10 @@ export default function TransactionModal({
 
   return (
     <div
-      className="modal d-block"
+      className="modal d-block finova-modal-backdrop"
       tabIndex="-1"
       role="dialog"
       aria-modal="true"
-      style={{ background: "rgba(15, 23, 42, 0.45)" }}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget && !isSubmitting) {
           onClose();
@@ -162,7 +161,7 @@ export default function TransactionModal({
             <div>
               <h2 className="finova-title h4 mb-1">{title}</h2>
               <p className="finova-subtitle small mb-0">
-                Preencha os dados da movimentação financeira.
+                Preencha os dados da movimentacao financeira.
               </p>
             </div>
 
@@ -187,14 +186,14 @@ export default function TransactionModal({
               </div>
 
               <div className="col-12 col-md-8">
-                <label className="form-label text-dark fw-medium">Descrição</label>
+                <label className="form-label text-dark fw-medium">Descricao</label>
                 <input
                   ref={descriptionInputRef}
                   type="text"
                   className="form-control finova-input"
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
-                  placeholder="Ex: Mercado do mês"
+                  placeholder="Ex: Mercado do mes"
                 />
               </div>
 
@@ -248,27 +247,29 @@ export default function TransactionModal({
                 </div>
               ) : null}
 
-              <div className="col-12 d-flex justify-content-end gap-2 pt-2">
-                <button
-                  type="button"
-                  className="btn finova-btn-light px-4"
-                  onClick={onClose}
-                  disabled={isSubmitting}
-                >
-                  Cancelar
-                </button>
+              <div className="col-12">
+                <div className="finova-actions-row finova-actions-row-end pt-2">
+                  <button
+                    type="button"
+                    className="btn finova-btn-light px-4"
+                    onClick={onClose}
+                    disabled={isSubmitting}
+                  >
+                    Cancelar
+                  </button>
 
-                <button
-                  type="submit"
-                  className="btn finova-btn-primary px-4"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting
-                    ? "Salvando..."
-                    : isEdit
-                      ? "Salvar alterações"
-                      : "Adicionar transação"}
-                </button>
+                  <button
+                    type="submit"
+                    className="btn finova-btn-primary px-4"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting
+                      ? "Salvando..."
+                      : isEdit
+                        ? "Salvar alteracoes"
+                        : "Adicionar transacao"}
+                  </button>
+                </div>
               </div>
             </form>
           </div>

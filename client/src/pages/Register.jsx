@@ -29,7 +29,7 @@ export default function Register() {
       setEmail("");
       setPassword("");
     } catch (requestError) {
-      setError(requestError.message || "Não foi possível criar a sua conta.");
+      setError(requestError.message || "Nao foi possivel criar a sua conta.");
     } finally {
       setIsSubmitting(false);
     }
@@ -37,7 +37,7 @@ export default function Register() {
 
   return (
     <div className="finova-page d-flex align-items-center justify-content-center px-3">
-      <div className="w-100" style={{ maxWidth: 460 }}>
+      <div className="finova-auth-shell finova-auth-shell-sm">
         <div className="text-center mb-4">
           <h1 className="finova-title finova-brand mb-2">Finova</h1>
           <p className="finova-subtitle mb-0">
@@ -117,7 +117,7 @@ export default function Register() {
 
           <div className="text-center mt-4">
             <span className="finova-subtitle small">
-              Já possui uma conta?{" "}
+              Ja possui uma conta?{" "}
               <Link to="/login" className="text-decoration-none fw-semibold">
                 Entrar
               </Link>

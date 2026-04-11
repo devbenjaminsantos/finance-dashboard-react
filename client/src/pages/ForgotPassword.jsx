@@ -20,11 +20,11 @@ export default function ForgotPassword() {
       const response = await forgotPasswordRequest(email);
       setSuccess(
         response.message ||
-          "Se o e-mail estiver cadastrado, enviaremos as instruções de redefinição."
+          "Se o e-mail estiver cadastrado, enviaremos as instrucoes de redefinicao."
       );
       setResetUrl(response.resetUrl || "");
     } catch (err) {
-      setError(err.message || "Não foi possível solicitar a redefinição.");
+      setError(err.message || "Nao foi possivel solicitar a redefinicao.");
     } finally {
       setIsSubmitting(false);
     }
@@ -43,11 +43,11 @@ export default function ForgotPassword() {
 
   return (
     <div className="finova-page d-flex align-items-center justify-content-center px-3">
-      <div className="w-100" style={{ maxWidth: 500 }}>
+      <div className="finova-auth-shell finova-auth-shell-md">
         <div className="text-center mb-4">
           <h1 className="finova-title finova-brand mb-2">Finova</h1>
           <p className="finova-subtitle mb-0">
-            Informe seu e-mail para receber um link de redefinição.
+            Informe seu e-mail para receber um link de redefinicao.
           </p>
         </div>
 
@@ -55,7 +55,8 @@ export default function ForgotPassword() {
           <div className="mb-4 text-center">
             <h2 className="finova-title h4 mb-2">Recuperar senha</h2>
             <p className="finova-subtitle mb-0">
-              Enviaremos as instruções se encontrarmos uma conta vinculada ao e-mail informado.
+              Enviaremos as instrucoes se encontrarmos uma conta vinculada ao
+              e-mail informado.
             </p>
           </div>
 
@@ -84,7 +85,7 @@ export default function ForgotPassword() {
                 {success}
                 {localResetPath ? (
                   <div className="mt-2">
-                    <Link to={localResetPath}>Abrir link de redefinição</Link>
+                    <Link to={localResetPath}>Abrir link de redefinicao</Link>
                   </div>
                 ) : null}
               </div>
@@ -95,7 +96,7 @@ export default function ForgotPassword() {
               className="btn finova-btn-primary"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Enviando instruções..." : "Enviar instruções"}
+              {isSubmitting ? "Enviando instrucoes..." : "Enviar instrucoes"}
             </button>
           </form>
 

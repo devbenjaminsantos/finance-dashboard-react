@@ -24,7 +24,7 @@ export default function Profile() {
           email: user.email ?? "",
         }));
       } catch (err) {
-        setError(err.message || "Não foi possível carregar seu perfil.");
+        setError(err.message || "Nao foi possivel carregar seu perfil.");
       } finally {
         setIsLoading(false);
       }
@@ -71,7 +71,7 @@ export default function Profile() {
       }
 
       if (form.newPassword !== form.confirmPassword) {
-        setError("A confirmação da senha não confere.");
+        setError("A confirmacao da senha nao confere.");
         return;
       }
     }
@@ -95,7 +95,7 @@ export default function Profile() {
       }));
       setSuccess("Perfil atualizado com sucesso.");
     } catch (err) {
-      setError(err.message || "Não foi possível atualizar seu perfil.");
+      setError(err.message || "Nao foi possivel atualizar seu perfil.");
     } finally {
       setIsSubmitting(false);
     }
@@ -198,14 +198,16 @@ export default function Profile() {
               </div>
             ) : null}
 
-            <div className="col-12 d-flex justify-content-end pt-2">
-              <button
-                type="submit"
-                className="btn finova-btn-primary px-4"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Salvando alterações..." : "Salvar perfil"}
-              </button>
+            <div className="col-12">
+              <div className="finova-actions-row finova-actions-row-end pt-2">
+                <button
+                  type="submit"
+                  className="btn finova-btn-primary px-4"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Salvando alteracoes..." : "Salvar perfil"}
+                </button>
+              </div>
             </div>
           </form>
         )}

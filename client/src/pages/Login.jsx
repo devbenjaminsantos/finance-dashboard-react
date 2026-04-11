@@ -8,9 +8,9 @@ import {
 } from "../lib/api/auth";
 
 const demoHighlights = [
-  "Conheça o dashboard com dados prontos e metas já preenchidas",
-  "Teste filtros, relatórios e fluxos sem criar conta",
-  "Explore autenticação, recuperação de senha e perfil em minutos",
+  "Conheca o dashboard com dados prontos e metas ja preenchidas",
+  "Teste filtros, relatorios e fluxos sem criar conta",
+  "Explore autenticacao, recuperacao de senha e perfil em minutos",
 ];
 
 export default function Login() {
@@ -50,15 +50,15 @@ export default function Login() {
 
   async function handleDemoLogin() {
     setError("");
-    setInfo("Preparando a demonstração...");
+    setInfo("Preparando a demonstracao...");
     setIsDemoSubmitting(true);
 
     try {
       await demoLoginRequest();
-      setInfo("Demonstração pronta. Redirecionando...");
+      setInfo("Demonstracao pronta. Redirecionando...");
       navigate("/");
     } catch (requestError) {
-      setError(requestError.message || "Não foi possível abrir a demonstração .");
+      setError(requestError.message || "Nao foi possivel abrir a demonstracao.");
       setInfo("");
     } finally {
       setIsDemoSubmitting(false);
@@ -76,10 +76,10 @@ export default function Login() {
       const response = await resendEmailVerificationRequest(email);
       setInfo(
         response.message ||
-          "Se a conta existir e ainda não estiver confirmada, enviaremos um novo link."
+          "Se a conta existir e ainda nao estiver confirmada, enviaremos um novo link."
       );
     } catch (requestError) {
-      setError(requestError.message || "Não foi possível reenviar a confirmação.");
+      setError(requestError.message || "Nao foi possivel reenviar a confirmacao.");
     } finally {
       setIsResendingVerification(false);
     }
@@ -87,7 +87,7 @@ export default function Login() {
 
   return (
     <div className="finova-page d-flex align-items-center justify-content-center px-3">
-      <div className="w-100" style={{ maxWidth: 540 }}>
+      <div className="finova-auth-shell finova-auth-shell-lg">
         <div className="text-center mb-4">
           <h1 className="finova-title finova-brand mb-2">Finova</h1>
           <p className="finova-subtitle mb-0">
@@ -99,18 +99,11 @@ export default function Login() {
           <div className="mb-4 text-center">
             <h2 className="finova-title h4 mb-2">Entrar</h2>
             <p className="finova-subtitle mb-0">
-              Acesse sua conta para visualizar suas transações.
+              Acesse sua conta para visualizar suas transacoes.
             </p>
           </div>
 
-          <div
-            className="p-4 rounded-4 mb-4"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(13,110,253,0.10), rgba(25,135,84,0.08))",
-              border: "1px solid rgba(13,110,253,0.12)",
-            }}
-          >
+          <div className="finova-demo-panel p-4 mb-4">
             <div className="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-start">
               <div>
                 <div className="small text-uppercase fw-semibold text-primary mb-2">
@@ -118,7 +111,8 @@ export default function Login() {
                 </div>
                 <h3 className="finova-title h5 mb-2">Explore a conta demo</h3>
                 <p className="finova-subtitle mb-3">
-                  Explore todas as funcionalidades sem criar conta e sem preencher cadastro.
+                  Explore todas as funcionalidades sem criar conta e sem
+                  preencher cadastro.
                 </p>
                 <div className="d-grid gap-2">
                   {demoHighlights.map((item) => (
@@ -135,15 +129,15 @@ export default function Login() {
                 onClick={handleDemoLogin}
                 disabled={isSubmitting || isDemoSubmitting || isResendingVerification}
               >
-                {isDemoSubmitting ? "Abrindo demonstração..." : "Entrar como demonstração"}
+                {isDemoSubmitting ? "Abrindo demonstracao..." : "Entrar como demonstracao"}
               </button>
             </div>
           </div>
 
-          <div className="d-flex align-items-center gap-3 mb-4">
-            <hr className="flex-grow-1" />
+          <div className="finova-divider mb-4">
+            <hr />
             <span className="finova-subtitle small">ou use sua conta</span>
-            <hr className="flex-grow-1" />
+            <hr />
           </div>
 
           <form onSubmit={handleSubmit} className="d-grid gap-3">
@@ -192,8 +186,8 @@ export default function Login() {
                     disabled={isResendingVerification}
                   >
                     {isResendingVerification
-                      ? "Reenviando confirmação..."
-                      : "Reenviar e-mail de confirmação"}
+                      ? "Reenviando confirmacao..."
+                      : "Reenviar e-mail de confirmacao"}
                   </button>
                 ) : null}
               </div>
@@ -216,7 +210,7 @@ export default function Login() {
 
           <div className="text-center mt-4">
             <span className="finova-subtitle small">
-              Ainda não tem uma conta?{" "}
+              Ainda nao tem uma conta?{" "}
               <Link to="/register" className="text-decoration-none fw-semibold">
                 Criar conta
               </Link>

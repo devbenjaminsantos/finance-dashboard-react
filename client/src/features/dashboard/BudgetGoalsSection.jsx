@@ -35,8 +35,6 @@ function normalizeCategory(value) {
 }
 
 function getGoalTone(progress) {
-  // Esse mapeamento controla o estado visual da meta no card
-  // e me ajuda a deixar o status entendível sem depender só do texto.
   if (progress >= 1) {
     return "danger";
   }
@@ -54,7 +52,7 @@ function getGoalStatus(progress) {
   }
 
   if (progress >= 0.8) {
-    return "Atenção ao limite";
+    return "Atencao ao limite";
   }
 
   return "Dentro do planejado";
@@ -71,14 +69,14 @@ function GoalCard({ goal, spentCents, onEdit, onDelete, isDeleting }) {
       <div className="d-flex justify-content-between align-items-start gap-3 mb-3">
         <div>
           <div className="finova-title h6 mb-1">
-            {goal.category || "Orçamento geral"}
+            {goal.category || "Orcamento geral"}
           </div>
           <div className={`finova-goal-pill finova-goal-pill-${tone}`}>
             {getGoalStatus(progress)}
           </div>
         </div>
 
-        <div className="d-flex gap-2">
+        <div className="finova-actions-row finova-actions-row-end">
           <button
             type="button"
             className="btn btn-sm finova-btn-light"
@@ -107,7 +105,7 @@ function GoalCard({ goal, spentCents, onEdit, onDelete, isDeleting }) {
       </div>
       <div className="d-flex justify-content-between small mb-3">
         <span className="finova-subtitle">
-          {remaining >= 0 ? "Saldo disponível" : "Excedente"}
+          {remaining >= 0 ? "Saldo disponivel" : "Excedente"}
         </span>
         <strong className={remaining >= 0 ? "" : "text-danger"}>
           {formatBRLFromCents(Math.abs(remaining))}
@@ -122,7 +120,7 @@ function GoalCard({ goal, spentCents, onEdit, onDelete, isDeleting }) {
       </div>
 
       <div className="small finova-subtitle">
-        {percent}% da meta consumida neste mês.
+        {percent}% da meta consumida neste mes.
       </div>
     </div>
   );
@@ -141,9 +139,6 @@ export default function BudgetGoalsSection({ transactions }) {
   const [feedback, setFeedback] = useState("");
 
   const availableCategories = useMemo(() => {
-    // Metas foram pensadas apenas para despesas.
-    // Mesmo assim eu junto categorias vindas do banco para suportar histórico antigo
-    // ou categorias personalizadas que não estejam na lista base.
     const categorySet = new Set(EXPENSE_TRANSACTION_CATEGORIES);
 
     for (const transaction of transactions) {
@@ -177,7 +172,11 @@ export default function BudgetGoalsSection({ transactions }) {
   }, [currentMonthExpenses]);
 
   const totalSpent = useMemo(
-    () => currentMonthExpenses.reduce((sum, item) => sum + (Number(item.amountCents) || 0), 0),
+    () =>
+      currentMonthExpenses.reduce(
+        (sum, item) => sum + (Number(item.amountCents) || 0),
+        0
+      ),
     [currentMonthExpenses]
   );
 
@@ -196,7 +195,7 @@ export default function BudgetGoalsSection({ transactions }) {
         }
       } catch (requestError) {
         if (active) {
-          setError(requestError.message || "Não foi possível carregar as metas do mês.");
+          setError(requestError.message || "Nao foi possivel carregar as metas do mes.");
         }
       } finally {
         if (active) {
@@ -220,7 +219,7 @@ export default function BudgetGoalsSection({ transactions }) {
     const amountCents = parseMoneyToCents(amount);
 
     if (!Number.isFinite(amountCents) || amountCents <= 0) {
-      setError("Informe um valor de meta válido.");
+      setError("Informe um valor de meta valido.");
       return;
     }
 
@@ -230,8 +229,6 @@ export default function BudgetGoalsSection({ transactions }) {
       amountCents,
     };
 
-    // Categoria null representa a meta geral do mês.
-    // Com categoria preenchida, a meta vale só para aquele grupo.
     setIsSaving(true);
 
     try {
@@ -255,7 +252,7 @@ export default function BudgetGoalsSection({ transactions }) {
       setCategory("__overall__");
       setAmount("");
     } catch (requestError) {
-      setError(requestError.message || "Não foi possível salvar a meta.");
+      setError(requestError.message || "Nao foi possivel salvar a meta.");
     } finally {
       setIsSaving(false);
     }
@@ -278,8 +275,6 @@ export default function BudgetGoalsSection({ transactions }) {
   }
 
   async function handleDelete(id) {
-    // A exclusão impacta o dashboard na hora.
-    // Deixo a confirmação para evitar apagar meta por clique acidental.
     if (!window.confirm("Remover esta meta mensal?")) {
       return;
     }
@@ -298,7 +293,7 @@ export default function BudgetGoalsSection({ transactions }) {
 
       setFeedback("Meta removida com sucesso.");
     } catch (requestError) {
-      setError(requestError.message || "Não foi possível remover a meta.");
+      setError(requestError.message || "Nao foi possivel remover a meta.");
     } finally {
       setDeletingId(null);
     }
@@ -308,14 +303,15 @@ export default function BudgetGoalsSection({ transactions }) {
     <div className="finova-card p-4 mb-4">
       <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3 mb-4">
         <div>
-          <h2 className="finova-title h4 mb-1">Metas de orçamento</h2>
+          <h2 className="finova-title h4 mb-1">Metas de orcamento</h2>
           <p className="finova-subtitle mb-0">
-            Defina limites para {formatMonthLabel(month)} e acompanhe os alertas de gasto em tempo real.
+            Defina limites para {formatMonthLabel(month)} e acompanhe os alertas
+            de gasto em tempo real.
           </p>
         </div>
 
         <div className="finova-goal-summary">
-          <span className="finova-subtitle small d-block">Despesas do mês atual</span>
+          <span className="finova-subtitle small d-block">Despesas do mes atual</span>
           <strong>{formatBRLFromCents(totalSpent)}</strong>
         </div>
       </div>
@@ -329,7 +325,7 @@ export default function BudgetGoalsSection({ transactions }) {
             onChange={(event) => setCategory(event.target.value)}
             disabled={isSaving}
           >
-            <option value="__overall__">Orçamento geral do mês</option>
+            <option value="__overall__">Orcamento geral do mes</option>
             {availableCategories.map((item) => (
               <option key={item} value={item}>
                 {item}
@@ -352,7 +348,11 @@ export default function BudgetGoalsSection({ transactions }) {
         </div>
 
         <div className="col-12 col-lg-3 d-flex align-items-end gap-2">
-          <button type="submit" className="btn finova-btn-primary flex-grow-1" disabled={isSaving}>
+          <button
+            type="submit"
+            className="btn finova-btn-primary flex-grow-1"
+            disabled={isSaving}
+          >
             {isSaving ? "Salvando..." : editingGoalId ? "Salvar meta" : "Adicionar meta"}
           </button>
 
@@ -373,12 +373,13 @@ export default function BudgetGoalsSection({ transactions }) {
       {feedback ? <div className="alert alert-success py-2">{feedback}</div> : null}
 
       {isLoading ? (
-        <div className="finova-subtitle">Carregando metas do mês...</div>
+        <div className="finova-subtitle">Carregando metas do mes...</div>
       ) : goals.length === 0 ? (
         <div className="finova-card-soft p-4">
-          <h3 className="finova-title h6 mb-2">Nenhuma meta cadastrada para este mês</h3>
+          <h3 className="finova-title h6 mb-2">Nenhuma meta cadastrada para este mes</h3>
           <p className="finova-subtitle mb-0">
-            Crie uma meta geral ou por categoria para receber alertas visuais quando os gastos se aproximarem do limite.
+            Crie uma meta geral ou por categoria para receber alertas visuais
+            quando os gastos se aproximarem do limite.
           </p>
         </div>
       ) : (

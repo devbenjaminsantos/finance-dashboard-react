@@ -161,7 +161,7 @@ export default function Transactions() {
   }
 
   async function handleRemove(id) {
-    if (!window.confirm("Remover esta transação?")) {
+    if (!window.confirm("Remover esta transacao?")) {
       return;
     }
 
@@ -203,7 +203,7 @@ export default function Transactions() {
 
   function exportFilteredTransactionsCsv() {
     const rows = [
-      ["Data", "Descrição", "Categoria", "Tipo", "Valor", "Valor em centavos"],
+      ["Data", "Descricao", "Categoria", "Tipo", "Valor", "Valor em centavos"],
       ...getExportRows(),
     ];
 
@@ -216,12 +216,11 @@ export default function Transactions() {
 
     exportTransactionsToPdf({
       filename: `finova-transacoes-${monthLabel}.pdf`,
-      title: "Relatório de transações",
-      subtitle:
-        month
-          ? `Periodo filtrado: ${month} | ${filtered.length} registro(s)`
-          : `Todos os periodos | ${filtered.length} registro(s)`,
-      columns: ["Data", "Descrição", "Categoria", "Tipo", "Valor", "Centavos"],
+      title: "Relatorio de transacoes",
+      subtitle: month
+        ? `Periodo filtrado: ${month} | ${filtered.length} registro(s)`
+        : `Todos os periodos | ${filtered.length} registro(s)`,
+      columns: ["Data", "Descricao", "Categoria", "Tipo", "Valor", "Centavos"],
       rows: getExportRows(),
     });
   }
@@ -230,7 +229,7 @@ export default function Transactions() {
     <section className="finova-section-space">
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 gap-3">
         <div>
-          <h1 className="finova-title mb-1">Transações</h1>
+          <h1 className="finova-title mb-1">Transacoes</h1>
           <p className="finova-subtitle mb-0">
             Gerencie receitas e despesas com controle total do seu fluxo financeiro.
           </p>
@@ -241,7 +240,7 @@ export default function Transactions() {
           onClick={openCreate}
           disabled={isMutating}
         >
-          Nova transação
+          Nova transacao
         </button>
       </div>
 

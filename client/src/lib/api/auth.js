@@ -175,6 +175,16 @@ export async function updateProfileRequest(payload) {
   return user;
 }
 
+export async function updateOnboardingPreferenceRequest(onboardingOptIn) {
+  const user = await apiRequest("/profile/onboarding-preference", {
+    method: "PUT",
+    body: JSON.stringify({ onboardingOptIn }),
+  });
+
+  setStoredUser(user);
+  return user;
+}
+
 function dispatchSessionChange() {
   window.dispatchEvent(new Event("finova-session-change"));
 }

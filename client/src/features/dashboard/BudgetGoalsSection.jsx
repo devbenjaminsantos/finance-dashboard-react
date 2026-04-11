@@ -8,6 +8,10 @@ import {
 import { EXPENSE_TRANSACTION_CATEGORIES } from "../../lib/constants/transactionCategories";
 import { formatBRLFromCents, parseMoneyToCents } from "../../lib/format/currency";
 
+function dispatchBudgetGoalsChange() {
+  window.dispatchEvent(new Event("finova-budget-goals-change"));
+}
+
 function currentMonthISO() {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -248,6 +252,8 @@ export default function BudgetGoalsSection({ transactions }) {
         setFeedback("Meta adicionada com sucesso.");
       }
 
+      dispatchBudgetGoalsChange();
+
       setEditingGoalId(null);
       setCategory("__overall__");
       setAmount("");
@@ -286,6 +292,7 @@ export default function BudgetGoalsSection({ transactions }) {
     try {
       await deleteBudgetGoal(id);
       setGoals((current) => current.filter((goal) => goal.id !== id));
+      dispatchBudgetGoalsChange();
 
       if (editingGoalId === id) {
         handleCancelEdit();

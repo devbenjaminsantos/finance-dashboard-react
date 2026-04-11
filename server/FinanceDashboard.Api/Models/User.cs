@@ -6,6 +6,7 @@ namespace FinanceDashboard.Api.Models
         public string Name { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public bool EmailConfirmed { get; set; }
+        public bool? OnboardingOptIn { get; set; }
         public string PasswordHash { get; set; } = string.Empty;
 
         public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();

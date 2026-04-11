@@ -19,17 +19,20 @@ namespace FinanceDashboard.Api.Controllers
         private readonly AuditLogService _auditLogService;
         private readonly CurrentUserService _currentUserService;
         private readonly PasswordHasher _passwordHasher;
+        private readonly IConfiguration _configuration;
 
         public ProfileController(
             AppDbContext context,
             CurrentUserService currentUserService,
             PasswordHasher passwordHasher,
-            AuditLogService auditLogService)
+            AuditLogService auditLogService,
+            IConfiguration configuration)
         {
             _context = context;
             _currentUserService = currentUserService;
             _passwordHasher = passwordHasher;
             _auditLogService = auditLogService;
+            _configuration = configuration;
         }
 
         [HttpGet]
@@ -143,14 +146,64 @@ namespace FinanceDashboard.Api.Controllers
             return Ok(ToAuthUserResponse(user));
         }
 
-        private static AuthUserResponse ToAuthUserResponse(User user)
+        [HttpPut("onboarding-preference")]
+        public async Task<ActionResult<AuthUserResponse>> UpdateOnboardingPreference(
+            OnboardingPreferenceUpdateRequest dto)
+        {
+            var userId = _currentUserService.GetRequiredUserId();
+
+            if (!dto.OnboardingOptIn.HasValue)
+            {
+                return BadRequest(new ProblemDetails
+                {
+                    Title = "Informe uma escolha válida para o guia inicial.",
+                    Status = StatusCodes.Status400BadRequest
+                });
+            }
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(existing => existing.Id == userId);
+
+            if (user is null)
+            {
+                return NotFound(new ProblemDetails
+                {
+                    Title = "Usuário não encontrado.",
+                    Status = StatusCodes.Status404NotFound
+                });
+            }
+
+            user.OnboardingOptIn = dto.OnboardingOptIn.Value;
+            await _context.SaveChangesAsync();
+
+            await _auditLogService.WriteAsync(
+                action: "profile.onboarding-preference-updated",
+                entityType: "User",
+                entityId: user.Id.ToString(),
+                userId: user.Id,
+                summary: dto.OnboardingOptIn.Value
+                    ? "Usuário optou por receber o guia inicial."
+                    : "Usuário optou por ocultar o guia inicial.");
+
+            return Ok(ToAuthUserResponse(user));
+        }
+
+        private AuthUserResponse ToAuthUserResponse(User user)
         {
             return new AuthUserResponse
             {
                 Id = user.Id,
                 Name = user.Name,
-                Email = user.Email
+                Email = user.Email,
+                IsDemo = IsDemoUser(user),
+                OnboardingOptIn = user.OnboardingOptIn
             };
+        }
+
+        private bool IsDemoUser(User user)
+        {
+            var demoEmail = (_configuration["Demo:Email"] ?? "demo@finova.app").Trim().ToLowerInvariant();
+            return user.Email == demoEmail;
         }
     }
 }

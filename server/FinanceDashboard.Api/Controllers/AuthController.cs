@@ -190,7 +190,8 @@ namespace FinanceDashboard.Api.Controllers
                 {
                     Name = "Conta Demo",
                     Email = normalizedEmail,
-                    EmailConfirmed = true
+                    EmailConfirmed = true,
+                    OnboardingOptIn = false
                 };
                 user.PasswordHash = _passwordHasher.HashPassword(
                     user,
@@ -423,14 +424,22 @@ namespace FinanceDashboard.Api.Controllers
             };
         }
 
-        private static AuthUserResponse ToAuthUserResponse(User user)
+        private AuthUserResponse ToAuthUserResponse(User user)
         {
             return new AuthUserResponse
             {
                 Id = user.Id,
                 Name = user.Name,
-                Email = user.Email
+                Email = user.Email,
+                IsDemo = IsDemoUser(user),
+                OnboardingOptIn = user.OnboardingOptIn
             };
+        }
+
+        private bool IsDemoUser(User user)
+        {
+            var demoEmail = (_configuration["Demo:Email"] ?? "demo@finova.app").Trim().ToLowerInvariant();
+            return user.Email == demoEmail;
         }
 
         private static bool IsDuplicateEmailViolation(DbUpdateException exception)

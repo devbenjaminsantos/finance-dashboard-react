@@ -1,7 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import BudgetGoalsSection from "../features/dashboard/BudgetGoalsSection";
 import DashboardCharts from "../features/dashboard/DashboardCharts";
 import { useTransactions } from "../features/transactions/useTransactions";
+import { updateOnboardingPreferenceRequest, getStoredUser } from "../lib/api/auth";
+import { getBudgetGoals } from "../lib/api/budgetGoals";
 import { formatBRLFromCents } from "../lib/format/currency";
 
 const PERIOD_OPTIONS = [
@@ -152,6 +154,154 @@ function CategoryInsightCard({ title, category, value, tone }) {
   );
 }
 
+function DemoInfoCard() {
+  return (
+    <div className="finova-card p-4 mb-4 finova-demo-panel">
+      <h2 className="finova-title h5 mb-2">Conta de demonstração</h2>
+      <p className="finova-subtitle mb-0">
+        Você está explorando uma conta com dados fictícios. Navegue pelo dashboard,
+        teste os filtros, veja metas prontas e entenda o fluxo completo do produto.
+      </p>
+    </div>
+  );
+}
+
+function OnboardingPromptCard({ isSaving, onChoose }) {
+  return (
+    <div className="finova-card p-4 mb-4">
+      <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+        <div>
+          <h2 className="finova-title h5 mb-2">Quer ajuda para configurar seu Finova?</h2>
+          <p className="finova-subtitle mb-0">
+            Posso te guiar pelos primeiros passos para deixar o dashboard útil mais rápido.
+          </p>
+        </div>
+
+        <div className="finova-actions-row">
+          <button
+            type="button"
+            className="btn finova-btn-primary"
+            disabled={isSaving}
+            onClick={() => onChoose(true)}
+          >
+            {isSaving ? "Salvando..." : "Quero ajuda"}
+          </button>
+          <button
+            type="button"
+            className="btn finova-btn-light"
+            disabled={isSaving}
+            onClick={() => onChoose(false)}
+          >
+            Agora não
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OnboardingChecklistCard({
+  transactionsCount,
+  recurringCount,
+  goalsCount,
+  isSaving,
+  onHide,
+  onShowAgain,
+  isVisible,
+}) {
+  const items = [
+    {
+      key: "transactions",
+      label: "Registrar a primeira transação",
+      description: "Adicione pelo menos uma receita ou despesa para começar a alimentar o dashboard.",
+      done: transactionsCount > 0,
+    },
+    {
+      key: "goals",
+      label: "Criar a primeira meta mensal",
+      description: "Defina um limite geral ou por categoria para começar a receber alertas visuais.",
+      done: goalsCount > 0,
+    },
+    {
+      key: "recurring",
+      label: "Automatizar um lançamento recorrente",
+      description: "Cadastre salário, aluguel, condomínio ou assinaturas como recorrentes.",
+      done: recurringCount > 0,
+    },
+  ];
+
+  const completedCount = items.filter((item) => item.done).length;
+
+  if (!isVisible) {
+    return (
+      <div className="finova-card p-4 mb-4">
+        <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+          <div>
+            <h2 className="finova-title h6 mb-1">Guia inicial oculto</h2>
+            <p className="finova-subtitle mb-0">
+              Se quiser, você pode reabrir o checklist a qualquer momento.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="btn finova-btn-light"
+            disabled={isSaving}
+            onClick={onShowAgain}
+          >
+            {isSaving ? "Salvando..." : "Mostrar guia inicial"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="finova-card p-4 mb-4">
+      <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-start gap-3 mb-4">
+        <div>
+          <h2 className="finova-title h5 mb-2">Guia inicial</h2>
+          <p className="finova-subtitle mb-0">
+            {completedCount === items.length
+              ? "Tudo pronto. Seu espaço já tem a base ideal para gerar valor no dashboard."
+              : "Siga estes passos para deixar sua conta útil desde os primeiros acessos."}
+          </p>
+        </div>
+
+        <div className="finova-actions-row">
+          <span className="finova-badge-primary">
+            {completedCount}/{items.length} concluídos
+          </span>
+          <button
+            type="button"
+            className="btn finova-btn-light"
+            disabled={isSaving}
+            onClick={onHide}
+          >
+            Ocultar guia
+          </button>
+        </div>
+      </div>
+
+      <div className="row g-3">
+        {items.map((item) => (
+          <div className="col-12 col-lg-4" key={item.key}>
+            <div className="finova-card-soft h-100 p-3">
+              <div className="d-flex justify-content-between align-items-start gap-3 mb-2">
+                <h3 className="finova-title h6 mb-0">{item.label}</h3>
+                <span className={item.done ? "finova-badge-income" : "finova-badge-neutral"}>
+                  {item.done ? "Feito" : "Pendente"}
+                </span>
+              </div>
+              <p className="finova-subtitle small mb-0">{item.description}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function currentMonthISO() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
@@ -264,6 +414,56 @@ export default function Dashboard() {
   const { isLoading, transactions } = useTransactions();
   const [period, setPeriod] = useState("current-month");
   const [comparisonRange, setComparisonRange] = useState(3);
+  const [user, setUser] = useState(() => getStoredUser());
+  const [goalsCount, setGoalsCount] = useState(0);
+  const [isApplyingOnboarding, setIsApplyingOnboarding] = useState(false);
+  const [goalsRefreshKey, setGoalsRefreshKey] = useState(0);
+
+  useEffect(() => {
+    function handleSessionChange() {
+      setUser(getStoredUser());
+    }
+
+    function handleBudgetGoalsChange() {
+      setGoalsRefreshKey((current) => current + 1);
+    }
+
+    window.addEventListener("finova-session-change", handleSessionChange);
+    window.addEventListener("finova-budget-goals-change", handleBudgetGoalsChange);
+    return () => {
+      window.removeEventListener("finova-session-change", handleSessionChange);
+      window.removeEventListener("finova-budget-goals-change", handleBudgetGoalsChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadGoalsForOnboarding() {
+      if (!user || user.isDemo) {
+        setGoalsCount(0);
+        return;
+      }
+
+      try {
+        const goals = await getBudgetGoals(currentMonthISO());
+
+        if (active) {
+          setGoalsCount(Array.isArray(goals) ? goals.length : 0);
+        }
+      } catch {
+        if (active) {
+          setGoalsCount(0);
+        }
+      }
+    }
+
+    loadGoalsForOnboarding();
+
+    return () => {
+      active = false;
+    };
+  }, [user, transactions, goalsRefreshKey]);
 
   const selectedPeriodLabel = useMemo(
     () => PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? "Mês atual",
@@ -298,6 +498,11 @@ export default function Dashboard() {
     [filteredTransactions]
   );
 
+  const recurringTransactionsCount = useMemo(
+    () => transactions.filter((transaction) => transaction.isRecurring).length,
+    [transactions]
+  );
+
   const monthComparison = useMemo(() => {
     const currentMonths = getRelativeMonthsISO(0, comparisonRange);
     const previousMonths = getRelativeMonthsISO(comparisonRange, comparisonRange);
@@ -319,6 +524,17 @@ export default function Dashboard() {
       categoryLeaders: getCategoryLeaders(currentTransactions, previousTransactions),
     };
   }, [transactions, comparisonRange, selectedComparisonRangeLabel]);
+
+  async function handleOnboardingChoice(onboardingOptIn) {
+    setIsApplyingOnboarding(true);
+
+    try {
+      const updatedUser = await updateOnboardingPreferenceRequest(onboardingOptIn);
+      setUser(updatedUser);
+    } finally {
+      setIsApplyingOnboarding(false);
+    }
+  }
 
   return (
     <section className="finova-section-space">
@@ -352,6 +568,25 @@ export default function Dashboard() {
         </div>
       ) : (
         <>
+          {user?.isDemo ? (
+            <DemoInfoCard />
+          ) : user?.onboardingOptIn == null ? (
+            <OnboardingPromptCard
+              isSaving={isApplyingOnboarding}
+              onChoose={handleOnboardingChoice}
+            />
+          ) : (
+            <OnboardingChecklistCard
+              transactionsCount={transactions.length}
+              recurringCount={recurringTransactionsCount}
+              goalsCount={goalsCount}
+              isSaving={isApplyingOnboarding}
+              onHide={() => handleOnboardingChoice(false)}
+              onShowAgain={() => handleOnboardingChoice(true)}
+              isVisible={Boolean(user.onboardingOptIn)}
+            />
+          )}
+
           <div className="row g-3 mb-4">
             <SummaryCard
               label="Receitas"

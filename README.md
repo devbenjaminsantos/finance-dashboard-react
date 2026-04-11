@@ -1,10 +1,10 @@
 # Finova
 
-Aplicacao full stack para controle financeiro pessoal, com autenticacao, dashboard, metas mensais, exportacao de relatorios e deploy em producao no Azure.
+Aplicação full stack para controle financeiro pessoal, com autenticação, dashboard, metas mensais, exportação de relatórios e deploy em produção no Azure.
 
-O projeto foi pensado para evoluir de um painel financeiro simples para um produto com cara de SaaS, com conta demo, recuperacao de senha, confirmacao de e-mail, monitoramento basico e estrutura pronta para expansao.
+O projeto foi pensado para evoluir de um painel financeiro simples para um produto com cara de SaaS: conta demo, recuperação de senha, confirmação de e-mail, monitoramento básico e estrutura pronta para expansão.
 
-## Visao geral
+## Visão Geral
 
 O Finova permite:
 
@@ -12,17 +12,17 @@ O Finova permite:
 - confirmar e-mail no cadastro
 - recuperar senha por e-mail
 - usar uma conta demo com dados prontos
-- cadastrar, editar e remover transacoes
+- cadastrar, editar e remover transações
 - acompanhar receitas, despesas e saldo
 - definir metas mensais de gasto
 - receber alerta visual quando a meta se aproxima do limite
-- exportar transacoes em CSV e PDF
+- exportar transações em CSV e PDF
 - alternar entre tema claro e escuro
-- registrar logs de auditoria para acoes sensiveis
+- registrar logs de auditoria para ações sensíveis
 
 ## Stack
 
-### Frontend
+### Front-End
 
 - React 19
 - Vite
@@ -30,7 +30,7 @@ O Finova permite:
 - Bootstrap 5
 - Recharts
 
-### Backend
+### Back-End
 
 - ASP.NET Core 10
 - Entity Framework Core 10
@@ -52,78 +52,78 @@ O Finova permite:
 - Azure Communication Services Email
 - Application Insights
 
-## Funcionalidades entregues
+## Funcionalidades Entregues
 
-### Autenticacao
+### Autenticação
 
-- cadastro com validacao de e-mail
+- cadastro com validação de e-mail
 - login com JWT
-- bloqueio de login para contas nao confirmadas
-- reenvio de e-mail de confirmacao
-- recuperacao de senha com token de uso unico
-- redefinicao de senha
-- tela de perfil com alteracao de nome e senha
+- bloqueio de login para contas não confirmadas
+- reenvio de e-mail de confirmação
+- recuperação de senha com token de uso único
+- redefinição de senha
+- tela de perfil com alteração de nome e senha
 
-### Experiencia de produto
+### Experiência de produto
 
-- conta demo com dados prontos para exploracao
+- conta demo com dados prontos para exploração
 - dashboard com resumo financeiro
-- filtro por periodo no dashboard
+- filtro por período no dashboard
 - tema claro e escuro
 - mensagens de erro e sucesso revisadas
 
-### Gestao financeira
+### Gestão financeira
 
 - cadastro de receitas e despesas
 - categorias separadas para receita e despesa
-- filtros por texto, tipo, categoria, mes e ordenacao
+- filtros por texto, tipo, categoria, mês e ordenação
 - metas mensais gerais ou por categoria
 - alerta visual de gasto
 
-### Relatorios e rastreabilidade
+### Relatórios e rastreabilidade
 
-- exportacao de transacoes em CSV
-- exportacao de transacoes em PDF via impressao do navegador
-- logs de auditoria para fluxos sensiveis
+- exportação de transações em CSV
+- exportação de transações em PDF via impressão do navegador
+- logs de auditoria para fluxos sensíveis
 
-### Qualidade e operacao
+### Qualidade e operação
 
-- testes automatizados para autenticacao
-- testes automatizados para transacoes
-- monitoramento basico configurado no Azure
+- testes automatizados para autenticação
+- testes automatizados para transações
+- monitoramento básico configurado no Azure
 
-## Estrutura do projeto
+## Estrutura do Projeto
 
 ```text
 finance-dashboard-react/
-|- client/                        # Frontend React/Vite
-|- server/
-|  |- FinanceDashboard.Api/       # API ASP.NET Core
-|  |- docker-compose.yml          # SQL Server local via Docker
-|  `- .env.example                # Exemplo para o banco local
-|- tests/
-|  `- FinanceDashboard.Api.Tests/ # Testes automatizados do backend
-|- docs/
-|  `- azure-deploy.md             # Guia de deploy e infraestrutura Azure
-`- finance-dashboard-react.sln
+├─ client/                          # Frontend React/Vite
+├─ server/
+│  ├─ FinanceDashboard.Api/         # API ASP.NET Core
+│  ├─ docker-compose.yml            # SQL Server local via Docker
+│  └─ .env.example                  # Exemplo para o banco local
+├─ tests/
+│  └─ FinanceDashboard.Api.Tests/   # Testes automatizados do backend
+├─ docs/
+│  └─ azure-deploy.md               # Guia de deploy e infraestrutura Azure
+└─ finance-dashboard-react.sln
 ```
 
-## Ambiente de producao
+## Ambiente de Produção
 
-Estado atual da publicacao:
+Estado atual da publicação:
 
-- frontend: `Azure Static Web Apps`
-- backend: `Azure App Service`
+- front-end: `Azure Static Web Apps`
+- back-end: `Azure App Service`
 - banco: `Azure SQL Database`
 
 Links atuais:
 
-- frontend: `https://happy-coast-09654c410.2.azurestaticapps.net`
+- front-end: `https://happy-coast-09654c410.2.azurestaticapps.net`
 - health da API: `https://finova-api-b9g4bpcadyegheed.brazilsouth-01.azurewebsites.net/health`
 
-O dominio customizado planejado para a proxima etapa e `finovawallet`.
+O domínio customizado planejado para a próxima etapa e `finovawallet`.
 
-## Como rodar localmente
+## Como Rodar Localmente
 
 ### 1. Banco de dados
 
@@ -140,14 +140,14 @@ cd server
 docker compose up -d
 ```
 
-### 2. Backend
+### 2. Back-End
 
-Voce pode configurar a API local de duas formas:
+Você pode configurar a API local de duas formas:
 
-- usando variaveis de ambiente
+- usando variaáveis de ambiente
 - usando um arquivo local ignorado pelo Git, como `appsettings.Development.local.json`
 
-Variaveis esperadas:
+Variáveis esperadas:
 
 - `ConnectionStrings__Default`
 - `Jwt__Key`
@@ -156,20 +156,20 @@ Variaveis esperadas:
 - `Cors__AllowedOrigins__0`
 - `Client__BaseUrl`
 
-Exemplo de execucao:
+Exemplo de execução:
 
 ```powershell
 cd server/FinanceDashboard.Api
 dotnet run
 ```
 
-A API sobe, por padrao, em:
+A API sobe, por padrão, em:
 
 ```text
 http://localhost:5278
 ```
 
-### 3. Frontend
+### 3. Front-End
 
 ```powershell
 cd client
@@ -177,13 +177,13 @@ npm install
 npm run dev
 ```
 
-O frontend sobe, por padrao, em:
+O front-end sobe, por padrão, em:
 
 ```text
 http://localhost:5173
 ```
 
-## Banco e migrations
+## Banco e Migrations
 
 Para aplicar as migrations:
 
@@ -192,16 +192,16 @@ cd server/FinanceDashboard.Api
 dotnet ef database update
 ```
 
-Esse passo e necessario sempre que entrar uma nova migration, por exemplo em:
+Esse passo é necessário sempre que entrar uma nova migration, por exemplo em:
 
-- recuperacao de senha
-- confirmacao de e-mail
+- recuperação de senha
+- confirmação de e-mail
 - metas mensais
 - logs de auditoria
 
-## Testes automatizados
+## Testes Automatizados
 
-Para rodar a suite do backend:
+Para rodar a suíte do backend:
 
 ```powershell
 dotnet test tests/FinanceDashboard.Api.Tests/FinanceDashboard.Api.Tests.csproj
@@ -209,17 +209,17 @@ dotnet test tests/FinanceDashboard.Api.Tests/FinanceDashboard.Api.Tests.csproj
 
 Atualmente os testes cobrem:
 
-- autenticacao
-- confirmacao de e-mail
-- recuperacao e redefinicao de senha
-- fluxo de transacoes
-- protecao por usuario nas operacoes de transacao
+- autenticação
+- confirmação de e-mail
+- recuperação e redefinição de senha
+- fluxo de transações
+- proteção por usuário nas operações de transação
 
-## Configuracoes importantes
+## Configurações Importantes
 
-### Frontend
+### Front-End
 
-No deploy, o frontend espera:
+No deploy, o front-end espera:
 
 - `VITE_API_URL`
 
@@ -229,9 +229,9 @@ Exemplo:
 https://finova-api-b9g4bpcadyegheed.brazilsouth-01.azurewebsites.net/api
 ```
 
-### Backend
+### Back-End
 
-No App Service, as configuracoes principais sao:
+No App Service, as configurações principais são:
 
 - `Jwt__Key`
 - `Jwt__Issuer`
@@ -253,50 +253,50 @@ Em `Connection Strings`, a API usa:
 
 - `Default`
 
-## Conta demo
+## Conta Demo
 
-O projeto inclui uma conta demo para exploracao rapida do produto.
+O projeto inclui uma conta demo para exploração rápida do produto.
 
-Objetivos:
+Objetivo:
 
-- permitir avaliacao sem cadastro
-- demonstrar dashboard, categorias, metas, filtros e relatorios
-- acelerar apresentacoes e validacoes
+- permitir avaliação sem cadastro
+- demonstrar dashboard, categorias, metas, filtros e relatórios
+- acelerar apresentações e validações
 
-O fluxo da demo usa a mesma sessao JWT da conta real, o que ajuda a validar o comportamento do app sem excecoes artificiais no frontend.
+O fluxo da demo usa a mesma sessão JWT da conta real, o que ajuda a validar o comportamento do app sem exceções artificiais no front-end.
 
-## Documentacao complementar
+## Documentação Complementar
 
 Guias extras:
 
 - deploy e infraestrutura Azure: [docs/azure-deploy.md](/c:/Users/user/Desktop/Dashboard%20Financeiro/finance-dashboard-react/docs/azure-deploy.md)
 
-## Observacoes de seguranca
+## Observações de Seguranca
 
-- segredos nao devem ser versionados
-- o arquivo local de configuracao do backend deve permanecer fora do Git
+- segredos não devem ser versionados
+- o arquivo local de configuracao do back-end deve permanecer fora do Git
 - a senha do SQL deve ser mantida apenas em ambiente seguro
-- o fluxo de recuperacao de senha nao deve expor o link de redefinicao em producao aberta
+- o fluxo de recuperação de senha não deve expôr o link de redefinição em produção aberta
 
-## Roadmap resumido
+## Roadmap Resumido
 
 ### Entregue
 
 - deploy completo no Azure
-- autenticacao completa
+- autenticação completa
 - conta demo
-- perfil do usuario
+- perfil do usuário
 - metas mensais
 - exportacao CSV e PDF
-- confirmacao de e-mail
-- recuperacao de senha
+- confirmação de e-mail
+- recuperação de senha
 - logs de auditoria
-- testes automatizados do backend
+- testes automatizados do back-end
 
-### Proxima etapa
+### Próxima etapa
 
-- dominio customizado `finovawallet`
-- acabamento final de apresentacao
+- domínio customizado `finovawallet`
+- acabamento final de apresentação
 - refinamentos de produto definidos para V3
 
 ## Autor

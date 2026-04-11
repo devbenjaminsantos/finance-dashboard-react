@@ -36,7 +36,7 @@ export default function App() {
             />
 
             <Route
-              path="/transações"
+              path="/transacoes"
               element={
                 <ProtectedRoute>
                   <Transactions />

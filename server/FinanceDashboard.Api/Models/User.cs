@@ -8,6 +8,9 @@ namespace FinanceDashboard.Api.Models
         public bool EmailConfirmed { get; set; }
         public bool? OnboardingOptIn { get; set; }
         public string PasswordHash { get; set; } = string.Empty;
+        public int FailedLoginAttempts { get; set; }
+        public DateTime? LockoutEndsAtUtc { get; set; }
+        public DateTime? LastFailedLoginAtUtc { get; set; }
 
         public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
         public ICollection<BudgetGoal> BudgetGoals { get; set; } = new List<BudgetGoal>();

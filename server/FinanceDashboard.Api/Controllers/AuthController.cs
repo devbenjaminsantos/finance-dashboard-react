@@ -14,6 +14,9 @@ namespace FinanceDashboard.Api.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
+        private const int MaxFailedLoginAttempts = 5;
+        private static readonly TimeSpan LoginLockoutDuration = TimeSpan.FromMinutes(15);
+
         private readonly AppDbContext _context;
         private readonly AuditLogService _auditLogService;
         private readonly PasswordHasher _passwordHasher;
@@ -115,6 +118,7 @@ namespace FinanceDashboard.Api.Controllers
         public async Task<ActionResult<AuthResponse>> Login(LoginRequest dto)
         {
             var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
+            var now = DateTime.UtcNow;
 
             var user = await _context.Users
                 .FirstOrDefaultAsync(existing => existing.Email == normalizedEmail);
@@ -125,6 +129,28 @@ namespace FinanceDashboard.Api.Controllers
                 {
                     Title = "Usuário não encontrado.",
                     Status = StatusCodes.Status404NotFound
+                });
+            }
+
+            if (user.LockoutEndsAtUtc is not null && user.LockoutEndsAtUtc <= now)
+            {
+                ResetLoginAttemptTracking(user);
+                await _context.SaveChangesAsync();
+            }
+
+            if (IsUserLockedOut(user, now))
+            {
+                await _auditLogService.WriteAsync(
+                    action: "auth.login-blocked-locked-out",
+                    entityType: "User",
+                    entityId: user.Id.ToString(),
+                    userId: user.Id,
+                    summary: "Tentativa de login bloqueada por excesso de tentativas inválidas.");
+
+                return StatusCode(StatusCodes.Status429TooManyRequests, new ProblemDetails
+                {
+                    Title = "Muitas tentativas de login. Aguarde alguns minutos antes de tentar novamente.",
+                    Status = StatusCodes.Status429TooManyRequests
                 });
             }
 
@@ -148,13 +174,30 @@ namespace FinanceDashboard.Api.Controllers
 
             if (!_passwordHasher.VerifyPassword(user, dto.Password))
             {
+                RegisterFailedLoginAttempt(user, now);
+                await _context.SaveChangesAsync();
+                await _auditLogService.WriteAsync(
+                    action: user.LockoutEndsAtUtc is not null && user.LockoutEndsAtUtc > now
+                        ? "auth.login-locked-out"
+                        : "auth.login-failed",
+                    entityType: "User",
+                    entityId: user.Id.ToString(),
+                    userId: user.Id,
+                    summary: user.LockoutEndsAtUtc is not null && user.LockoutEndsAtUtc > now
+                        ? "Conta temporariamente bloqueada por excesso de senhas incorretas."
+                        : "Tentativa de login com senha incorreta.");
+
                 return Unauthorized(new ProblemDetails
                 {
-                    Title = "Senha incorreta.",
+                    Title = user.LockoutEndsAtUtc is not null && user.LockoutEndsAtUtc > now
+                        ? "Senha incorreta. A conta foi bloqueada temporariamente por segurança."
+                        : "Senha incorreta.",
                     Status = StatusCodes.Status401Unauthorized
                 });
             }
 
+            ResetLoginAttemptTracking(user);
+            await _context.SaveChangesAsync();
             await _auditLogService.WriteAsync(
                 action: "auth.login-succeeded",
                 entityType: "User",
@@ -445,6 +488,29 @@ namespace FinanceDashboard.Api.Controllers
         private static bool IsDuplicateEmailViolation(DbUpdateException exception)
         {
             return exception.InnerException is SqlException { Number: 2601 or 2627 };
+        }
+
+        private static bool IsUserLockedOut(User user, DateTime now)
+        {
+            return user.LockoutEndsAtUtc is not null && user.LockoutEndsAtUtc > now;
+        }
+
+        private static void RegisterFailedLoginAttempt(User user, DateTime now)
+        {
+            user.FailedLoginAttempts += 1;
+            user.LastFailedLoginAtUtc = now;
+
+            if (user.FailedLoginAttempts >= MaxFailedLoginAttempts)
+            {
+                user.LockoutEndsAtUtc = now.Add(LoginLockoutDuration);
+            }
+        }
+
+        private static void ResetLoginAttemptTracking(User user)
+        {
+            user.FailedLoginAttempts = 0;
+            user.LastFailedLoginAtUtc = null;
+            user.LockoutEndsAtUtc = null;
         }
 
         private async Task<string> CreateEmailVerificationTokenAsync(User user)

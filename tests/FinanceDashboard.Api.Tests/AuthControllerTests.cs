@@ -137,6 +137,87 @@ public class AuthControllerTests
     }
 
     [Fact]
+    public async Task Login_LocksUserAfterTooManyFailedAttempts()
+    {
+        using var context = CreateContext();
+        var controller = CreateController(context);
+
+        var user = new User
+        {
+            Name = "Finova User",
+            Email = "user@finova.app",
+            EmailConfirmed = true,
+        };
+        user.PasswordHash = HashPassword("SenhaSegura123!", user);
+
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        for (var attempt = 1; attempt <= 5; attempt++)
+        {
+            var result = await controller.Login(new LoginRequest
+            {
+                Email = user.Email,
+                Password = "SenhaErrada123!"
+            });
+
+            var unauthorized = Assert.IsType<UnauthorizedObjectResult>(result.Result);
+            Assert.Equal(StatusCodes.Status401Unauthorized, unauthorized.StatusCode);
+        }
+
+        var refreshedUser = await context.Users.SingleAsync();
+        Assert.Equal(5, refreshedUser.FailedLoginAttempts);
+        Assert.NotNull(refreshedUser.LockoutEndsAtUtc);
+        Assert.Contains(context.AuditLogs, log => log.Action == "auth.login-locked-out");
+
+        var lockedOutResult = await controller.Login(new LoginRequest
+        {
+            Email = user.Email,
+            Password = "SenhaSegura123!"
+        });
+
+        var tooManyRequests = Assert.IsType<ObjectResult>(lockedOutResult.Result);
+        var problem = Assert.IsType<ProblemDetails>(tooManyRequests.Value);
+
+        Assert.Equal(StatusCodes.Status429TooManyRequests, tooManyRequests.StatusCode);
+        Assert.Equal("Muitas tentativas de login. Aguarde alguns minutos antes de tentar novamente.", problem.Title);
+    }
+
+    [Fact]
+    public async Task Login_ResetsFailedAttemptTracking_AfterSuccessfulAuthentication()
+    {
+        using var context = CreateContext();
+        var controller = CreateController(context);
+
+        var user = new User
+        {
+            Name = "Finova User",
+            Email = "user@finova.app",
+            EmailConfirmed = true,
+            FailedLoginAttempts = 2,
+            LastFailedLoginAtUtc = DateTime.UtcNow.AddMinutes(-3)
+        };
+        user.PasswordHash = HashPassword("SenhaSegura123!", user);
+
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var result = await controller.Login(new LoginRequest
+        {
+            Email = user.Email,
+            Password = "SenhaSegura123!"
+        });
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        Assert.NotNull(ok.Value);
+
+        var refreshedUser = await context.Users.SingleAsync();
+        Assert.Equal(0, refreshedUser.FailedLoginAttempts);
+        Assert.Null(refreshedUser.LockoutEndsAtUtc);
+        Assert.Null(refreshedUser.LastFailedLoginAtUtc);
+    }
+
+    [Fact]
     public async Task VerifyEmail_ConfirmsUser_AndMarksTokenAsUsed()
     {
         using var context = CreateContext();

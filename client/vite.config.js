@@ -8,5 +8,7 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: "./src/test/setup.js",
     globals: true,
+    include: ["src/**/*.test.{js,jsx}"],
+    exclude: ["tests/e2e/**"],
   },
 })

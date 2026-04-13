@@ -345,6 +345,33 @@ a {
   text-align: right;
 }
 
+.finova-suggestion-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.finova-goal-suggestion {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 44px;
+  padding: 0.65rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.finova-goal-suggestion:hover,
+.finova-goal-suggestion:focus {
+  background: var(--surface-soft);
+  color: var(--text);
+  border-color: rgba(37, 99, 235, 0.25);
+}
+
 .finova-goal-pill {
   display: inline-flex;
   align-items: center;

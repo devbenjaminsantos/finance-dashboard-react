@@ -1,160 +1,216 @@
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
-}
+const PAGE_WIDTH = 595;
+const PAGE_HEIGHT = 842;
+const PAGE_MARGIN_X = 40;
+const PAGE_TOP = 800;
+const LINE_HEIGHT = 16;
+const ROWS_PER_PAGE = 28;
 
-export function exportTransactionsToPdf({
-  filename,
-  title,
-  subtitle,
-  columns,
-  rows,
-}) {
-  const reportWindow = window.open("", "_blank", "noopener,noreferrer,width=1080,height=900");
+function padText(value, length, align = "left") {
+  const normalized = String(value ?? "");
 
-  if (!reportWindow) {
-    throw new Error("Não foi possível abrir a janela de impressão. Verifique se o navegador bloqueou pop-ups.");
+  if (normalized.length >= length) {
+    return normalized.slice(0, Math.max(length - 1, 1)) + "…";
   }
 
-  const tableHeader = columns
-    .map((column) => `<th>${escapeHtml(column)}</th>`)
-    .join("");
+  return align === "right"
+    ? normalized.padStart(length, " ")
+    : normalized.padEnd(length, " ");
+}
 
-  const tableRows = rows
-    .map(
-      (row) =>
-        `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`
+function formatRow(columns) {
+  return columns.join(" | ");
+}
+
+function toPdfHexString(value) {
+  const input = String(value ?? "");
+  let hex = "FEFF";
+
+  for (const character of input) {
+    const codePoint = character.codePointAt(0);
+
+    if (codePoint <= 0xffff) {
+      hex += codePoint.toString(16).padStart(4, "0").toUpperCase();
+      continue;
+    }
+
+    const adjusted = codePoint - 0x10000;
+    const high = 0xd800 + (adjusted >> 10);
+    const low = 0xdc00 + (adjusted & 0x3ff);
+    hex += high.toString(16).padStart(4, "0").toUpperCase();
+    hex += low.toString(16).padStart(4, "0").toUpperCase();
+  }
+
+  return `<${hex}>`;
+}
+
+function buildTableLines({ title, subtitle, columns, rows }) {
+  const columnWidths = [12, 24, 18, 10, 14];
+  const visibleRows = rows.map((row) => [
+    row[0],
+    row[1],
+    row[2],
+    row[3],
+    row[4],
+  ]);
+
+  const headerLine = formatRow(
+    columns.slice(0, 5).map((column, index) =>
+      padText(column, columnWidths[index], index === 4 ? "right" : "left")
     )
-    .join("");
+  );
 
-  reportWindow.document.write(`
-    <!DOCTYPE html>
-    <html lang="pt-BR">
-      <head>
-        <meta charset="UTF-8" />
-        <title>${escapeHtml(filename)}</title>
-        <style>
-          :root {
-            color-scheme: light;
-          }
+  const separatorLine = columnWidths
+    .map((width) => "-".repeat(width))
+    .join("-+-");
 
-          * {
-            box-sizing: border-box;
-          }
+  const bodyLines =
+    visibleRows.length > 0
+      ? visibleRows.map((row) =>
+          formatRow(
+            row.map((cell, index) =>
+              padText(cell, columnWidths[index], index === 4 ? "right" : "left")
+            )
+          )
+        )
+      : ["Nenhuma transacao encontrada para os filtros selecionados."];
 
-          body {
-            margin: 0;
-            padding: 32px;
-            font-family: Inter, Arial, sans-serif;
-            color: #0f172a;
-            background: #ffffff;
-          }
+  return [
+    title,
+    subtitle,
+    `Gerado em ${new Date().toLocaleString("pt-BR")}`,
+    "",
+    headerLine,
+    separatorLine,
+    ...bodyLines,
+  ];
+}
 
-          .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 24px;
-            margin-bottom: 24px;
-          }
+function buildPageChunks(lines) {
+  const firstPageCapacity = ROWS_PER_PAGE;
+  const pages = [];
 
-          .brand {
-            font-size: 28px;
-            font-weight: 800;
-            letter-spacing: -0.03em;
-            margin: 0 0 8px;
-          }
+  for (let index = 0; index < lines.length; index += firstPageCapacity) {
+    pages.push(lines.slice(index, index + firstPageCapacity));
+  }
 
-          .title {
-            font-size: 18px;
-            font-weight: 700;
-            margin: 0 0 6px;
-          }
+  return pages;
+}
 
-          .subtitle {
-            margin: 0;
-            color: #64748b;
-            font-size: 14px;
-          }
+function buildContentStream(lines, pageNumber, pageCount) {
+  const commands = [
+    "BT",
+    "/F1 12 Tf",
+    `${LINE_HEIGHT} TL`,
+    `${PAGE_MARGIN_X} ${PAGE_TOP} Td`,
+  ];
 
-          .generated-at {
-            color: #64748b;
-            font-size: 13px;
-            text-align: right;
-          }
+  lines.forEach((line, index) => {
+    if (index === 0) {
+      commands.push(`${toPdfHexString(line)} Tj`);
+      return;
+    }
 
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 24px;
-          }
+    commands.push("T*");
+    commands.push(`${toPdfHexString(line)} Tj`);
+  });
 
-          th,
-          td {
-            border: 1px solid #e2e8f0;
-            padding: 12px 10px;
-            text-align: left;
-            vertical-align: top;
-            font-size: 13px;
-          }
+  commands.push("T*");
+  commands.push(`${toPdfHexString(`Pagina ${pageNumber} de ${pageCount}`)} Tj`);
+  commands.push("ET");
 
-          th {
-            background: #f8fafc;
-            color: #475569;
-            font-weight: 700;
-          }
+  return commands.join("\n");
+}
 
-          tbody tr:nth-child(even) {
-            background: #f8fafc;
-          }
+function buildPdfDocument(pageContents) {
+  const objects = [];
+  const pageObjectIds = [];
+  const fontObjectId = 3;
+  let nextObjectId = 4;
 
-          .empty {
-            margin-top: 24px;
-            padding: 24px;
-            border: 1px dashed #cbd5e1;
-            border-radius: 16px;
-            color: #64748b;
-          }
+  pageContents.forEach((content, index) => {
+    const contentObjectId = nextObjectId++;
+    const pageObjectId = nextObjectId++;
 
-          @media print {
-            body {
-              padding: 0;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div>
-            <h1 class="brand">Finova</h1>
-            <h2 class="title">${escapeHtml(title)}</h2>
-            <p class="subtitle">${escapeHtml(subtitle)}</p>
-          </div>
+    objects.push({
+      id: contentObjectId,
+      body: `<< /Length ${content.length} >>\nstream\n${content}\nendstream`,
+    });
 
-          <div class="generated-at">
-            Gerado em<br />
-            ${escapeHtml(new Date().toLocaleString("pt-BR"))}
-          </div>
-        </div>
+    pageObjectIds.push(pageObjectId);
 
-        ${
-          rows.length === 0
-            ? `<div class="empty">Nenhuma transação encontrada para os filtros selecionados.</div>`
-            : `<table>
-                <thead>
-                  <tr>${tableHeader}</tr>
-                </thead>
-                <tbody>${tableRows}</tbody>
-              </table>`
-        }
-      </body>
-    </html>
-  `);
+    objects.push({
+      id: pageObjectId,
+      body:
+        `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PAGE_WIDTH} ${PAGE_HEIGHT}] ` +
+        `/Resources << /Font << /F1 ${fontObjectId} 0 R >> >> /Contents ${contentObjectId} 0 R >>`,
+    });
+  });
 
-  reportWindow.document.close();
-  reportWindow.focus();
-  reportWindow.print();
+  const catalogObject = { id: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" };
+  const pagesObject = {
+    id: 2,
+    body: `<< /Type /Pages /Count ${pageObjectIds.length} /Kids [${pageObjectIds
+      .map((id) => `${id} 0 R`)
+      .join(" ")}] >>`,
+  };
+  const fontObject = { id: 3, body: "<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>" };
+
+  const orderedObjects = [catalogObject, pagesObject, fontObject, ...objects].sort(
+    (left, right) => left.id - right.id
+  );
+
+  let pdf = "%PDF-1.4\n";
+  const offsets = [0];
+
+  for (const object of orderedObjects) {
+    offsets[object.id] = pdf.length;
+    pdf += `${object.id} 0 obj\n${object.body}\nendobj\n`;
+  }
+
+  const xrefStart = pdf.length;
+  pdf += `xref\n0 ${orderedObjects.length + 1}\n`;
+  pdf += "0000000000 65535 f \n";
+
+  for (let id = 1; id <= orderedObjects.length; id += 1) {
+    pdf += `${String(offsets[id]).padStart(10, "0")} 00000 n \n`;
+  }
+
+  pdf +=
+    `trailer\n<< /Size ${orderedObjects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
+
+  return pdf;
+}
+
+export function buildTransactionsPdf({ title, subtitle, columns, rows }) {
+  const lines = buildTableLines({ title, subtitle, columns, rows });
+  const pages = buildPageChunks(lines);
+  const pageContents = pages.map((pageLines, index) =>
+    buildContentStream(pageLines, index + 1, pages.length)
+  );
+
+  return buildPdfDocument(pageContents);
+}
+
+export function downloadPdf(filename, pdfContent) {
+  const blob = new Blob([pdfContent], { type: "application/pdf" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+export function exportTransactionsToPdf({ filename, title, subtitle, columns, rows }) {
+  const pdfContent = buildTransactionsPdf({
+    title,
+    subtitle,
+    columns,
+    rows,
+  });
+
+  downloadPdf(filename, pdfContent);
 }

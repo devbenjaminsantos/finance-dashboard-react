@@ -673,9 +673,9 @@ export default function Home() {
           >
             <div className="row g-3">
               <ShortcutTile
-                title="Dashboard"
+                title="Graficos"
                 description="Acompanhe graficos e resumo geral do periodo."
-                to="/dashboard"
+                to="/graficos"
               />
               <ShortcutTile
                 title="Insights"

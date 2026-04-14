@@ -13,7 +13,7 @@ vi.mock("../features/dashboard/DashboardCharts", () => ({
 
 import { useTransactions } from "../features/transactions/useTransactions";
 
-describe("Dashboard page", () => {
+describe("Graficos page", () => {
   function renderDashboard() {
     return render(
       <MemoryRouter>
@@ -53,7 +53,7 @@ describe("Dashboard page", () => {
 
     renderDashboard();
 
-    expect(screen.getByText("Dashboard")).toBeInTheDocument();
+    expect(screen.getByText("Graficos")).toBeInTheDocument();
     expect(screen.getByText("Graficos do periodo")).toBeInTheDocument();
     expect(screen.getByText("Graficos mockados")).toBeInTheDocument();
   });

@@ -11,7 +11,7 @@ import {
 } from "../lib/api/auth";
 
 const demoHighlights = [
-  "Conheça o dashboard com dados prontos e metas já preenchidas",
+  "Conheca a area de graficos com dados prontos e metas ja preenchidas",
   "Teste filtros, relatórios e fluxos sem criar conta",
   "Explore autenticação, recuperação de senha e perfil em minutos",
 ];

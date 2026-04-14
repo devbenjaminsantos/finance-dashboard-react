@@ -74,8 +74,8 @@ export default function Navbar() {
                 <NavLink className={linkClass} to="/">
                   Home
                 </NavLink>
-                <NavLink className={linkClass} to="/dashboard">
-                  Dashboard
+                <NavLink className={linkClass} to="/graficos">
+                  Graficos
                 </NavLink>
                 <NavLink className={linkClass} to="/transacoes">
                   Transacoes

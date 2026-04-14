@@ -1,6 +1,6 @@
 # Finova
 
-Aplicação full stack para controle financeiro pessoal, com autenticação, dashboard, metas mensais, exportação de relatórios e deploy em produção no Azure.
+Aplicação full stack para controle financeiro pessoal, com autenticação, gráficos financeiros, metas mensais, exportação de relatórios e deploy em produção no Azure.
 
 O projeto foi pensado para evoluir de um painel financeiro simples para um produto com cara de SaaS: conta demo, recuperação de senha, confirmação de e-mail, monitoramento básico, auditoria e estrutura pronta para expansão.
 
@@ -74,8 +74,8 @@ O Finova permite:
 
 - conta demo com dados prontos para exploração
 - onboarding inicial com opt-in
-- dashboard com resumo financeiro
-- filtro por período no dashboard
+- área de gráficos com resumo financeiro
+- filtro por período na área de gráficos
 - comparativo entre meses
 - insights automáticos
 - insights prescritivos
@@ -245,7 +245,7 @@ Atualmente os testes cobrem:
 - fluxo de transações
 - proteção por usuário nas operações de transação
 - helpers de sessão, storage e exportação
-- dashboard e modal de transações
+- área de gráficos e modal de transações
 - smoke tests com Playwright para rotas públicas e proteção de rotas
 
 ## Configurações Importantes
@@ -293,7 +293,7 @@ O projeto inclui uma conta demo para exploração rápida do produto.
 Objetivo:
 
 - permitir avaliação sem cadastro
-- demonstrar dashboard, categorias, metas, filtros e relatórios
+- demonstrar gráficos, categorias, metas, filtros e relatórios
 - acelerar apresentações e validações
 
 O fluxo da demo usa a mesma sessão JWT da conta real, o que ajuda a validar o comportamento do app sem exceções artificiais no front-end.
@@ -322,7 +322,7 @@ Guias extras:
 - [x] Conta demo
 - [x] Recuperação de senha
 - [x] Confirmação de e-mail
-- [x] Dashboard inicial
+- [x] Área inicial de gráficos
 - [x] Metas mensais
 - [x] Exportação em CSV e PDF
 - [x] Monitoramento básico
@@ -332,7 +332,7 @@ Guias extras:
 - [x] Melhorias de UX no fluxo de autenticação
 - [x] Estados de loading e feedback visual mais claros
 - [x] Refinamento da conta demo
-- [x] Filtros por período no dashboard
+- [x] Filtros por período na área de gráficos
 - [x] Metas mensais por categoria
 - [x] Alerta de gastos
 - [x] Logs de auditoria no backend
@@ -358,7 +358,7 @@ Guias extras:
 
 - [x] Otimizar a página de auditoria para mostrar apenas eventos mais relevantes
 - [x] Renomear Auditoria para Histórico
-- [x] Separar dashboard, insights, comparativos e metas em páginas próprias
+- [x] Separar gráficos, insights, comparativos e metas em páginas próprias
 - [x] Ocultar automaticamente o mini tutorial quando ele for concluído
 - [ ] Criar uma Home personalizável, com widgets escolhidos pelo usuário
 - [ ] Melhorar a exportação em PDF sem depender da impressão/extensão do navegador

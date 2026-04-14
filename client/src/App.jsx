@@ -70,13 +70,15 @@ export default function App() {
             />
 
             <Route
-              path="/dashboard"
+              path="/graficos"
               element={
                 <ProtectedRoute>
                   <Dashboard />
                 </ProtectedRoute>
               }
             />
+
+            <Route path="/dashboard" element={<Navigate to="/graficos" replace />} />
 
             <Route
               path="/transacoes"

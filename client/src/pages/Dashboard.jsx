@@ -41,7 +41,7 @@ export default function Dashboard() {
     <section className="finova-section-space">
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 gap-3">
         <div>
-          <h1 className="finova-title mb-1">Dashboard</h1>
+          <h1 className="finova-title mb-1">Graficos</h1>
           <p className="finova-subtitle mb-0">
             Sua visao geral financeira com foco em resumo e graficos do periodo selecionado.
           </p>

@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Dashboard from "./Dashboard";
 
@@ -13,10 +14,6 @@ vi.mock("../lib/api/auth", () => ({
 
 vi.mock("../lib/api/budgetGoals", () => ({
   getBudgetGoals: vi.fn(),
-}));
-
-vi.mock("../features/dashboard/BudgetGoalsSection", () => ({
-  default: () => <div>Metas mockadas</div>,
 }));
 
 vi.mock("../features/dashboard/DashboardCharts", () => ({
@@ -67,6 +64,14 @@ const baseTransactions = [
 ];
 
 describe("Dashboard page", () => {
+  function renderDashboard() {
+    return render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
+  }
+
   beforeEach(() => {
     vi.clearAllMocks();
     useTransactions.mockReturnValue({
@@ -84,7 +89,7 @@ describe("Dashboard page", () => {
       onboardingOptIn: null,
     });
 
-    render(<Dashboard />);
+    renderDashboard();
 
     expect(
       screen.getByText("Quer ajuda para configurar seu Finova?")
@@ -105,7 +110,7 @@ describe("Dashboard page", () => {
       onboardingOptIn: true,
     });
 
-    render(<Dashboard />);
+    renderDashboard();
     fireEvent.click(screen.getByRole("button", { name: "Quero ajuda" }));
 
     await waitFor(() => {
@@ -113,7 +118,7 @@ describe("Dashboard page", () => {
     });
   });
 
-  it("shows automatic insights and prescriptive guidance", async () => {
+  it("shows shortcuts to the dedicated analysis areas", async () => {
     getStoredUser.mockReturnValue({
       id: 1,
       name: "User",
@@ -121,14 +126,23 @@ describe("Dashboard page", () => {
       onboardingOptIn: true,
     });
 
-    render(<Dashboard />);
+    renderDashboard();
 
     await act(async () => {});
 
-    expect(screen.getByText("Insights automáticos")).toBeInTheDocument();
-    expect(screen.getByText("Categoria mais representativa")).toBeInTheDocument();
-    expect(screen.queryByText("Ação prioritária")).not.toBeInTheDocument();
-    expect(screen.getByText("Categoria que pede atenção")).toBeInTheDocument();
+    expect(screen.getByText("Áreas dedicadas")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Abrir insights" })).toHaveAttribute(
+      "href",
+      "/insights"
+    );
+    expect(screen.getByRole("link", { name: "Abrir comparativos" })).toHaveAttribute(
+      "href",
+      "/comparativos"
+    );
+    expect(screen.getByRole("link", { name: "Abrir metas" })).toHaveAttribute(
+      "href",
+      "/metas"
+    );
   });
 
   it("shows demo information instead of onboarding for demo user", () => {
@@ -139,7 +153,7 @@ describe("Dashboard page", () => {
       onboardingOptIn: false,
     });
 
-    render(<Dashboard />);
+    renderDashboard();
 
     expect(screen.getByText("Conta de demonstração")).toBeInTheDocument();
     expect(
@@ -161,7 +175,7 @@ describe("Dashboard page", () => {
       onboardingOptIn: false,
     });
 
-    render(<Dashboard />);
+    renderDashboard();
 
     await waitFor(() => {
       expect(updateOnboardingPreferenceRequest).toHaveBeenCalledWith(false);

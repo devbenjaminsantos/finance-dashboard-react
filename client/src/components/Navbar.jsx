@@ -77,6 +77,15 @@ export default function Navbar() {
                 <NavLink className={linkClass} to="/transacoes">
                   Transações
                 </NavLink>
+                <NavLink className={linkClass} to="/insights">
+                  Insights
+                </NavLink>
+                <NavLink className={linkClass} to="/comparativos">
+                  Comparativos
+                </NavLink>
+                <NavLink className={linkClass} to="/metas">
+                  Metas
+                </NavLink>
                 <NavLink className={linkClass} to="/historico">
                   Histórico
                 </NavLink>

@@ -442,6 +442,13 @@ a {
   justify-content: flex-end;
 }
 
+.finova-page-note {
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+}
+
 .finova-modal-backdrop {
   background: var(--overlay);
 }

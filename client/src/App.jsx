@@ -9,8 +9,11 @@ import {
   touchSessionActivity,
 } from "./lib/api/auth";
 import Dashboard from "./pages/Dashboard";
+import Comparisons from "./pages/Comparisons";
 import AuditLogs from "./pages/AuditLogs";
 import ForgotPassword from "./pages/ForgotPassword";
+import Goals from "./pages/Goals";
+import Insights from "./pages/Insights";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import Register from "./pages/Register";
@@ -70,6 +73,33 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Transactions />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/insights"
+              element={
+                <ProtectedRoute>
+                  <Insights />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/comparativos"
+              element={
+                <ProtectedRoute>
+                  <Comparisons />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/metas"
+              element={
+                <ProtectedRoute>
+                  <Goals />
                 </ProtectedRoute>
               }
             />

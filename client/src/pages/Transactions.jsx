@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import TransactionImportModal from "../features/transactions/components/TransactionImportModal";
 import TransactionModal from "../features/transactions/components/TransactionModal";
 import TransactionsFilters from "../features/transactions/components/TransactionsFilters";
 import TransactionsTable from "../features/transactions/components/TransactionsTable";
@@ -16,6 +17,7 @@ export default function Transactions() {
   const {
     transactions,
     addTransaction,
+    importTransactions,
     removeTransaction,
     updateTransaction,
     isLoading,
@@ -39,6 +41,7 @@ export default function Transactions() {
   const [month, setMonth] = useState(() => saved.month);
   const [sortBy, setSortBy] = useState(() => saved.sortBy);
   const [isOpen, setIsOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [mode, setMode] = useState("create");
   const [selected, setSelected] = useState(null);
   const [isMutating, setIsMutating] = useState(false);
@@ -50,10 +53,7 @@ export default function Transactions() {
   const categories = useMemo(() => {
     const baseCategories =
       typeFilter === "all"
-        ? [
-            ...getTransactionCategories("expense"),
-            ...getTransactionCategories("income"),
-          ]
+        ? [...getTransactionCategories("expense"), ...getTransactionCategories("income")]
         : getTransactionCategories(typeFilter);
 
     const set = new Set(baseCategories);
@@ -104,14 +104,10 @@ export default function Transactions() {
         list.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
         break;
       case "amount_desc":
-        list.sort(
-          (a, b) => (Number(b.amountCents) || 0) - (Number(a.amountCents) || 0)
-        );
+        list.sort((a, b) => (Number(b.amountCents) || 0) - (Number(a.amountCents) || 0));
         break;
       case "amount_asc":
-        list.sort(
-          (a, b) => (Number(a.amountCents) || 0) - (Number(b.amountCents) || 0)
-        );
+        list.sort((a, b) => (Number(a.amountCents) || 0) - (Number(b.amountCents) || 0));
         break;
       case "date_desc":
       default:
@@ -142,8 +138,20 @@ export default function Transactions() {
     setIsOpen(true);
   }
 
+  function openImport() {
+    if (isMutating) {
+      return;
+    }
+
+    setIsImportOpen(true);
+  }
+
   function closeModal() {
     setIsOpen(false);
+  }
+
+  function closeImport() {
+    setIsImportOpen(false);
   }
 
   async function handleSubmit(data) {
@@ -155,6 +163,16 @@ export default function Transactions() {
       } else {
         await addTransaction(data);
       }
+    } finally {
+      setIsMutating(false);
+    }
+  }
+
+  async function handleImportSubmit(items) {
+    setIsMutating(true);
+
+    try {
+      return await importTransactions(items);
     } finally {
       setIsMutating(false);
     }
@@ -235,13 +253,23 @@ export default function Transactions() {
           </p>
         </div>
 
-        <button
-          className="btn finova-btn-primary px-4"
-          onClick={openCreate}
-          disabled={isMutating}
-        >
-          Nova transação
-        </button>
+        <div className="finova-actions-row">
+          <button
+            className="btn finova-btn-light px-4"
+            onClick={openImport}
+            disabled={isMutating}
+          >
+            Importar CSV
+          </button>
+
+          <button
+            className="btn finova-btn-primary px-4"
+            onClick={openCreate}
+            disabled={isMutating}
+          >
+            Nova transação
+          </button>
+        </div>
       </div>
 
       <TransactionModal
@@ -250,6 +278,12 @@ export default function Transactions() {
         onClose={closeModal}
         onSubmit={handleSubmit}
         initial={selected}
+      />
+
+      <TransactionImportModal
+        isOpen={isImportOpen}
+        onClose={closeImport}
+        onImport={handleImportSubmit}
       />
 
       <TransactionsFilters

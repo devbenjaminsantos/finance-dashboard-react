@@ -11,6 +11,13 @@ export function createTransaction(transaction) {
   });
 }
 
+export function importTransactions(transactions) {
+  return apiRequest("/transactions/import", {
+    method: "POST",
+    body: JSON.stringify({ transactions }),
+  });
+}
+
 export function updateTransaction(id, transaction) {
   return apiRequest(`/transactions/${id}`, {
     method: "PUT",

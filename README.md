@@ -1,10 +1,10 @@
 # Finova
 
-Aplicação full stack para controle financeiro pessoal, com autenticação, gráficos financeiros, metas mensais, exportação de relatórios e deploy em produção no Azure.
+Aplicacao full stack para controle financeiro pessoal, com autenticacao, graficos financeiros, metas mensais, exportacao de relatorios e deploy em producao no Azure.
 
-O projeto foi pensado para evoluir de um painel financeiro simples para um produto com cara de SaaS: conta demo, recuperação de senha, confirmação de e-mail, monitoramento básico, auditoria e estrutura pronta para expansão.
+O projeto foi pensado para evoluir de um painel financeiro simples para um produto com cara de SaaS: conta demo, recuperacao de senha, confirmacao de e-mail, monitoramento basico, historico e estrutura pronta para expansao.
 
-## Visão Geral
+## Visao Geral
 
 O Finova permite:
 
@@ -12,13 +12,13 @@ O Finova permite:
 - confirmar e-mail no cadastro
 - recuperar senha por e-mail
 - usar uma conta demo com dados prontos
-- cadastrar, editar e remover transações
+- cadastrar, editar e remover transacoes
 - acompanhar receitas, despesas e saldo
 - definir metas mensais de gasto
-- receber alertas visuais e insights automáticos
-- exportar transações em CSV e PDF
+- receber alertas visuais e insights automaticos
+- exportar transacoes em CSV e PDF
 - alternar entre tema claro e escuro
-- registrar logs de auditoria para ações sensíveis
+- registrar logs de auditoria para acoes sensiveis
 
 ## Stack
 
@@ -57,75 +57,75 @@ O Finova permite:
 
 ## Funcionalidades Entregues
 
-### Autenticação e segurança
+### Autenticacao e seguranca
 
-- cadastro com validação de e-mail
+- cadastro com validacao de e-mail
 - login com JWT
-- bloqueio de login para contas não confirmadas
-- reenvio de e-mail de confirmação
-- recuperação de senha com token de uso único
-- redefinição de senha
-- tela de perfil com alteração de nome e senha
-- bloqueio temporário após excesso de tentativas inválidas de login
-- política de senha fortalecida
-- gerenciamento de sessão com expiração, inatividade e retorno para rota protegida
+- bloqueio de login para contas nao confirmadas
+- reenvio de e-mail de confirmacao
+- recuperacao de senha com token de uso unico
+- redefinicao de senha
+- tela de perfil com alteracao de nome e senha
+- bloqueio temporario apos excesso de tentativas invalidas de login
+- politica de senha fortalecida
+- gerenciamento de sessao com expiracao, inatividade e retorno para rota protegida
 
-### Experiência de produto
+### Experiencia de produto
 
-- conta demo com dados prontos para exploração
+- conta demo com dados prontos para exploracao
 - onboarding inicial com opt-in
-- área de gráficos com resumo financeiro
-- filtro por período na área de gráficos
+- area de graficos com resumo financeiro
+- filtro por periodo na area de graficos
 - comparativo entre meses
-- insights automáticos
+- insights automaticos
 - insights prescritivos
 - tema claro e escuro
 - mensagens de erro e sucesso revisadas
 
-### Gestão financeira
+### Gestao financeira
 
 - cadastro de receitas e despesas
 - categorias separadas para receita e despesa
-- filtros por texto, tipo, categoria, mês e ordenação
+- filtros por texto, tipo, categoria, mes e ordenacao
 - metas mensais gerais e por categoria
-- expansão das metas por categoria com navegação mensal e sugestões automáticas
+- expansao das metas por categoria com navegacao mensal e sugestoes automaticas
 - alerta visual de gasto
 - gastos recorrentes mensais
 
-### Relatórios e rastreabilidade
+### Relatorios e rastreabilidade
 
-- exportação de transações em CSV
-- exportação de transações em PDF via impressão do navegador
-- logs de auditoria para fluxos sensíveis
-- tela de histórico no frontend
+- exportacao de transacoes em CSV
+- exportacao de transacoes em PDF sem depender da impressao do navegador
+- logs de auditoria para fluxos sensiveis
+- tela de historico no frontend
 
-### Qualidade e operação
+### Qualidade e operacao
 
-- testes automatizados para autenticação
-- testes automatizados para transações
+- testes automatizados para autenticacao
+- testes automatizados para transacoes
 - testes automatizados de frontend com Vitest
-- suíte E2E inicial com Playwright
-- monitoramento básico configurado no Azure
+- suite E2E inicial com Playwright
+- monitoramento basico configurado no Azure
 
 ## Estrutura do Projeto
 
 ```text
 finance-dashboard-react/
-├─ client/                          # Frontend React/Vite
-├─ server/
-│  ├─ FinanceDashboard.Api/         # API ASP.NET Core
-│  ├─ docker-compose.yml            # SQL Server local via Docker
-│  └─ .env.example                  # Exemplo para o banco local
-├─ tests/
-│  └─ FinanceDashboard.Api.Tests/   # Testes automatizados do backend
-├─ docs/
-│  └─ azure-deploy.md               # Guia de deploy e infraestrutura Azure
-└─ finance-dashboard-react.sln
+|-- client/                          # Frontend React/Vite
+|-- server/
+|   |-- FinanceDashboard.Api/        # API ASP.NET Core
+|   |-- docker-compose.yml           # SQL Server local via Docker
+|   `-- .env.example                 # Exemplo para o banco local
+|-- tests/
+|   `-- FinanceDashboard.Api.Tests/  # Testes automatizados do backend
+|-- docs/
+|   `-- azure-deploy.md              # Guia de deploy e infraestrutura Azure
+`-- finance-dashboard-react.sln
 ```
 
-## Ambiente de Produção
+## Ambiente de Producao
 
-Estado atual da publicação:
+Estado atual da publicacao:
 
 - front-end: `Azure Static Web Apps`
 - back-end: `Azure App Service`
@@ -136,7 +136,7 @@ Links atuais:
 - front-end: `https://happy-coast-09654c410.2.azurestaticapps.net`
 - health da API: `https://finova-api-b9g4bpcadyegheed.brazilsouth-01.azurewebsites.net/health`
 
-O domínio customizado planejado para a próxima etapa é `finovawallet`.
+O dominio customizado planejado para a proxima etapa e `finovawallet`.
 
 ## Como Rodar Localmente
 
@@ -157,12 +157,12 @@ docker compose up -d
 
 ### 2. Back-End
 
-Você pode configurar a API local de duas formas:
+Voce pode configurar a API local de duas formas:
 
-- usando variáveis de ambiente
+- usando variaveis de ambiente
 - usando um arquivo local ignorado pelo Git, como `appsettings.Development.local.json`
 
-Variáveis esperadas:
+Variaveis esperadas:
 
 - `ConnectionStrings__Default`
 - `Jwt__Key`
@@ -171,14 +171,14 @@ Variáveis esperadas:
 - `Cors__AllowedOrigins__0`
 - `Client__BaseUrl`
 
-Exemplo de execução:
+Exemplo de execucao:
 
 ```powershell
 cd server/FinanceDashboard.Api
 dotnet run
 ```
 
-A API sobe, por padrão, em:
+A API sobe, por padrao, em:
 
 ```text
 http://localhost:5278
@@ -192,7 +192,7 @@ npm install
 npm run dev
 ```
 
-O front-end sobe, por padrão, em:
+O front-end sobe, por padrao, em:
 
 ```text
 http://localhost:5173
@@ -207,23 +207,23 @@ cd server/FinanceDashboard.Api
 dotnet ef database update
 ```
 
-Esse passo é necessário sempre que entrar uma nova migration, por exemplo em:
+Esse passo e necessario sempre que entrar uma nova migration, por exemplo em:
 
-- recuperação de senha
-- confirmação de e-mail
+- recuperacao de senha
+- confirmacao de e-mail
 - metas mensais
 - logs de auditoria
-- proteção contra tentativas de login
+- protecao contra tentativas de login
 
 ## Testes Automatizados
 
-Para rodar a suíte do backend:
+Para rodar a suite do backend:
 
 ```powershell
 dotnet test tests/FinanceDashboard.Api.Tests/FinanceDashboard.Api.Tests.csproj
 ```
 
-Para rodar a suíte do frontend:
+Para rodar a suite do frontend:
 
 ```powershell
 cd client
@@ -239,16 +239,16 @@ npm run test:e2e
 
 Atualmente os testes cobrem:
 
-- autenticação
-- confirmação de e-mail
-- recuperação e redefinição de senha
-- fluxo de transações
-- proteção por usuário nas operações de transação
-- helpers de sessão, storage e exportação
-- área de gráficos e modal de transações
-- smoke tests com Playwright para rotas públicas e proteção de rotas
+- autenticacao
+- confirmacao de e-mail
+- recuperacao e redefinicao de senha
+- fluxo de transacoes
+- protecao por usuario nas operacoes de transacao
+- helpers de sessao, storage e exportacao
+- area de graficos e modal de transacoes
+- smoke tests com Playwright para rotas publicas e protecao de rotas
 
-## Configurações Importantes
+## Configuracoes Importantes
 
 ### Front-End
 
@@ -264,7 +264,7 @@ https://finova-api-b9g4bpcadyegheed.brazilsouth-01.azurewebsites.net/api
 
 ### Back-End
 
-No App Service, as configurações principais são:
+No App Service, as configuracoes principais sao:
 
 - `Jwt__Key`
 - `Jwt__Issuer`
@@ -288,51 +288,51 @@ Em `Connection Strings`, a API usa:
 
 ## Conta Demo
 
-O projeto inclui uma conta demo para exploração rápida do produto.
+O projeto inclui uma conta demo para exploracao rapida do produto.
 
 Objetivo:
 
-- permitir avaliação sem cadastro
-- demonstrar gráficos, categorias, metas, filtros e relatórios
-- acelerar apresentações e validações
+- permitir avaliacao sem cadastro
+- demonstrar graficos, categorias, metas, filtros e relatorios
+- acelerar apresentacoes e validacoes
 
-O fluxo da demo usa a mesma sessão JWT da conta real, o que ajuda a validar o comportamento do app sem exceções artificiais no front-end.
+O fluxo da demo usa a mesma sessao JWT da conta real, o que ajuda a validar o comportamento do app sem excecoes artificiais no front-end.
 
-## Documentação Complementar
+## Documentacao Complementar
 
 Guias extras:
 
 - deploy e infraestrutura Azure: [docs/azure-deploy.md](/c:/Users/user/Desktop/Dashboard%20Financeiro/finance-dashboard-react/docs/azure-deploy.md)
 
-## Observações de Segurança
+## Observacoes de Seguranca
 
-- segredos não devem ser versionados
-- o arquivo local de configuração do back-end deve permanecer fora do Git
+- segredos nao devem ser versionados
+- o arquivo local de configuracao do back-end deve permanecer fora do Git
 - a senha do SQL deve ser mantida apenas em ambiente seguro
-- o fluxo de recuperação de senha não deve expor o link de redefinição em produção aberta
-- a sessão deve ser invalidada quando o token expirar ou quando houver inatividade prolongada
+- o fluxo de recuperacao de senha nao deve expor o link de redefinicao em producao aberta
+- a sessao deve ser invalidada quando o token expirar ou quando houver inatividade prolongada
 
-## Checklist por Versão
+## Checklist por Versao
 
 ### V1
 
 - [x] Deploy completo no Azure
-- [x] Autenticação base com JWT
-- [x] Perfil do usuário
+- [x] Autenticacao base com JWT
+- [x] Perfil do usuario
 - [x] Conta demo
-- [x] Recuperação de senha
-- [x] Confirmação de e-mail
-- [x] Área inicial de gráficos
+- [x] Recuperacao de senha
+- [x] Confirmacao de e-mail
+- [x] Area inicial de graficos
 - [x] Metas mensais
-- [x] Exportação em CSV e PDF
-- [x] Monitoramento básico
+- [x] Exportacao em CSV e PDF
+- [x] Monitoramento basico
 
 ### V2
 
-- [x] Melhorias de UX no fluxo de autenticação
+- [x] Melhorias de UX no fluxo de autenticacao
 - [x] Estados de loading e feedback visual mais claros
 - [x] Refinamento da conta demo
-- [x] Filtros por período na área de gráficos
+- [x] Filtros por periodo na area de graficos
 - [x] Metas mensais por categoria
 - [x] Alerta de gastos
 - [x] Logs de auditoria no backend
@@ -343,32 +343,39 @@ Guias extras:
 
 - [x] Tela de auditoria no frontend
 - [x] Comparativo entre meses
-- [x] Insights automáticos
+- [x] Insights automaticos
 - [x] Insights prescritivos
 - [x] Onboarding inicial com opt-in
 - [x] Gastos recorrentes
-- [x] Expansão das metas por categoria
+- [x] Expansao das metas por categoria
 - [x] Testes de frontend com Vitest
-- [x] Suíte inicial E2E com Playwright
-- [x] Proteção contra tentativas de login
-- [x] Política de senha fortalecida
-- [x] Gerenciamento de sessão
+- [x] Suite inicial E2E com Playwright
+- [x] Protecao contra tentativas de login
+- [x] Politica de senha fortalecida
+- [x] Gerenciamento de sessao
 
 ### V4
 
-- [x] Otimizar a página de auditoria para mostrar apenas eventos mais relevantes
-- [x] Renomear Auditoria para Histórico
-- [x] Separar gráficos, insights, comparativos e metas em páginas próprias
-- [x] Ocultar automaticamente o mini tutorial quando ele for concluído
-- [ ] Criar uma Home personalizável, com widgets escolhidos pelo usuário
-- [ ] Melhorar a exportação em PDF sem depender da impressão/extensão do navegador
+- [x] Otimizar a pagina de auditoria para mostrar apenas eventos mais relevantes
+- [x] Renomear Auditoria para Historico
+- [x] Separar graficos, insights, comparativos e metas em paginas proprias
+- [x] Ocultar automaticamente o mini tutorial quando ele for concluido
+- [x] Criar uma Home personalizavel, com widgets escolhidos pelo usuario
+- [x] Melhorar a exportacao em PDF sem depender da impressao/extensao do navegador
 
 ### V5
 
-- [ ] Suporte a múltiplos idiomas
-- [ ] Integração com conta bancária para detectar e importar transações automaticamente
-- [ ] Avaliar se ainda faz sentido incluir 2FA em um cenário mais maduro do produto
-- [ ] Domínio customizado como fechamento final da experiência
+- [ ] Suporte a multiplos idiomas
+- [ ] Integracao bancaria
+- [ ] V5.1 Importacao manual via CSV
+- [ ] V5.2 Importacao manual via OFX
+- [ ] V5.3 Tela de revisao antes da confirmacao da importacao
+- [ ] V5.4 Conciliacao de transacoes importadas com transacoes manuais
+- [ ] V5.5 Categorizacao assistida para lancamentos importados
+- [ ] V5.6 Preparar arquitetura para integracao automatica com Open Finance/agregador
+- [ ] V5.7 Sincronizacao automatica com conta bancaria
+- [ ] Avaliar se ainda faz sentido incluir 2FA em um cenario mais maduro do produto
+- [ ] Dominio customizado como fechamento final da experiencia
 
 ## Autor
 

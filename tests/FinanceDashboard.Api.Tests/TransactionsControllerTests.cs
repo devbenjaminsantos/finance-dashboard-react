@@ -103,6 +103,47 @@ public class TransactionsControllerTests
     }
 
     [Fact]
+    public async Task Import_PersistsTransactionsForAuthenticatedUser()
+    {
+        using var context = CreateContext();
+        var controller = CreateController(context, userId: 15);
+
+        var dto = new TransactionImportRequest
+        {
+            Transactions =
+            {
+                new TransactionImportItemRequest
+                {
+                    Description = "Padaria",
+                    Category = "Alimentacao",
+                    AmountCents = 2590,
+                    Date = new DateTime(2026, 4, 11),
+                    Type = "expense"
+                },
+                new TransactionImportItemRequest
+                {
+                    Description = "Transferencia recebida",
+                    Category = "Reembolso",
+                    AmountCents = 30000,
+                    Date = new DateTime(2026, 4, 12),
+                    Type = "income"
+                }
+            }
+        };
+
+        var result = await controller.Import(dto);
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        var payload = Assert.IsType<TransactionImportResponse>(ok.Value);
+        var entities = await context.Transactions.OrderBy(item => item.Date).ToListAsync();
+
+        Assert.Equal(2, payload.ImportedCount);
+        Assert.Equal(2, entities.Count);
+        Assert.All(entities, item => Assert.Equal(15, item.UserId));
+        Assert.Contains(context.AuditLogs, log => log.Action == "transaction.imported" && log.UserId == 15);
+    }
+
+    [Fact]
     public async Task Update_ReturnsNotFound_WhenTransactionBelongsToAnotherUser()
     {
         using var context = CreateContext();

@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  getTransactions,
   createTransaction,
-  updateTransaction,
   deleteTransaction,
+  getTransactions,
+  importTransactions,
+  updateTransaction,
 } from "../../lib/api/transactions";
 import { hasValidSession } from "../../lib/api/auth";
 import { TransactionsContext } from "./TransactionsContext";
@@ -53,6 +54,12 @@ export function TransactionsProvider({ children }) {
     await loadAll();
   }, [loadAll]);
 
+  const importTransactionsBatch = useCallback(async (items) => {
+    const result = await importTransactions(items);
+    await loadAll();
+    return result;
+  }, [loadAll]);
+
   const removeTransaction = useCallback(async (id) => {
     await deleteTransaction(id);
     setTransactions((current) => current.filter((transaction) => transaction.id !== id));
@@ -92,6 +99,7 @@ export function TransactionsProvider({ children }) {
       isLoading,
       loadAll,
       addTransaction,
+      importTransactions: importTransactionsBatch,
       removeTransaction,
       updateTransaction: updateTransactionItem,
       summary,
@@ -101,15 +109,12 @@ export function TransactionsProvider({ children }) {
       isLoading,
       loadAll,
       addTransaction,
+      importTransactionsBatch,
       removeTransaction,
       updateTransactionItem,
       summary,
     ]
   );
 
-  return (
-    <TransactionsContext.Provider value={value}>
-      {children}
-    </TransactionsContext.Provider>
-  );
+  return <TransactionsContext.Provider value={value}>{children}</TransactionsContext.Provider>;
 }

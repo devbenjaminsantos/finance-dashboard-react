@@ -76,18 +76,7 @@ namespace FinanceDashboard.Api.Controllers
                 : null;
 
             var transactions = occurrenceDates
-                .Select(date => new Transaction
-                {
-                    Description = dto.Description.Trim(),
-                    Category = dto.Category.Trim(),
-                    AmountCents = dto.AmountCents,
-                    Date = date,
-                    Type = dto.Type.Trim().ToLowerInvariant(),
-                    IsRecurring = dto.IsRecurring,
-                    RecurrenceEndDate = dto.IsRecurring ? dto.RecurrenceEndDate?.Date : null,
-                    RecurrenceGroupId = recurrenceGroupId,
-                    UserId = userId
-                })
+                .Select(date => BuildTransactionEntity(dto, userId, date, recurrenceGroupId))
                 .ToList();
 
             _context.Transactions.AddRange(transactions);
@@ -109,6 +98,50 @@ namespace FinanceDashboard.Api.Controllers
                 nameof(GetById),
                 new { id = firstTransaction.Id },
                 ToResponse(firstTransaction));
+        }
+
+        [HttpPost("import")]
+        public async Task<ActionResult<TransactionImportResponse>> Import(TransactionImportRequest dto)
+        {
+            var userId = _currentUserService.GetRequiredUserId();
+
+            if (dto.Transactions.Count > 500)
+            {
+                ModelState.AddModelError(nameof(dto.Transactions), "Limite de 500 transações por importação.");
+                return ValidationProblem(ModelState);
+            }
+
+            var transactions = new List<Transaction>();
+
+            for (var index = 0; index < dto.Transactions.Count; index += 1)
+            {
+                var item = dto.Transactions[index];
+
+                if (item.IsRecurring)
+                {
+                    ModelState.AddModelError(
+                        $"{nameof(dto.Transactions)}[{index}].{nameof(item.IsRecurring)}",
+                        "A importação CSV inicial não aceita recorrência automática.");
+                    return ValidationProblem(ModelState);
+                }
+
+                transactions.Add(BuildTransactionEntity(item, userId, item.Date.Date, recurrenceGroupId: null));
+            }
+
+            _context.Transactions.AddRange(transactions);
+            await _context.SaveChangesAsync();
+
+            await _auditLogService.WriteAsync(
+                action: "transaction.imported",
+                entityType: "Transaction",
+                entityId: transactions[0].Id.ToString(),
+                userId: userId,
+                summary: $"Importação CSV concluída com {transactions.Count} transações.");
+
+            return Ok(new TransactionImportResponse
+            {
+                ImportedCount = transactions.Count
+            });
         }
 
         [HttpPut("{id:int}")]
@@ -213,6 +246,26 @@ namespace FinanceDashboard.Api.Controllers
             }
 
             return true;
+        }
+
+        private static Transaction BuildTransactionEntity(
+            TransactionRequest dto,
+            int userId,
+            DateTime date,
+            string? recurrenceGroupId)
+        {
+            return new Transaction
+            {
+                Description = dto.Description.Trim(),
+                Category = dto.Category.Trim(),
+                AmountCents = dto.AmountCents,
+                Date = date,
+                Type = dto.Type.Trim().ToLowerInvariant(),
+                IsRecurring = dto.IsRecurring,
+                RecurrenceEndDate = dto.IsRecurring ? dto.RecurrenceEndDate?.Date : null,
+                RecurrenceGroupId = recurrenceGroupId,
+                UserId = userId
+            };
         }
 
         private static TransactionResponse ToResponse(Transaction transaction)

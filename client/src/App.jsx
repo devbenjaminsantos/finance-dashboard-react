@@ -8,11 +8,12 @@ import {
   syncSessionFromStorageEvent,
   touchSessionActivity,
 } from "./lib/api/auth";
-import Dashboard from "./pages/Dashboard";
-import Comparisons from "./pages/Comparisons";
 import AuditLogs from "./pages/AuditLogs";
+import Comparisons from "./pages/Comparisons";
+import Dashboard from "./pages/Dashboard";
 import ForgotPassword from "./pages/ForgotPassword";
 import Goals from "./pages/Goals";
+import Home from "./pages/Home";
 import Insights from "./pages/Insights";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
@@ -61,6 +62,15 @@ export default function App() {
 
             <Route
               path="/"
+              element={
+                <ProtectedRoute>
+                  <Home />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/dashboard"
               element={
                 <ProtectedRoute>
                   <Dashboard />

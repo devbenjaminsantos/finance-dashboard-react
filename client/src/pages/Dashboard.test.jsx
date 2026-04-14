@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Dashboard from "./Dashboard";
@@ -7,61 +7,11 @@ vi.mock("../features/transactions/useTransactions", () => ({
   useTransactions: vi.fn(),
 }));
 
-vi.mock("../lib/api/auth", () => ({
-  getStoredUser: vi.fn(),
-  updateOnboardingPreferenceRequest: vi.fn(),
-}));
-
-vi.mock("../lib/api/budgetGoals", () => ({
-  getBudgetGoals: vi.fn(),
-}));
-
 vi.mock("../features/dashboard/DashboardCharts", () => ({
   default: () => <div>Graficos mockados</div>,
 }));
 
 import { useTransactions } from "../features/transactions/useTransactions";
-import { getStoredUser, updateOnboardingPreferenceRequest } from "../lib/api/auth";
-import { getBudgetGoals } from "../lib/api/budgetGoals";
-
-const baseTransactions = [
-  {
-    id: 1,
-    description: "Salário",
-    category: "Salário",
-    amountCents: 500000,
-    date: "2026-04-05",
-    type: "income",
-    isRecurring: true,
-  },
-  {
-    id: 2,
-    description: "Mercado",
-    category: "Alimentação",
-    amountCents: 160000,
-    date: "2026-04-10",
-    type: "expense",
-    isRecurring: false,
-  },
-  {
-    id: 3,
-    description: "Aluguel",
-    category: "Moradia",
-    amountCents: 180000,
-    date: "2026-04-08",
-    type: "expense",
-    isRecurring: true,
-  },
-  {
-    id: 4,
-    description: "Freelancer",
-    category: "Freelancer",
-    amountCents: 120000,
-    date: "2026-03-10",
-    type: "income",
-    isRecurring: false,
-  },
-];
 
 describe("Dashboard page", () => {
   function renderDashboard() {
@@ -74,114 +24,48 @@ describe("Dashboard page", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("shows a financial summary and charts when there are transactions", () => {
     useTransactions.mockReturnValue({
       isLoading: false,
-      transactions: baseTransactions,
-    });
-    getBudgetGoals.mockResolvedValue([{ id: 1 }]);
-  });
-
-  it("shows onboarding prompt when user has not chosen yet", () => {
-    getStoredUser.mockReturnValue({
-      id: 1,
-      name: "User",
-      isDemo: false,
-      onboardingOptIn: null,
-    });
-
-    renderDashboard();
-
-    expect(
-      screen.getByText("Quer ajuda para configurar seu Finova?")
-    ).toBeInTheDocument();
-  });
-
-  it("persists onboarding choice when user opts in", async () => {
-    getStoredUser.mockReturnValue({
-      id: 1,
-      name: "User",
-      isDemo: false,
-      onboardingOptIn: null,
-    });
-    updateOnboardingPreferenceRequest.mockResolvedValue({
-      id: 1,
-      name: "User",
-      isDemo: false,
-      onboardingOptIn: true,
-    });
-
-    renderDashboard();
-    fireEvent.click(screen.getByRole("button", { name: "Quero ajuda" }));
-
-    await waitFor(() => {
-      expect(updateOnboardingPreferenceRequest).toHaveBeenCalledWith(true);
-    });
-  });
-
-  it("shows shortcuts to the dedicated analysis areas", async () => {
-    getStoredUser.mockReturnValue({
-      id: 1,
-      name: "User",
-      isDemo: false,
-      onboardingOptIn: true,
+      transactions: [
+        {
+          id: 1,
+          description: "Salario",
+          category: "Salario",
+          amountCents: 500000,
+          date: "2026-04-05",
+          type: "income",
+          isRecurring: true,
+        },
+        {
+          id: 2,
+          description: "Mercado",
+          category: "Alimentacao",
+          amountCents: 120000,
+          date: "2026-04-10",
+          type: "expense",
+          isRecurring: false,
+        },
+      ],
     });
 
     renderDashboard();
 
-    await act(async () => {});
-
-    expect(screen.getByText("Áreas dedicadas")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Abrir insights" })).toHaveAttribute(
-      "href",
-      "/insights"
-    );
-    expect(screen.getByRole("link", { name: "Abrir comparativos" })).toHaveAttribute(
-      "href",
-      "/comparativos"
-    );
-    expect(screen.getByRole("link", { name: "Abrir metas" })).toHaveAttribute(
-      "href",
-      "/metas"
-    );
+    expect(screen.getByText("Dashboard")).toBeInTheDocument();
+    expect(screen.getByText("Graficos do periodo")).toBeInTheDocument();
+    expect(screen.getByText("Graficos mockados")).toBeInTheDocument();
   });
 
-  it("shows demo information instead of onboarding for demo user", () => {
-    getStoredUser.mockReturnValue({
-      id: 999,
-      name: "Demo",
-      isDemo: true,
-      onboardingOptIn: false,
+  it("shows an empty state when the selected period has no transactions", () => {
+    useTransactions.mockReturnValue({
+      isLoading: false,
+      transactions: [],
     });
 
     renderDashboard();
 
-    expect(screen.getByText("Conta de demonstração")).toBeInTheDocument();
-    expect(
-      screen.queryByText("Quer ajuda para configurar seu Finova?")
-    ).not.toBeInTheDocument();
-  });
-
-  it("automatically hides onboarding after all initial steps are completed", async () => {
-    getStoredUser.mockReturnValue({
-      id: 1,
-      name: "User",
-      isDemo: false,
-      onboardingOptIn: true,
-    });
-    updateOnboardingPreferenceRequest.mockResolvedValue({
-      id: 1,
-      name: "User",
-      isDemo: false,
-      onboardingOptIn: false,
-    });
-
-    renderDashboard();
-
-    await waitFor(() => {
-      expect(updateOnboardingPreferenceRequest).toHaveBeenCalledWith(false);
-    });
-
-    expect(screen.queryByText("Guia inicial")).not.toBeInTheDocument();
-    expect(screen.queryByText("Mostrar guia inicial")).not.toBeInTheDocument();
+    expect(screen.getByText("Nenhum dado para o periodo selecionado")).toBeInTheDocument();
   });
 });

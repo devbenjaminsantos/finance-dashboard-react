@@ -50,7 +50,7 @@ export default function Navbar() {
             title={isDark ? "Ativar tema claro" : "Ativar tema escuro"}
           >
             <span className="finova-theme-toggle-icon" aria-hidden="true">
-              {theme === "dark" ? "☀" : "☾"}
+              {theme === "dark" ? "\u2600" : "\u263E"}
             </span>
           </button>
 
@@ -61,7 +61,7 @@ export default function Navbar() {
             data-bs-target="#nav"
             aria-controls="nav"
             aria-expanded="false"
-            aria-label="Alternar navegação"
+            aria-label="Alternar navegacao"
           >
             <span className="navbar-toggler-icon" />
           </button>
@@ -72,10 +72,13 @@ export default function Navbar() {
             {hasSession ? (
               <>
                 <NavLink className={linkClass} to="/">
+                  Home
+                </NavLink>
+                <NavLink className={linkClass} to="/dashboard">
                   Dashboard
                 </NavLink>
                 <NavLink className={linkClass} to="/transacoes">
-                  Transações
+                  Transacoes
                 </NavLink>
                 <NavLink className={linkClass} to="/insights">
                   Insights
@@ -87,7 +90,7 @@ export default function Navbar() {
                   Metas
                 </NavLink>
                 <NavLink className={linkClass} to="/historico">
-                  Histórico
+                  Historico
                 </NavLink>
                 <NavLink className={linkClass} to="/perfil">
                   Perfil

@@ -1,92 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
+import {
+  formatActionLabel,
+  formatAuditDate,
+  getActionGroup,
+  getActionToneClass,
+  VISIBLE_AUDIT_ACTIONS,
+} from "../features/history/auditLogPresentation";
 import { getAuditLogs } from "../lib/api/auditLogs";
-
-const VISIBLE_ACTIONS = new Set([
-  "auth.registered",
-  "auth.login-succeeded",
-  "auth.login-blocked-unconfirmed-email",
-  "auth.login-locked-out",
-  "auth.login-blocked-locked-out",
-  "auth.email-confirmed",
-  "auth.password-reset-requested",
-  "auth.password-reset-completed",
-  "auth.demo-login",
-  "transaction.created",
-  "transaction.updated",
-  "transaction.deleted",
-  "budget-goal.created",
-  "budget-goal.updated",
-  "budget-goal.deleted",
-  "profile.updated",
-  "profile.updated-with-password",
-]);
-
-function formatAuditDate(value) {
-  if (!value) {
-    return "-";
-  }
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
-
-function formatActionLabel(action) {
-  const labels = {
-    "auth.registered": "Conta criada",
-    "auth.login-succeeded": "Login realizado",
-    "auth.login-blocked-unconfirmed-email": "Login bloqueado por e-mail não confirmado",
-    "auth.login-locked-out": "Conta bloqueada por excesso de tentativas",
-    "auth.login-blocked-locked-out": "Novo acesso bloqueado temporariamente",
-    "auth.demo-login": "Entrada na conta de demonstração",
-    "auth.email-confirmed": "E-mail confirmado",
-    "auth.password-reset-requested": "Recuperação de senha solicitada",
-    "auth.password-reset-completed": "Senha redefinida",
-    "transaction.created": "Transação adicionada",
-    "transaction.updated": "Transação editada",
-    "transaction.deleted": "Transação removida",
-    "budget-goal.created": "Meta criada",
-    "budget-goal.updated": "Meta editada",
-    "budget-goal.deleted": "Meta removida",
-    "profile.updated": "Perfil atualizado",
-    "profile.updated-with-password": "Perfil e senha atualizados",
-  };
-
-  return labels[action] || "Atividade registrada";
-}
-
-function getActionGroup(action) {
-  if (action.startsWith("transaction.")) {
-    return "Transações";
-  }
-
-  if (action.startsWith("budget-goal.")) {
-    return "Metas";
-  }
-
-  if (action.startsWith("profile.")) {
-    return "Perfil";
-  }
-
-  return "Acesso e segurança";
-}
-
-function getActionToneClass(action) {
-  if (action?.includes("deleted") || action?.includes("locked-out")) {
-    return "finova-badge-danger";
-  }
-
-  if (action?.includes("updated") || action?.includes("changed")) {
-    return "finova-badge-warning";
-  }
-
-  if (action?.includes("password-reset") || action?.includes("confirmed")) {
-    return "finova-badge-income";
-  }
-
-  return "finova-badge-primary";
-}
 
 export default function AuditLogs() {
   const [logs, setLogs] = useState([]);
@@ -109,7 +29,7 @@ export default function AuditLogs() {
         }
       } catch (requestError) {
         if (active) {
-          setError(requestError.message || "Não foi possível carregar o histórico.");
+          setError(requestError.message || "Nao foi possivel carregar o historico.");
         }
       } finally {
         if (active) {
@@ -126,7 +46,7 @@ export default function AuditLogs() {
   }, [limit]);
 
   const visibleLogs = useMemo(
-    () => logs.filter((log) => VISIBLE_ACTIONS.has(log.action)),
+    () => logs.filter((log) => VISIBLE_AUDIT_ACTIONS.has(log.action)),
     [logs]
   );
 
@@ -136,10 +56,10 @@ export default function AuditLogs() {
     <section className="finova-section-space">
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 gap-3">
         <div>
-          <h1 className="finova-title mb-1">Histórico da conta</h1>
+          <h1 className="finova-title mb-1">Historico da conta</h1>
           <p className="finova-subtitle mb-0">
-            Acompanhe as ações mais relevantes da sua conta, como acessos, mudanças de perfil,
-            transações e metas.
+            Acompanhe as acoes mais relevantes da sua conta, como acessos, mudancas de perfil,
+            transacoes e metas.
           </p>
         </div>
 
@@ -150,9 +70,9 @@ export default function AuditLogs() {
             value={limit}
             onChange={(event) => setLimit(Number(event.target.value))}
           >
-            <option value={25}>Últimos 25 registros</option>
-            <option value={50}>Últimos 50 registros</option>
-            <option value={100}>Últimos 100 registros</option>
+            <option value={25}>Ultimos 25 registros</option>
+            <option value={50}>Ultimos 50 registros</option>
+            <option value={100}>Ultimos 100 registros</option>
           </select>
         </div>
       </div>
@@ -161,7 +81,7 @@ export default function AuditLogs() {
         {isLoading ? (
           <div className="d-flex align-items-center gap-3">
             <div className="spinner-border spinner-border-sm text-primary" />
-            <p className="finova-subtitle mb-0">Carregando histórico...</p>
+            <p className="finova-subtitle mb-0">Carregando historico...</p>
           </div>
         ) : error ? (
           <div className="alert alert-danger py-2 mb-0" role="alert">
@@ -171,16 +91,16 @@ export default function AuditLogs() {
           <div className="text-center py-4">
             <h2 className="finova-title h6 mb-2">Nenhum registro relevante encontrado</h2>
             <p className="finova-subtitle mb-0">
-              As principais ações da sua conta aparecerão aqui conforme você usa o sistema.
+              As principais acoes da sua conta aparecerao aqui conforme voce usa o sistema.
             </p>
           </div>
         ) : (
           <div className="d-grid gap-3">
             {hiddenLogsCount > 0 ? (
               <div className="alert alert-info py-2 mb-0" role="status">
-                {hiddenLogsCount} registro{hiddenLogsCount === 1 ? "" : "s"} mais técnico
+                {hiddenLogsCount} registro{hiddenLogsCount === 1 ? "" : "s"} mais tecnico
                 {hiddenLogsCount === 1 ? " foi ocultado" : "s foram ocultados"} para manter este
-                histórico mais direto.
+                historico mais direto.
               </div>
             ) : null}
 
@@ -191,14 +111,10 @@ export default function AuditLogs() {
                     <span className={getActionToneClass(log.action)}>
                       {formatActionLabel(log.action)}
                     </span>
-                    <span className="finova-badge-neutral">
-                      {getActionGroup(log.action)}
-                    </span>
+                    <span className="finova-badge-neutral">{getActionGroup(log.action)}</span>
                   </div>
 
-                  <span className="finova-subtitle small">
-                    {formatAuditDate(log.createdAtUtc)}
-                  </span>
+                  <span className="finova-subtitle small">{formatAuditDate(log.createdAtUtc)}</span>
                 </div>
 
                 <div className="fw-medium">{log.summary}</div>

@@ -18,7 +18,7 @@ describe("AuditLogs page", () => {
       {
         id: 1,
         action: "transaction.created",
-        summary: "Transação criada com sucesso.",
+        summary: "Transacao criada com sucesso.",
         entityType: "Transaction",
         entityId: "10",
         ipAddress: "127.0.0.1",
@@ -27,7 +27,7 @@ describe("AuditLogs page", () => {
       {
         id: 2,
         action: "auth.verification-resent",
-        summary: "Novo e-mail de confirmação enviado.",
+        summary: "Novo e-mail de confirmacao enviado.",
         entityType: "User",
         entityId: "3",
         ipAddress: "127.0.0.1",
@@ -38,11 +38,11 @@ describe("AuditLogs page", () => {
     render(<AuditLogs />);
 
     await waitFor(() => {
-      expect(screen.getByText("Transação adicionada")).toBeInTheDocument();
+      expect(screen.getByText("Transacao adicionada")).toBeInTheDocument();
     });
 
     expect(screen.queryByText("IP: 127.0.0.1")).not.toBeInTheDocument();
-    expect(screen.queryByText("Novo e-mail de confirmação enviado.")).not.toBeInTheDocument();
-    expect(screen.getByText(/registro mais técnico foi ocultado/i)).toBeInTheDocument();
+    expect(screen.queryByText("Novo e-mail de confirmacao enviado.")).not.toBeInTheDocument();
+    expect(screen.getByText(/registro mais tecnico foi ocultado/i)).toBeInTheDocument();
   });
 });

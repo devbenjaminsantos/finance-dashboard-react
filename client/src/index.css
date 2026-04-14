@@ -560,3 +560,34 @@ hr {
 .spinner-border.text-primary {
   color: var(--info) !important;
 }
+
+.finova-widget-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 100%;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-soft);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.finova-widget-toggle input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--primary);
+  flex-shrink: 0;
+}
+
+.finova-home-shortcut {
+  color: inherit;
+  display: block;
+}
+
+.finova-home-shortcut:hover .finova-card-soft,
+.finova-home-shortcut:focus-visible .finova-card-soft {
+  border-color: rgba(37, 99, 235, 0.28);
+  transform: translateY(-1px);
+}

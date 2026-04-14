@@ -97,7 +97,7 @@ O Finova permite:
 - exportação de transações em CSV
 - exportação de transações em PDF via impressão do navegador
 - logs de auditoria para fluxos sensíveis
-- tela de auditoria no frontend
+- tela de histórico no frontend
 
 ### Qualidade e operação
 
@@ -312,63 +312,63 @@ Guias extras:
 - o fluxo de recuperação de senha não deve expor o link de redefinição em produção aberta
 - a sessão deve ser invalidada quando o token expirar ou quando houver inatividade prolongada
 
-## Roadmap por Versão
+## Checklist por Versão
 
-### V1 concluída
+### V1
 
-- deploy completo no Azure
-- autenticação base com JWT
-- perfil do usuário
-- conta demo
-- recuperação de senha
-- confirmação de e-mail
-- dashboard inicial
-- metas mensais
-- exportação em CSV e PDF
-- monitoramento básico
+- [x] Deploy completo no Azure
+- [x] Autenticação base com JWT
+- [x] Perfil do usuário
+- [x] Conta demo
+- [x] Recuperação de senha
+- [x] Confirmação de e-mail
+- [x] Dashboard inicial
+- [x] Metas mensais
+- [x] Exportação em CSV e PDF
+- [x] Monitoramento básico
 
-### V2 concluída
+### V2
 
-- melhorias de UX no fluxo de autenticação
-- estados de loading e feedback visual mais claros
-- refinamento da conta demo
-- filtros por período no dashboard
-- metas mensais por categoria
-- alerta de gastos
-- logs de auditoria no backend
-- testes automatizados do backend
-- tema claro e escuro
+- [x] Melhorias de UX no fluxo de autenticação
+- [x] Estados de loading e feedback visual mais claros
+- [x] Refinamento da conta demo
+- [x] Filtros por período no dashboard
+- [x] Metas mensais por categoria
+- [x] Alerta de gastos
+- [x] Logs de auditoria no backend
+- [x] Testes automatizados do backend
+- [x] Tema claro e escuro
 
-### V3 concluída
+### V3
 
-- tela de auditoria no frontend
-- comparativo entre meses
-- insights automáticos
-- insights prescritivos
-- onboarding inicial com opt-in
-- gastos recorrentes
-- expansão das metas por categoria
-- testes de frontend com Vitest
-- suíte inicial E2E com Playwright
-- reforço de segurança:
-  - proteção contra tentativas de login
-  - política de senha fortalecida
-  - gerenciamento de sessão
+- [x] Tela de auditoria no frontend
+- [x] Comparativo entre meses
+- [x] Insights automáticos
+- [x] Insights prescritivos
+- [x] Onboarding inicial com opt-in
+- [x] Gastos recorrentes
+- [x] Expansão das metas por categoria
+- [x] Testes de frontend com Vitest
+- [x] Suíte inicial E2E com Playwright
+- [x] Proteção contra tentativas de login
+- [x] Política de senha fortalecida
+- [x] Gerenciamento de sessão
 
-### V4 planejada
+### V4
 
-- otimizar a página de auditoria para mostrar apenas eventos mais relevantes
-- separar dashboard, insights, comparativos e metas em páginas próprias
-- criar uma Home personalizável, com widgets escolhidos pelo usuário
-- ocultar automaticamente o mini tutorial quando ele for concluído
-- melhorar a exportação em PDF sem depender da impressão/extensão do navegador
+- [x] Otimizar a página de auditoria para mostrar apenas eventos mais relevantes
+- [x] Renomear Auditoria para Histórico
+- [x] Separar dashboard, insights, comparativos e metas em páginas próprias
+- [x] Ocultar automaticamente o mini tutorial quando ele for concluído
+- [ ] Criar uma Home personalizável, com widgets escolhidos pelo usuário
+- [ ] Melhorar a exportação em PDF sem depender da impressão/extensão do navegador
 
-### V5 planejada
+### V5
 
-- suporte a múltiplos idiomas
-- integração com conta bancária para detectar e importar transações automaticamente
-- avaliar se ainda faz sentido incluir 2FA em um cenário mais maduro do produto
-- domínio customizado como fechamento final da experiência
+- [ ] Suporte a múltiplos idiomas
+- [ ] Integração com conta bancária para detectar e importar transações automaticamente
+- [ ] Avaliar se ainda faz sentido incluir 2FA em um cenário mais maduro do produto
+- [ ] Domínio customizado como fechamento final da experiência
 
 ## Autor
 

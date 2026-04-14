@@ -231,6 +231,7 @@ function OnboardingChecklistCard({
   onHide,
   onShowAgain,
   isVisible,
+  isCompleted,
 }) {
   const items = [
     {
@@ -254,6 +255,10 @@ function OnboardingChecklistCard({
   ];
 
   const completedCount = items.filter((item) => item.done).length;
+
+  if (!isVisible && isCompleted) {
+    return null;
+  }
 
   if (!isVisible) {
     return (
@@ -732,6 +737,14 @@ export default function Dashboard() {
     [transactions]
   );
 
+  const onboardingCompleted = useMemo(
+    () =>
+      transactions.length > 0 &&
+      recurringTransactionsCount > 0 &&
+      goalsCount > 0,
+    [transactions.length, recurringTransactionsCount, goalsCount]
+  );
+
   const automaticInsights = useMemo(
     () => getAutomaticInsights(filteredTransactions),
     [filteredTransactions]
@@ -774,6 +787,36 @@ export default function Dashboard() {
       setIsApplyingOnboarding(false);
     }
   }
+
+  useEffect(() => {
+    if (!user || user.isDemo || user.onboardingOptIn !== true || !onboardingCompleted) {
+      return;
+    }
+
+    let active = true;
+
+    async function autoCompleteOnboarding() {
+      setIsApplyingOnboarding(true);
+
+      try {
+        const updatedUser = await updateOnboardingPreferenceRequest(false);
+
+        if (active) {
+          setUser(updatedUser);
+        }
+      } finally {
+        if (active) {
+          setIsApplyingOnboarding(false);
+        }
+      }
+    }
+
+    autoCompleteOnboarding();
+
+    return () => {
+      active = false;
+    };
+  }, [user, onboardingCompleted]);
 
   return (
     <section className="finova-section-space">
@@ -823,6 +866,7 @@ export default function Dashboard() {
               onHide={() => handleOnboardingChoice(false)}
               onShowAgain={() => handleOnboardingChoice(true)}
               isVisible={Boolean(user.onboardingOptIn)}
+              isCompleted={onboardingCompleted}
             />
           )}
 

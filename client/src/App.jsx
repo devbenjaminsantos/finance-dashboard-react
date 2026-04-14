@@ -84,7 +84,7 @@ export default function App() {
             />
 
             <Route
-              path="/auditoria"
+              path="/historico"
               element={
                 <ProtectedRoute>
                   <AuditLogs />
@@ -92,6 +92,7 @@ export default function App() {
               }
             />
 
+            <Route path="/auditoria" element={<Navigate to="/historico" replace />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </TransactionsProvider>

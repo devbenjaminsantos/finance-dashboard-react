@@ -146,4 +146,28 @@ describe("Dashboard page", () => {
       screen.queryByText("Quer ajuda para configurar seu Finova?")
     ).not.toBeInTheDocument();
   });
+
+  it("automatically hides onboarding after all initial steps are completed", async () => {
+    getStoredUser.mockReturnValue({
+      id: 1,
+      name: "User",
+      isDemo: false,
+      onboardingOptIn: true,
+    });
+    updateOnboardingPreferenceRequest.mockResolvedValue({
+      id: 1,
+      name: "User",
+      isDemo: false,
+      onboardingOptIn: false,
+    });
+
+    render(<Dashboard />);
+
+    await waitFor(() => {
+      expect(updateOnboardingPreferenceRequest).toHaveBeenCalledWith(false);
+    });
+
+    expect(screen.queryByText("Guia inicial")).not.toBeInTheDocument();
+    expect(screen.queryByText("Mostrar guia inicial")).not.toBeInTheDocument();
+  });
 });

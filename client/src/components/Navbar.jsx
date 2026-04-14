@@ -61,7 +61,7 @@ export default function Navbar() {
             data-bs-target="#nav"
             aria-controls="nav"
             aria-expanded="false"
-            aria-label="Toggle navigation"
+            aria-label="Alternar navegação"
           >
             <span className="navbar-toggler-icon" />
           </button>
@@ -77,8 +77,8 @@ export default function Navbar() {
                 <NavLink className={linkClass} to="/transacoes">
                   Transações
                 </NavLink>
-                <NavLink className={linkClass} to="/auditoria">
-                  Auditoria
+                <NavLink className={linkClass} to="/historico">
+                  Histórico
                 </NavLink>
                 <NavLink className={linkClass} to="/perfil">
                   Perfil

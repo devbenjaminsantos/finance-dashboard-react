@@ -44,6 +44,25 @@ export default function TransactionImportModal({ isOpen, onClose, onImport }) {
   }, [isOpen, isSubmitting, onClose]);
 
   const previewRows = useMemo(() => preview.slice(0, 8), [preview]);
+  const summary = useMemo(() => {
+    return preview.reduce(
+      (accumulator, transaction) => {
+        if (transaction.type === "income") {
+          accumulator.incomeCount += 1;
+        } else {
+          accumulator.expenseCount += 1;
+        }
+
+        accumulator.categories.add(transaction.category);
+        return accumulator;
+      },
+      {
+        incomeCount: 0,
+        expenseCount: 0,
+        categories: new Set(),
+      }
+    );
+  }, [preview]);
 
   async function handleFileChange(event) {
     const file = event.target.files?.[0];
@@ -161,6 +180,27 @@ export default function TransactionImportModal({ isOpen, onClose, onImport }) {
                     </p>
                   </div>
                   <span className="finova-badge-primary">{preview.length} transações</span>
+                </div>
+
+                <div className="row g-3 mb-3">
+                  <div className="col-12 col-md-4">
+                    <div className="finova-card-soft p-3 h-100">
+                      <div className="finova-subtitle small mb-1">Receitas</div>
+                      <div className="finova-title h5 mb-0">{summary.incomeCount}</div>
+                    </div>
+                  </div>
+                  <div className="col-12 col-md-4">
+                    <div className="finova-card-soft p-3 h-100">
+                      <div className="finova-subtitle small mb-1">Despesas</div>
+                      <div className="finova-title h5 mb-0">{summary.expenseCount}</div>
+                    </div>
+                  </div>
+                  <div className="col-12 col-md-4">
+                    <div className="finova-card-soft p-3 h-100">
+                      <div className="finova-subtitle small mb-1">Categorias lidas</div>
+                      <div className="finova-title h5 mb-0">{summary.categories.size}</div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="table-responsive">

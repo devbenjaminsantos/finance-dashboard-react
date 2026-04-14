@@ -4,17 +4,124 @@ import { parseMoneyToCents } from "../format/currency";
 const HEADER_ALIASES = {
   data: "date",
   date: "date",
+  historico: "description",
   descricao: "description",
-  descrição: "description",
   description: "description",
+  lancamento: "description",
+  detalhes: "description",
+  memo: "description",
   categoria: "category",
   category: "category",
   tipo: "type",
   type: "type",
   valor: "amount",
   amount: "amount",
+  credito: "creditAmount",
+  credit: "creditAmount",
+  debito: "debitAmount",
+  debit: "debitAmount",
   valorcentavos: "amountCents",
   amountcents: "amountCents",
+};
+
+const CATEGORY_KEYWORDS = {
+  expense: {
+    Alimentacao: [
+      "aliment",
+      "mercad",
+      "supermerc",
+      "padaria",
+      "restaurante",
+      "lanch",
+      "ifood",
+      "delivery",
+      "cafe",
+      "acougue",
+      "feira",
+    ],
+    Transporte: [
+      "uber",
+      "99app",
+      "taxi",
+      "posto",
+      "combust",
+      "gasolina",
+      "etanol",
+      "onibus",
+      "metro",
+      "estacion",
+      "pedagio",
+      "mobilidade",
+      "shell",
+    ],
+    Moradia: [
+      "alug",
+      "condom",
+      "energia",
+      "luz",
+      "agua",
+      "saneamento",
+      "gas",
+      "moradia",
+      "iptu",
+      "internet",
+    ],
+    Lazer: [
+      "cinema",
+      "show",
+      "viagem",
+      "bar",
+      "lazer",
+      "jogo",
+      "ingresso",
+    ],
+    Saude: [
+      "saude",
+      "medic",
+      "farm",
+      "hospital",
+      "clinica",
+      "consulta",
+      "odont",
+      "exame",
+    ],
+    Educacao: [
+      "educ",
+      "curso",
+      "facul",
+      "escola",
+      "livro",
+      "mensalidade",
+      "treinamento",
+    ],
+    Assinaturas: [
+      "assin",
+      "netflix",
+      "spotify",
+      "amazon prime",
+      "youtube",
+      "adobe",
+      "microsoft",
+      "icloud",
+      "google one",
+    ],
+  },
+  income: {
+    Salario: [
+      "salario",
+      "folha",
+      "pagamento",
+      "provento",
+      "holerite",
+      "credito em conta",
+      "credito conta",
+    ],
+    Freelancer: ["freelancer", "freela", "projeto", "servico"],
+    Comissao: ["comissao", "bonus venda", "premiacao"],
+    Investimentos: ["dividendo", "rendimento", "juros", "invest", "aplicacao"],
+    Reembolso: ["reembolso", "estorno", "devolucao"],
+    Vendas: ["venda", "recebimento venda", "loja", "marketplace"],
+  },
 };
 
 function normalizeHeader(value) {
@@ -22,6 +129,13 @@ function normalizeHeader(value) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/\s+/g, "")
+    .toLowerCase();
+}
+
+function normalizeSearchText(value) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 }
 
@@ -73,11 +187,11 @@ function splitCsvLine(line, delimiter) {
 function normalizeType(value) {
   const normalized = normalizeHeader(value);
 
-  if (["income", "receita", "entrada"].includes(normalized)) {
+  if (["income", "receita", "entrada", "credito", "credit"].includes(normalized)) {
     return "income";
   }
 
-  if (["expense", "despesa", "saida", "saída"].includes(normalized)) {
+  if (["expense", "despesa", "saida", "debito", "debit"].includes(normalized)) {
     return "expense";
   }
 
@@ -99,43 +213,113 @@ function normalizeDate(value) {
   return "";
 }
 
-function normalizeCategory(type, value) {
-  const raw = String(value ?? "").trim();
+function mapCategoryByName(type, value) {
   const categories = getTransactionCategories(type);
+  const raw = String(value ?? "").trim();
 
   if (!raw) {
-    return categories[categories.length - 1] || "Outros";
+    return "";
   }
 
-  const exact = categories.find(
-    (category) => normalizeHeader(category) === normalizeHeader(raw)
+  return (
+    categories.find((category) => normalizeHeader(category) === normalizeHeader(raw)) || ""
   );
+}
 
-  return exact || raw;
+function inferCategory(type, categoryValue, description) {
+  const haystack = `${categoryValue || ""} ${description || ""}`.trim();
+  const normalizedHaystack = normalizeSearchText(haystack);
+  const keywordMap = CATEGORY_KEYWORDS[type] || {};
+
+  for (const [categoryKey, keywords] of Object.entries(keywordMap)) {
+    if (keywords.some((keyword) => normalizedHaystack.includes(normalizeSearchText(keyword)))) {
+      return mapCategoryByName(type, categoryKey);
+    }
+  }
+
+  return "";
+}
+
+function normalizeCategory(type, value, description) {
+  const categories = getTransactionCategories(type);
+  const raw = String(value ?? "").trim();
+
+  const exactCategory = mapCategoryByName(type, raw);
+  if (exactCategory) {
+    return exactCategory;
+  }
+
+  const inferredCategory = inferCategory(type, raw, description);
+  if (inferredCategory) {
+    return inferredCategory;
+  }
+
+  return raw || categories[categories.length - 1] || "Outros";
 }
 
 function mapHeaders(headerRow) {
   return headerRow.map((header) => HEADER_ALIASES[normalizeHeader(header)] || "");
 }
 
-function parseAmountToCents(row, headers) {
-  const centsIndex = headers.indexOf("amountCents");
-  if (centsIndex >= 0 && row[centsIndex]) {
-    const parsed = Number(row[centsIndex]);
-    if (Number.isFinite(parsed) && parsed > 0) {
-      return parsed;
-    }
+function getValue(row, headers, key) {
+  const index = headers.indexOf(key);
+  return index >= 0 ? row[index] ?? "" : "";
+}
+
+function parseRawAmount(value) {
+  const parsed = parseMoneyToCents(value);
+  return Number.isFinite(parsed) ? parsed : NaN;
+}
+
+function parseRawCents(value) {
+  const parsed = Number(String(value ?? "").trim());
+  return Number.isFinite(parsed) ? parsed : NaN;
+}
+
+function parseAmountData(row, headers) {
+  const centsValue = parseRawCents(getValue(row, headers, "amountCents"));
+  if (Number.isFinite(centsValue) && centsValue !== 0) {
+    return {
+      amountCents: Math.abs(centsValue),
+      inferredType: centsValue >= 0 ? "income" : "expense",
+    };
   }
 
-  const amountIndex = headers.indexOf("amount");
-  return amountIndex >= 0 ? parseMoneyToCents(row[amountIndex]) : NaN;
+  const creditValue = parseRawAmount(getValue(row, headers, "creditAmount"));
+  if (Number.isFinite(creditValue) && creditValue > 0) {
+    return {
+      amountCents: creditValue,
+      inferredType: "income",
+    };
+  }
+
+  const debitValue = parseRawAmount(getValue(row, headers, "debitAmount"));
+  if (Number.isFinite(debitValue) && debitValue > 0) {
+    return {
+      amountCents: debitValue,
+      inferredType: "expense",
+    };
+  }
+
+  const amountValue = parseRawAmount(getValue(row, headers, "amount"));
+  if (Number.isFinite(amountValue) && amountValue !== 0) {
+    return {
+      amountCents: Math.abs(amountValue),
+      inferredType: amountValue >= 0 ? "income" : "expense",
+    };
+  }
+
+  return {
+    amountCents: NaN,
+    inferredType: "",
+  };
 }
 
 export function parseTransactionsCsv(text) {
   const normalizedText = String(text ?? "").trim();
 
   if (!normalizedText) {
-    throw new Error("O arquivo CSV está vazio.");
+    throw new Error("O arquivo CSV esta vazio.");
   }
 
   const delimiter = detectDelimiter(normalizedText);
@@ -145,35 +329,37 @@ export function parseTransactionsCsv(text) {
     .filter(Boolean);
 
   if (lines.length < 2) {
-    throw new Error("O CSV precisa ter cabeçalho e pelo menos uma linha de dados.");
+    throw new Error("O CSV precisa ter cabecalho e pelo menos uma linha de dados.");
   }
 
   const headers = mapHeaders(splitCsvLine(lines[0], delimiter));
-  const requiredHeaders = ["date", "description", "type"];
 
-  if (!requiredHeaders.every((header) => headers.includes(header))) {
-    throw new Error("O CSV precisa conter as colunas Data, Descrição e Tipo.");
+  if (!headers.includes("date") || !headers.includes("description")) {
+    throw new Error("O CSV precisa conter as colunas Data e Descricao.");
   }
 
-  if (!headers.includes("amount") && !headers.includes("amountCents")) {
-    throw new Error("O CSV precisa conter uma coluna de Valor ou Valor em centavos.");
+  if (
+    !headers.includes("amount") &&
+    !headers.includes("amountCents") &&
+    !headers.includes("creditAmount") &&
+    !headers.includes("debitAmount")
+  ) {
+    throw new Error(
+      "O CSV precisa conter uma coluna de Valor, Valor em centavos, Credito ou Debito."
+    );
   }
 
-  const transactions = lines.slice(1).map((line, lineIndex) => {
+  return lines.slice(1).map((line, lineIndex) => {
     const row = splitCsvLine(line, delimiter);
-    const getValue = (key) => {
-      const index = headers.indexOf(key);
-      return index >= 0 ? row[index] ?? "" : "";
-    };
-
-    const type = normalizeType(getValue("type"));
-    const date = normalizeDate(getValue("date"));
-    const description = String(getValue("description")).trim();
-    const amountCents = parseAmountToCents(row, headers);
-    const category = normalizeCategory(type, getValue("category"));
+    const explicitType = normalizeType(getValue(row, headers, "type"));
+    const date = normalizeDate(getValue(row, headers, "date"));
+    const description = String(getValue(row, headers, "description")).trim();
+    const { amountCents, inferredType } = parseAmountData(row, headers);
+    const type = explicitType || inferredType;
+    const category = normalizeCategory(type, getValue(row, headers, "category"), description);
 
     if (!type || !date || !description || !Number.isFinite(amountCents) || amountCents <= 0) {
-      throw new Error(`A linha ${lineIndex + 2} do CSV está inválida e precisa ser revisada.`);
+      throw new Error(`A linha ${lineIndex + 2} do CSV esta invalida e precisa ser revisada.`);
     }
 
     return {
@@ -186,6 +372,4 @@ export function parseTransactionsCsv(text) {
       recurrenceEndDate: null,
     };
   });
-
-  return transactions;
 }

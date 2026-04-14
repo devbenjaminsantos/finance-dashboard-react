@@ -1,4 +1,8 @@
-import { clearStoredSession } from "./auth";
+import {
+  clearStoredSession,
+  rememberPostLoginRedirect,
+  touchSessionActivity,
+} from "./auth";
 
 const API_URL = resolveApiUrl();
 
@@ -20,19 +24,16 @@ export async function apiRequest(path, options = {}) {
       headers,
     });
   } catch {
-    // Concentrei aqui o erro de conexão para não repetir fallback
-    // em cada client de endpoint do front-end.
     throw new Error(
       "Não foi possível conectar com a API. Verifique se o back-end está publicado e acessível."
     );
   }
 
   if (response.status === 401 && token) {
-    // 401 com token significa sessão expirada ou inválida.
-    // Eu limpo tudo e forço o login para evitar UI inconsistente.
-    clearStoredSession();
+    rememberPostLoginRedirect(window.location.pathname);
+    clearStoredSession("expired");
     window.location.href = "/login";
-    throw new Error("Sessão expirada. Faça login novamente.");
+    throw new Error("Sua sessão expirou. Faça login novamente.");
   }
 
   if (!response.ok) {
@@ -46,8 +47,6 @@ export async function apiRequest(path, options = {}) {
         contentType.includes("application/problem+json") ||
         contentType.includes("+json")
       ) {
-        // A API devolve tanto JSON comum quanto ProblemDetails.
-        // Por isso tento ler várias chaves conhecidas antes de usar o fallback.
         const data = await response.json();
         message =
           data?.message ||
@@ -62,17 +61,20 @@ export async function apiRequest(path, options = {}) {
         }
       }
     } catch {
-      // Se a resposta falhar ao ser lida, mantenho a mensagem padrão.
+      // Mantém a mensagem padrão se a leitura da resposta falhar.
     }
 
     throw new Error(message);
   }
 
   if (response.status === 204) {
+    touchSessionActivity();
     return null;
   }
 
-  return response.json();
+  const data = await response.json();
+  touchSessionActivity();
+  return data;
 }
 
 function resolveApiUrl() {
@@ -83,11 +85,8 @@ function resolveApiUrl() {
   }
 
   if (import.meta.env.DEV) {
-    // No ambiente local o back-end ASP.NET sobe nessa porta.
     return "http://localhost:5278/api";
   }
 
-  // Em produção esse fallback só funciona quando existe proxy
-  // ou API integrada no mesmo domínio.
   return "/api";
 }

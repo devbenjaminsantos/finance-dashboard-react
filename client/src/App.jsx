@@ -1,7 +1,13 @@
+import { useEffect } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { TransactionsProvider } from "./features/transactions/TransactionsProvider";
+import {
+  hasValidSession,
+  syncSessionFromStorageEvent,
+  touchSessionActivity,
+} from "./lib/api/auth";
 import Dashboard from "./pages/Dashboard";
 import AuditLogs from "./pages/AuditLogs";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -13,6 +19,30 @@ import Transactions from "./pages/Transactions";
 import VerifyEmail from "./pages/VerifyEmail";
 
 export default function App() {
+  useEffect(() => {
+    function handleStorage(event) {
+      syncSessionFromStorageEvent(event);
+    }
+
+    function handleActivity() {
+      if (hasValidSession()) {
+        touchSessionActivity();
+      }
+    }
+
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener("click", handleActivity);
+    window.addEventListener("keydown", handleActivity);
+    window.addEventListener("focus", handleActivity);
+
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("click", handleActivity);
+      window.removeEventListener("keydown", handleActivity);
+      window.removeEventListener("focus", handleActivity);
+    };
+  }, []);
+
   return (
     <div className="finova-page">
       <Navbar />

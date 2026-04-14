@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import {
+  consumePostLoginRedirect,
+  consumeStoredLogoutReason,
   demoLoginRequest,
+  getLogoutMessage,
   hasValidSession,
   loginRequest,
   resendEmailVerificationRequest,
@@ -19,7 +22,9 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [info, setInfo] = useState("");
+  const [info, setInfo] = useState(() =>
+    getLogoutMessage(consumeStoredLogoutReason())
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDemoSubmitting, setIsDemoSubmitting] = useState(false);
   const [isResendingVerification, setIsResendingVerification] = useState(false);
@@ -40,7 +45,7 @@ export default function Login() {
     try {
       await loginRequest(email, password);
       setInfo("Login realizado com sucesso. Redirecionando...");
-      navigate("/");
+      navigate(consumePostLoginRedirect(), { replace: true });
     } catch (requestError) {
       setError(requestError.message || "Falha ao fazer login.");
     } finally {
@@ -56,7 +61,7 @@ export default function Login() {
     try {
       await demoLoginRequest();
       setInfo("Demonstração pronta. Redirecionando...");
-      navigate("/");
+      navigate(consumePostLoginRedirect(), { replace: true });
     } catch (requestError) {
       setError(requestError.message || "Não foi possível abrir a demonstração.");
       setInfo("");

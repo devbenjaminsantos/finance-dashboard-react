@@ -1,15 +1,19 @@
 import { apiRequest } from "./http";
 
+const TOKEN_KEY = "token";
+const USER_KEY = "user";
+const LAST_ACTIVITY_KEY = "finova:last-activity-at";
+const LOGOUT_REASON_KEY = "finova:logout-reason";
+const POST_LOGIN_REDIRECT_KEY = "finova:post-login-redirect";
+const SESSION_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
+
 export async function loginRequest(email, password) {
   const data = await apiRequest("/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
 
-  // Salvo token e user juntos para atualizar navbar, guards e requests
-  // autenticados imediatamente depois do login.
   persistSession(data.token, data.user ?? null);
-
   return data;
 }
 
@@ -18,10 +22,7 @@ export async function demoLoginRequest() {
     method: "POST",
   });
 
-  // A demo reaproveita o mesmo fluxo da conta real.
-  // Isso evita criar exceções de navegação só para o modo demonstração.
   persistSession(data.token, data.user ?? null);
-
   return data;
 }
 
@@ -60,37 +61,43 @@ export function resetPasswordRequest(token, newPassword) {
   });
 }
 
-export function clearStoredSession() {
-  const hadToken = localStorage.getItem("token") !== null;
-  const hadUser = localStorage.getItem("user") !== null;
+export function clearStoredSession(reason = "") {
+  const hadToken = localStorage.getItem(TOKEN_KEY) !== null;
+  const hadUser = localStorage.getItem(USER_KEY) !== null;
+  const hadActivity = localStorage.getItem(LAST_ACTIVITY_KEY) !== null;
 
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+  localStorage.removeItem(LAST_ACTIVITY_KEY);
 
-  if (hadToken || hadUser) {
-    // Só disparo o evento se algo mudou de verdade.
-    // Isso evita loops desnecessários nos componentes que escutam a sessão.
+  if (reason) {
+    localStorage.setItem(LOGOUT_REASON_KEY, reason);
+  }
+
+  if (hadToken || hadUser || hadActivity || reason) {
     dispatchSessionChange();
   }
 }
 
 export function logout() {
-  clearStoredSession();
+  clearStoredSession("manual");
 }
 
 export function persistSession(token, user) {
-  localStorage.setItem("token", token);
-  localStorage.setItem("user", JSON.stringify(user ?? null));
+  localStorage.setItem(TOKEN_KEY, token);
+  localStorage.setItem(USER_KEY, JSON.stringify(user ?? null));
+  touchSessionActivity();
+  clearStoredLogoutReason();
   dispatchSessionChange();
 }
 
 export function setStoredUser(user) {
-  localStorage.setItem("user", JSON.stringify(user ?? null));
+  localStorage.setItem(USER_KEY, JSON.stringify(user ?? null));
   dispatchSessionChange();
 }
 
 export function getStoredUser() {
-  const raw = localStorage.getItem("user");
+  const raw = localStorage.getItem(USER_KEY);
 
   if (!raw) {
     return null;
@@ -100,8 +107,6 @@ export function getStoredUser() {
     const parsed = JSON.parse(raw);
 
     if (!parsed || typeof parsed !== "object") {
-      // Se o user salvo estiver corrompido, prefiro derrubar a sessão
-      // inteira em vez de manter estado parcial.
       clearStoredSession();
       return null;
     }
@@ -114,7 +119,7 @@ export function getStoredUser() {
 }
 
 export function getStoredToken() {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem(TOKEN_KEY);
   return typeof token === "string" && token.trim() ? token : null;
 }
 
@@ -129,11 +134,68 @@ export function isTokenExpired(token) {
     const normalized = payloadBase64.replace(/-/g, "+").replace(/_/g, "/");
     const payload = JSON.parse(atob(normalized));
 
-    // Valido o exp no cliente para cortar sessão vencida
-    // sem depender de uma chamada extra ao back-end.
     return !payload?.exp || payload.exp * 1000 < Date.now();
   } catch {
     return true;
+  }
+}
+
+export function isSessionIdle() {
+  const raw = localStorage.getItem(LAST_ACTIVITY_KEY);
+
+  if (!raw) {
+    return false;
+  }
+
+  const timestamp = Number(raw);
+
+  if (!Number.isFinite(timestamp)) {
+    return true;
+  }
+
+  return Date.now() - timestamp > SESSION_IDLE_TIMEOUT_MS;
+}
+
+export function touchSessionActivity() {
+  if (!getStoredToken()) {
+    return;
+  }
+
+  localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now()));
+}
+
+export function rememberPostLoginRedirect(pathname) {
+  if (!pathname || pathname === "/login") {
+    return;
+  }
+
+  localStorage.setItem(POST_LOGIN_REDIRECT_KEY, pathname);
+}
+
+export function consumePostLoginRedirect() {
+  const path = localStorage.getItem(POST_LOGIN_REDIRECT_KEY);
+  localStorage.removeItem(POST_LOGIN_REDIRECT_KEY);
+  return path || "/";
+}
+
+export function getStoredLogoutReason() {
+  return localStorage.getItem(LOGOUT_REASON_KEY) || "";
+}
+
+export function consumeStoredLogoutReason() {
+  const reason = getStoredLogoutReason();
+  clearStoredLogoutReason();
+  return reason;
+}
+
+export function getLogoutMessage(reason) {
+  switch (reason) {
+    case "expired":
+      return "Sua sessão expirou. Faça login novamente.";
+    case "idle":
+      return "Sua sessão foi encerrada por inatividade. Faça login novamente.";
+    default:
+      return "";
   }
 }
 
@@ -141,10 +203,9 @@ export function hasValidSession() {
   const token = getStoredToken();
 
   if (!token) {
-    const user = localStorage.getItem("user");
+    const user = localStorage.getItem(USER_KEY);
 
     if (user !== null) {
-      // Isso cobre o caso em que sobrou user salvo sem token válido.
       clearStoredSession();
     }
 
@@ -152,7 +213,12 @@ export function hasValidSession() {
   }
 
   if (isTokenExpired(token)) {
-    clearStoredSession();
+    clearStoredSession("expired");
+    return false;
+  }
+
+  if (isSessionIdle()) {
+    clearStoredSession("idle");
     return false;
   }
 
@@ -169,8 +235,6 @@ export async function updateProfileRequest(payload) {
     body: JSON.stringify(payload),
   });
 
-  // Quando nome ou dados do perfil mudam, atualizo o user salvo
-  // para a navbar refletir a mudança sem novo login.
   setStoredUser(user);
   return user;
 }
@@ -183,6 +247,21 @@ export async function updateOnboardingPreferenceRequest(onboardingOptIn) {
 
   setStoredUser(user);
   return user;
+}
+
+export function syncSessionFromStorageEvent(event) {
+  if (
+    event.key === TOKEN_KEY ||
+    event.key === USER_KEY ||
+    event.key === LAST_ACTIVITY_KEY ||
+    event.key === LOGOUT_REASON_KEY
+  ) {
+    dispatchSessionChange();
+  }
+}
+
+function clearStoredLogoutReason() {
+  localStorage.removeItem(LOGOUT_REASON_KEY);
 }
 
 function dispatchSessionChange() {

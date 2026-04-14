@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { hasValidSession, registerRequest } from "../lib/api/auth";
+import {
+  isPasswordStrong,
+  PASSWORD_POLICY_MESSAGE,
+} from "../lib/auth/passwordPolicy";
 
 export default function Register() {
   const [name, setName] = useState("");
@@ -18,6 +22,12 @@ export default function Register() {
     event.preventDefault();
     setError("");
     setSuccess("");
+
+    if (!isPasswordStrong(password)) {
+      setError(PASSWORD_POLICY_MESSAGE);
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -91,7 +101,7 @@ export default function Register() {
                 disabled={isSubmitting}
                 required
               />
-              <div className="form-text">Use pelo menos 8 caracteres.</div>
+              <div className="form-text">{PASSWORD_POLICY_MESSAGE}</div>
             </div>
 
             {error ? (

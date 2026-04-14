@@ -75,6 +75,26 @@ public class AuthControllerTests
     }
 
     [Fact]
+    public async Task Register_ReturnsBadRequest_WhenPasswordIsTooWeak()
+    {
+        using var context = CreateContext();
+        var controller = CreateController(context);
+
+        var result = await controller.Register(new RegisterRequest
+        {
+            Name = "Novo Usuário",
+            Email = "novo@finova.app",
+            Password = "12345678"
+        });
+
+        var badRequest = Assert.IsType<BadRequestObjectResult>(result.Result);
+        var problem = Assert.IsType<ProblemDetails>(badRequest.Value);
+
+        Assert.Equal(StatusCodes.Status400BadRequest, badRequest.StatusCode);
+        Assert.Equal(PasswordPolicyService.DefaultMessage, problem.Title);
+    }
+
+    [Fact]
     public async Task Login_ReturnsForbidden_WhenEmailIsNotConfirmed()
     {
         using var context = CreateContext();
@@ -335,6 +355,50 @@ public class AuthControllerTests
         Assert.NotNull(ok.Value);
     }
 
+    [Fact]
+    public async Task ResetPassword_ReturnsBadRequest_WhenPasswordIsTooWeak()
+    {
+        using var context = CreateContext();
+        var controller = CreateController(
+            context,
+            configurationValues: new Dictionary<string, string?>
+            {
+                ["Client:BaseUrl"] = "https://finova.example",
+                ["PasswordReset:ExposeResetUrlInResponse"] = "true"
+            });
+
+        var user = new User
+        {
+            Name = "Finova User",
+            Email = "user@finova.app",
+            EmailConfirmed = true,
+        };
+        user.PasswordHash = HashPassword("SenhaSegura123!", user);
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var forgot = await controller.ForgotPassword(new ForgotPasswordRequest
+        {
+            Email = user.Email
+        });
+
+        var forgotOk = Assert.IsType<OkObjectResult>(forgot.Result);
+        var forgotPayload = Assert.IsType<ForgotPasswordResponse>(forgotOk.Value);
+        var rawToken = ExtractTokenFromUrl(forgotPayload.ResetUrl);
+
+        var result = await controller.ResetPassword(new ResetPasswordRequest
+        {
+            Token = rawToken,
+            NewPassword = "12345678"
+        });
+
+        var badRequest = Assert.IsType<BadRequestObjectResult>(result);
+        var problem = Assert.IsType<ProblemDetails>(badRequest.Value);
+
+        Assert.Equal(StatusCodes.Status400BadRequest, badRequest.StatusCode);
+        Assert.Equal(PasswordPolicyService.DefaultMessage, problem.Title);
+    }
+
     private static AppDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
@@ -373,6 +437,7 @@ public class AuthControllerTests
             context,
             new AuditLogService(context, new HttpContextAccessor()),
             CreatePasswordHasher(),
+            new PasswordPolicyService(),
             new JwTokenService(configuration),
             new PasswordResetTokenService(),
             emailSender ?? new FakeEmailSender(),

@@ -14,7 +14,7 @@ namespace FinanceDashboard.Api.DTOs
         public string Email { get; set; } = string.Empty;
 
         [Required]
-        [MinLength(8)]
+        [MinLength(10)]
         [StringLength(128)]
         public string Password { get; set; } = string.Empty;
     }

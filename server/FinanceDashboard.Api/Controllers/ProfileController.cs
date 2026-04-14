@@ -19,18 +19,21 @@ namespace FinanceDashboard.Api.Controllers
         private readonly AuditLogService _auditLogService;
         private readonly CurrentUserService _currentUserService;
         private readonly PasswordHasher _passwordHasher;
+        private readonly PasswordPolicyService _passwordPolicyService;
         private readonly IConfiguration _configuration;
 
         public ProfileController(
             AppDbContext context,
             CurrentUserService currentUserService,
             PasswordHasher passwordHasher,
+            PasswordPolicyService passwordPolicyService,
             AuditLogService auditLogService,
             IConfiguration configuration)
         {
             _context = context;
             _currentUserService = currentUserService;
             _passwordHasher = passwordHasher;
+            _passwordPolicyService = passwordPolicyService;
             _auditLogService = auditLogService;
             _configuration = configuration;
         }
@@ -118,11 +121,11 @@ namespace FinanceDashboard.Api.Controllers
                     });
                 }
 
-                if (dto.NewPassword.Length < 6)
+                if (!_passwordPolicyService.IsValid(dto.NewPassword))
                 {
                     return BadRequest(new ProblemDetails
                     {
-                        Title = "A nova senha deve ter pelo menos 6 caracteres.",
+                        Title = PasswordPolicyService.DefaultMessage,
                         Status = StatusCodes.Status400BadRequest
                     });
                 }

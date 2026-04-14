@@ -1,6 +1,10 @@
 import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { resetPasswordRequest } from "../lib/api/auth";
+import {
+  isPasswordStrong,
+  PASSWORD_POLICY_MESSAGE,
+} from "../lib/auth/passwordPolicy";
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
@@ -21,8 +25,8 @@ export default function ResetPassword() {
       return;
     }
 
-    if (newPassword.length < 6) {
-      setError("A nova senha deve ter pelo menos 6 caracteres.");
+    if (!isPasswordStrong(newPassword)) {
+      setError(PASSWORD_POLICY_MESSAGE);
       return;
     }
 
@@ -72,6 +76,7 @@ export default function ResetPassword() {
                 disabled={isSubmitting || !!success}
                 required
               />
+              <div className="form-text">{PASSWORD_POLICY_MESSAGE}</div>
             </div>
 
             <div>

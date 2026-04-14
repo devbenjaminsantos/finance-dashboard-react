@@ -20,6 +20,7 @@ namespace FinanceDashboard.Api.Controllers
         private readonly AppDbContext _context;
         private readonly AuditLogService _auditLogService;
         private readonly PasswordHasher _passwordHasher;
+        private readonly PasswordPolicyService _passwordPolicyService;
         private readonly JwTokenService _tokenService;
         private readonly PasswordResetTokenService _tokenUtility;
         private readonly IEmailSender _emailSender;
@@ -31,6 +32,7 @@ namespace FinanceDashboard.Api.Controllers
             AppDbContext context,
             AuditLogService auditLogService,
             PasswordHasher passwordHasher,
+            PasswordPolicyService passwordPolicyService,
             JwTokenService tokenService,
             PasswordResetTokenService tokenUtility,
             IEmailSender emailSender,
@@ -41,6 +43,7 @@ namespace FinanceDashboard.Api.Controllers
             _context = context;
             _auditLogService = auditLogService;
             _passwordHasher = passwordHasher;
+            _passwordPolicyService = passwordPolicyService;
             _tokenService = tokenService;
             _tokenUtility = tokenUtility;
             _emailSender = emailSender;
@@ -72,6 +75,15 @@ namespace FinanceDashboard.Api.Controllers
                 Email = normalizedEmail,
                 EmailConfirmed = false
             };
+
+            if (!_passwordPolicyService.IsValid(dto.Password))
+            {
+                return BadRequest(new ProblemDetails
+                {
+                    Title = PasswordPolicyService.DefaultMessage,
+                    Status = StatusCodes.Status400BadRequest
+                });
+            }
 
             user.PasswordHash = _passwordHasher.HashPassword(user, dto.Password);
 
@@ -435,11 +447,11 @@ namespace FinanceDashboard.Api.Controllers
                 });
             }
 
-            if (dto.NewPassword.Length < 6)
+            if (!_passwordPolicyService.IsValid(dto.NewPassword))
             {
                 return BadRequest(new ProblemDetails
                 {
-                    Title = "A nova senha deve ter pelo menos 6 caracteres.",
+                    Title = PasswordPolicyService.DefaultMessage,
                     Status = StatusCodes.Status400BadRequest
                 });
             }

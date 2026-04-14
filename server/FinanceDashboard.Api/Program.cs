@@ -24,6 +24,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(GetRequiredConnectionString(builder.Configuration)));
 
 builder.Services.AddScoped<PasswordHasher>();
+builder.Services.AddScoped<PasswordPolicyService>();
 builder.Services.AddScoped<JwTokenService>();
 builder.Services.AddScoped<PasswordResetTokenService>();
 builder.Services.AddScoped<AuditLogService>();

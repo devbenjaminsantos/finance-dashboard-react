@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
 import { getProfile, updateProfileRequest } from "../lib/api/auth";
+import {
+  isPasswordStrong,
+  PASSWORD_POLICY_MESSAGE,
+} from "../lib/auth/passwordPolicy";
 
 export default function Profile() {
   const [form, setForm] = useState({
@@ -65,8 +69,8 @@ export default function Profile() {
         return;
       }
 
-      if (form.newPassword.length < 6) {
-        setError("A nova senha deve ter pelo menos 6 caracteres.");
+      if (!isPasswordStrong(form.newPassword)) {
+        setError(PASSWORD_POLICY_MESSAGE);
         return;
       }
 
@@ -169,6 +173,7 @@ export default function Profile() {
                 onChange={(e) => updateField("newPassword", e.target.value)}
                 disabled={isSubmitting}
               />
+              <div className="form-text">{PASSWORD_POLICY_MESSAGE}</div>
             </div>
 
             <div className="col-12 col-md-4">

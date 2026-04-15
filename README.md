@@ -366,12 +366,12 @@ Guias extras:
 ### V5
 
 - [ ] Suporte a multiplos idiomas
-- [ ] Integracao bancaria
-- [ ] V5.1 Importacao manual via CSV
-- [ ] V5.2 Importacao manual via OFX
-- [ ] V5.3 Tela de revisao antes da confirmacao da importacao
-- [ ] V5.4 Conciliacao de transacoes importadas com transacoes manuais
-- [ ] V5.5 Categorizacao assistida para lancamentos importados
+- [x] Integracao bancaria manual inicial
+- [x] V5.1 Importacao manual via CSV
+- [x] V5.2 Importacao manual via OFX
+- [x] V5.3 Tela de revisao antes da confirmacao da importacao
+- [x] V5.4 Conciliacao de transacoes importadas com transacoes manuais
+- [x] V5.5 Categorizacao assistida para lancamentos importados
 - [ ] V5.6 Preparar arquitetura para integracao automatica com Open Finance/agregador
 - [ ] V5.7 Sincronizacao automatica com conta bancaria
 - [ ] Avaliar se ainda faz sentido incluir 2FA em um cenario mais maduro do produto

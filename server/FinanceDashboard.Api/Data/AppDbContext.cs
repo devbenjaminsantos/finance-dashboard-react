@@ -11,6 +11,7 @@ namespace FinanceDashboard.Api.Data
         }
 
         public DbSet<User> Users { get; set; }
+        public DbSet<FinancialAccount> FinancialAccounts { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<BudgetGoal> BudgetGoals { get; set; }
         public DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; }
@@ -45,15 +46,70 @@ namespace FinanceDashboard.Api.Data
                 entity.Property(transaction => transaction.Type)
                     .HasMaxLength(20);
 
+                entity.Property(transaction => transaction.Source)
+                    .HasMaxLength(30);
+
+                entity.Property(transaction => transaction.SourceReference)
+                    .HasMaxLength(120);
+
                 entity.Property(transaction => transaction.RecurrenceGroupId)
                     .HasMaxLength(40);
 
                 entity.ToTable(table =>
+                {
+                    table.HasCheckConstraint(
+                        "CK_Transactions_Source",
+                        "[Source] IN ('manual', 'import_csv', 'import_ofx', 'bank_sync')");
+
                     table.HasCheckConstraint(
                         "CK_Transactions_Type",
-                        "[Type] IN ('income', 'expense')"));
+                        "[Type] IN ('income', 'expense')");
+                });
 
                 entity.HasIndex(transaction => new { transaction.UserId, transaction.RecurrenceGroupId });
+                entity.HasIndex(transaction => new { transaction.UserId, transaction.Source, transaction.SourceReference });
+
+                entity.HasOne(transaction => transaction.FinancialAccount)
+                    .WithMany(account => account.Transactions)
+                    .HasForeignKey(transaction => transaction.FinancialAccountId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<FinancialAccount>(entity =>
+            {
+                entity.Property(account => account.Provider)
+                    .HasMaxLength(40);
+
+                entity.Property(account => account.InstitutionName)
+                    .HasMaxLength(120);
+
+                entity.Property(account => account.InstitutionCode)
+                    .HasMaxLength(40);
+
+                entity.Property(account => account.AccountName)
+                    .HasMaxLength(120);
+
+                entity.Property(account => account.AccountMask)
+                    .HasMaxLength(32);
+
+                entity.Property(account => account.ExternalAccountId)
+                    .HasMaxLength(120);
+
+                entity.Property(account => account.Status)
+                    .HasMaxLength(30);
+
+                entity.ToTable(table =>
+                    table.HasCheckConstraint(
+                        "CK_FinancialAccounts_Status",
+                        "[Status] IN ('disconnected', 'pending', 'connected', 'error')"));
+
+                entity.HasIndex(account => new { account.UserId, account.ExternalAccountId });
+                entity.HasIndex(account => new { account.UserId, account.Provider, account.InstitutionName });
+
+                entity.HasOne(account => account.User)
+                    .WithMany(user => user.FinancialAccounts)
+                    .HasForeignKey(account => account.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<BudgetGoal>(entity =>

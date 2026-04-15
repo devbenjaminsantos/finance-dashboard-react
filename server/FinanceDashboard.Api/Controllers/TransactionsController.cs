@@ -76,7 +76,13 @@ namespace FinanceDashboard.Api.Controllers
                 : null;
 
             var transactions = occurrenceDates
-                .Select(date => BuildTransactionEntity(dto, userId, date, recurrenceGroupId))
+                .Select(date => BuildTransactionEntity(
+                    dto,
+                    userId,
+                    date,
+                    recurrenceGroupId,
+                    source: "manual",
+                    importedAtUtc: null))
                 .ToList();
 
             _context.Transactions.AddRange(transactions);
@@ -84,8 +90,8 @@ namespace FinanceDashboard.Api.Controllers
 
             var firstTransaction = transactions[0];
             var summary = dto.IsRecurring
-                ? $"Série recorrente criada: {firstTransaction.Description} ({transactions.Count} lançamentos mensais)."
-                : $"Transação criada: {firstTransaction.Description} ({firstTransaction.Type}).";
+                ? $"Serie recorrente criada: {firstTransaction.Description} ({transactions.Count} lancamentos mensais)."
+                : $"Transacao criada: {firstTransaction.Description} ({firstTransaction.Type}).";
 
             await _auditLogService.WriteAsync(
                 action: "transaction.created",
@@ -107,10 +113,17 @@ namespace FinanceDashboard.Api.Controllers
 
             if (dto.Transactions.Count > 500)
             {
-                ModelState.AddModelError(nameof(dto.Transactions), "Limite de 500 transações por importação.");
+                ModelState.AddModelError(nameof(dto.Transactions), "Limite de 500 transacoes por importacao.");
                 return ValidationProblem(ModelState);
             }
 
+            var source = dto.ImportFormat?.Trim().ToLowerInvariant() switch
+            {
+                "ofx" => "import_ofx",
+                _ => "import_csv"
+            };
+
+            var importedAtUtc = DateTime.UtcNow;
             var transactions = new List<Transaction>();
 
             for (var index = 0; index < dto.Transactions.Count; index += 1)
@@ -121,11 +134,17 @@ namespace FinanceDashboard.Api.Controllers
                 {
                     ModelState.AddModelError(
                         $"{nameof(dto.Transactions)}[{index}].{nameof(item.IsRecurring)}",
-                        "A importação CSV inicial não aceita recorrência automática.");
+                        "A importacao inicial de arquivo nao aceita recorrencia automatica.");
                     return ValidationProblem(ModelState);
                 }
 
-                transactions.Add(BuildTransactionEntity(item, userId, item.Date.Date, recurrenceGroupId: null));
+                transactions.Add(BuildTransactionEntity(
+                    item,
+                    userId,
+                    item.Date.Date,
+                    recurrenceGroupId: null,
+                    source: source,
+                    importedAtUtc: importedAtUtc));
             }
 
             _context.Transactions.AddRange(transactions);
@@ -136,7 +155,7 @@ namespace FinanceDashboard.Api.Controllers
                 entityType: "Transaction",
                 entityId: transactions[0].Id.ToString(),
                 userId: userId,
-                summary: $"Importação CSV concluída com {transactions.Count} transações.");
+                summary: $"Importacao {dto.ImportFormat?.ToUpperInvariant() ?? "CSV"} concluida com {transactions.Count} transacoes.");
 
             return Ok(new TransactionImportResponse
             {
@@ -169,7 +188,7 @@ namespace FinanceDashboard.Api.Controllers
                 entityType: "Transaction",
                 entityId: transaction.Id.ToString(),
                 userId: userId,
-                summary: $"Transação atualizada: {transaction.Description} ({transaction.Type}).");
+                summary: $"Transacao atualizada: {transaction.Description} ({transaction.Type}).");
 
             return Ok(ToResponse(transaction));
         }
@@ -194,7 +213,7 @@ namespace FinanceDashboard.Api.Controllers
                 entityType: "Transaction",
                 entityId: id.ToString(),
                 userId: userId,
-                summary: $"Transação removida: {transaction.Description} ({transaction.Type}).");
+                summary: $"Transacao removida: {transaction.Description} ({transaction.Type}).");
 
             return NoContent();
         }
@@ -217,7 +236,7 @@ namespace FinanceDashboard.Api.Controllers
 
             if (!dto.RecurrenceEndDate.HasValue)
             {
-                validationError = "Informe até quando a recorrência mensal deve ser gerada.";
+                validationError = "Informe ate quando a recorrencia mensal deve ser gerada.";
                 return false;
             }
 
@@ -226,7 +245,7 @@ namespace FinanceDashboard.Api.Controllers
 
             if (endDate < minimumEndDate)
             {
-                validationError = "A recorrência mensal precisa alcançar pelo menos o próximo mês.";
+                validationError = "A recorrencia mensal precisa alcancar pelo menos o proximo mes.";
                 return false;
             }
 
@@ -238,7 +257,7 @@ namespace FinanceDashboard.Api.Controllers
 
                 if (occurrenceDates.Count > 60)
                 {
-                    validationError = "Limite de 60 lançamentos recorrentes por série.";
+                    validationError = "Limite de 60 lancamentos recorrentes por serie.";
                     return false;
                 }
 
@@ -252,7 +271,9 @@ namespace FinanceDashboard.Api.Controllers
             TransactionRequest dto,
             int userId,
             DateTime date,
-            string? recurrenceGroupId)
+            string? recurrenceGroupId,
+            string source,
+            DateTime? importedAtUtc)
         {
             return new Transaction
             {
@@ -261,6 +282,11 @@ namespace FinanceDashboard.Api.Controllers
                 AmountCents = dto.AmountCents,
                 Date = date,
                 Type = dto.Type.Trim().ToLowerInvariant(),
+                Source = source,
+                SourceReference = dto is TransactionImportItemRequest importItem
+                    ? importItem.SourceReference?.Trim()
+                    : null,
+                ImportedAtUtc = importedAtUtc,
                 IsRecurring = dto.IsRecurring,
                 RecurrenceEndDate = dto.IsRecurring ? dto.RecurrenceEndDate?.Date : null,
                 RecurrenceGroupId = recurrenceGroupId,
@@ -278,6 +304,10 @@ namespace FinanceDashboard.Api.Controllers
                 AmountCents = transaction.AmountCents,
                 Date = transaction.Date,
                 Type = transaction.Type,
+                Source = transaction.Source,
+                SourceReference = transaction.SourceReference,
+                ImportedAtUtc = transaction.ImportedAtUtc,
+                FinancialAccountId = transaction.FinancialAccountId,
                 IsRecurring = transaction.IsRecurring,
                 RecurrenceEndDate = transaction.RecurrenceEndDate,
                 RecurrenceGroupId = transaction.RecurrenceGroupId

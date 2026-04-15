@@ -75,6 +75,7 @@ export function parseTransactionsOfx(text) {
     const amountRaw = extractTagValue(block, "TRNAMT");
     const amountCentsSigned = parseImportMoneyToCents(amountRaw);
     const date = normalizeImportDate(extractTagValue(block, "DTPOSTED"));
+    const fitId = extractTagValue(block, "FITID");
     const name = extractTagValue(block, "NAME");
     const memo = extractTagValue(block, "MEMO");
     const description = memo || name || trnType || `Transacao OFX ${index + 1}`;
@@ -97,6 +98,7 @@ export function parseTransactionsOfx(text) {
       type,
       category,
       amountCents: Math.abs(amountCentsSigned),
+      sourceReference: fitId || null,
       isRecurring: false,
       recurrenceEndDate: null,
     };

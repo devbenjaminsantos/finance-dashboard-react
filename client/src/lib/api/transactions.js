@@ -11,10 +11,10 @@ export function createTransaction(transaction) {
   });
 }
 
-export function importTransactions(transactions) {
+export function importTransactions({ transactions, importFormat }) {
   return apiRequest("/transactions/import", {
     method: "POST",
-    body: JSON.stringify({ transactions }),
+    body: JSON.stringify({ transactions, importFormat }),
   });
 }
 

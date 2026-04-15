@@ -58,8 +58,11 @@ public class TransactionsControllerTests
         Assert.Equal(dto.Category, entity.Category);
         Assert.Equal(dto.AmountCents, entity.AmountCents);
         Assert.Equal(dto.Type, entity.Type);
+        Assert.Equal("manual", entity.Source);
+        Assert.Null(entity.ImportedAtUtc);
         Assert.False(entity.IsRecurring);
         Assert.Equal(entity.Id, payload.Id);
+        Assert.Equal("manual", payload.Source);
         Assert.Contains(context.AuditLogs, log => log.Action == "transaction.created" && log.UserId == 7);
     }
 
@@ -91,6 +94,7 @@ public class TransactionsControllerTests
         Assert.Equal(4, entities.Count);
         Assert.All(entities, entity => Assert.True(entity.IsRecurring));
         Assert.All(entities, entity => Assert.Equal(7, entity.UserId));
+        Assert.All(entities, entity => Assert.Equal("manual", entity.Source));
         Assert.Equal(new DateTime(2026, 4, 7), entities[0].Date);
         Assert.Equal(new DateTime(2026, 5, 7), entities[1].Date);
         Assert.Equal(new DateTime(2026, 6, 7), entities[2].Date);
@@ -99,7 +103,8 @@ public class TransactionsControllerTests
         Assert.Equal(dto.RecurrenceEndDate, entities[3].RecurrenceEndDate);
         Assert.True(payload.IsRecurring);
         Assert.NotNull(payload.RecurrenceGroupId);
-        Assert.Contains(context.AuditLogs, log => log.Action == "transaction.created" && log.Summary.Contains("Série recorrente criada"));
+        Assert.Equal("manual", payload.Source);
+        Assert.Contains(context.AuditLogs, log => log.Action == "transaction.created" && log.Summary.Contains("Serie recorrente criada"));
     }
 
     [Fact]
@@ -110,6 +115,7 @@ public class TransactionsControllerTests
 
         var dto = new TransactionImportRequest
         {
+            ImportFormat = "csv",
             Transactions =
             {
                 new TransactionImportItemRequest
@@ -126,7 +132,8 @@ public class TransactionsControllerTests
                     Category = "Reembolso",
                     AmountCents = 30000,
                     Date = new DateTime(2026, 4, 12),
-                    Type = "income"
+                    Type = "income",
+                    SourceReference = "arquivo-001"
                 }
             }
         };
@@ -140,6 +147,9 @@ public class TransactionsControllerTests
         Assert.Equal(2, payload.ImportedCount);
         Assert.Equal(2, entities.Count);
         Assert.All(entities, item => Assert.Equal(15, item.UserId));
+        Assert.All(entities, item => Assert.Equal("import_csv", item.Source));
+        Assert.All(entities, item => Assert.NotNull(item.ImportedAtUtc));
+        Assert.Equal("arquivo-001", entities[1].SourceReference);
         Assert.Contains(context.AuditLogs, log => log.Action == "transaction.imported" && log.UserId == 15);
     }
 
@@ -282,7 +292,8 @@ public class TransactionsControllerTests
                 Category = "Alimentacao",
                 AmountCents = 85000,
                 Date = new DateTime(2026, 4, 8),
-                Type = "expense"
+                Type = "expense",
+                Source = "manual"
             },
             new Transaction
             {
@@ -291,7 +302,8 @@ public class TransactionsControllerTests
                 Category = "Salario",
                 AmountCents = 700000,
                 Date = new DateTime(2026, 4, 5),
-                Type = "income"
+                Type = "income",
+                Source = "manual"
             },
             new Transaction
             {
@@ -300,7 +312,8 @@ public class TransactionsControllerTests
                 Category = "Transporte",
                 AmountCents = 21000,
                 Date = new DateTime(2026, 4, 7),
-                Type = "expense"
+                Type = "expense",
+                Source = "manual"
             });
 
         context.SaveChanges();

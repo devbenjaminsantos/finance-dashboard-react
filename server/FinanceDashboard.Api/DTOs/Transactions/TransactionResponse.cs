@@ -8,6 +8,10 @@ namespace FinanceDashboard.Api.DTOs
         public long AmountCents { get; set; }
         public DateTime Date { get; set; }
         public string Type { get; set; } = string.Empty;
+        public string Source { get; set; } = string.Empty;
+        public string? SourceReference { get; set; }
+        public DateTime? ImportedAtUtc { get; set; }
+        public int? FinancialAccountId { get; set; }
         public bool IsRecurring { get; set; }
         public DateTime? RecurrenceEndDate { get; set; }
         public string? RecurrenceGroupId { get; set; }

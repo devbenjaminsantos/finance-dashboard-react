@@ -205,7 +205,10 @@ export default function TransactionImportModal({
     setError("");
 
     try {
-      await onImport(selectedTransactions);
+      await onImport({
+        transactions: selectedTransactions,
+        importFormat,
+      });
       onClose();
     } catch (requestError) {
       setError(requestError.message || "Não foi possível concluir a importação.");

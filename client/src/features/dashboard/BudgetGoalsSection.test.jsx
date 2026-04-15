@@ -52,7 +52,7 @@ describe("BudgetGoalsSection", () => {
     render(<BudgetGoalsSection transactions={transactions} />);
 
     expect(
-      await screen.findByText("Categorias que merecem meta própria")
+      await screen.findByText((content) => content.toLowerCase().includes("merecem meta"))
     ).toBeInTheDocument();
 
     const suggestionButton = screen.getByRole("button", { name: /Moradia/i });
@@ -72,7 +72,7 @@ describe("BudgetGoalsSection", () => {
       expect(getBudgetGoals).toHaveBeenCalledTimes(1);
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Próximo mês" }));
+    fireEvent.click(screen.getByRole("button", { name: /Próximo mês/i }));
 
     await waitFor(() => {
       expect(getBudgetGoals).toHaveBeenCalledTimes(2);

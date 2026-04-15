@@ -54,8 +54,8 @@ export function TransactionsProvider({ children }) {
     await loadAll();
   }, [loadAll]);
 
-  const importTransactionsBatch = useCallback(async (items) => {
-    const result = await importTransactions(items);
+  const importTransactionsBatch = useCallback(async (payload) => {
+    const result = await importTransactions(payload);
     await loadAll();
     return result;
   }, [loadAll]);

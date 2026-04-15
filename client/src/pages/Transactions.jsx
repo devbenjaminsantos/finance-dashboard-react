@@ -259,7 +259,7 @@ export default function Transactions() {
             onClick={openImport}
             disabled={isMutating}
           >
-            Importar CSV
+            Importar arquivo
           </button>
 
           <button
@@ -284,6 +284,7 @@ export default function Transactions() {
         isOpen={isImportOpen}
         onClose={closeImport}
         onImport={handleImportSubmit}
+        existingTransactions={transactions}
       />
 
       <TransactionsFilters

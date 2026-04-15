@@ -1,5 +1,10 @@
-import { getTransactionCategories } from "../constants/transactionCategories";
-import { parseMoneyToCents } from "../format/currency";
+import {
+  normalizeImportCategory,
+  normalizeImportDate,
+  normalizeImportKey,
+  normalizeImportType,
+  parseImportMoneyToCents,
+} from "./transactionImportUtils";
 
 const HEADER_ALIASES = {
   data: "date",
@@ -23,121 +28,6 @@ const HEADER_ALIASES = {
   valorcentavos: "amountCents",
   amountcents: "amountCents",
 };
-
-const CATEGORY_KEYWORDS = {
-  expense: {
-    Alimentacao: [
-      "aliment",
-      "mercad",
-      "supermerc",
-      "padaria",
-      "restaurante",
-      "lanch",
-      "ifood",
-      "delivery",
-      "cafe",
-      "acougue",
-      "feira",
-    ],
-    Transporte: [
-      "uber",
-      "99app",
-      "taxi",
-      "posto",
-      "combust",
-      "gasolina",
-      "etanol",
-      "onibus",
-      "metro",
-      "estacion",
-      "pedagio",
-      "mobilidade",
-      "shell",
-    ],
-    Moradia: [
-      "alug",
-      "condom",
-      "energia",
-      "luz",
-      "agua",
-      "saneamento",
-      "gas",
-      "moradia",
-      "iptu",
-      "internet",
-    ],
-    Lazer: [
-      "cinema",
-      "show",
-      "viagem",
-      "bar",
-      "lazer",
-      "jogo",
-      "ingresso",
-    ],
-    Saude: [
-      "saude",
-      "medic",
-      "farm",
-      "hospital",
-      "clinica",
-      "consulta",
-      "odont",
-      "exame",
-    ],
-    Educacao: [
-      "educ",
-      "curso",
-      "facul",
-      "escola",
-      "livro",
-      "mensalidade",
-      "treinamento",
-    ],
-    Assinaturas: [
-      "assin",
-      "netflix",
-      "spotify",
-      "amazon prime",
-      "youtube",
-      "adobe",
-      "microsoft",
-      "icloud",
-      "google one",
-    ],
-  },
-  income: {
-    Salario: [
-      "salario",
-      "folha",
-      "pagamento",
-      "provento",
-      "holerite",
-      "credito em conta",
-      "credito conta",
-    ],
-    Freelancer: ["freelancer", "freela", "projeto", "servico"],
-    Comissao: ["comissao", "bonus venda", "premiacao"],
-    Investimentos: ["dividendo", "rendimento", "juros", "invest", "aplicacao"],
-    Reembolso: ["reembolso", "estorno", "devolucao"],
-    Vendas: ["venda", "recebimento venda", "loja", "marketplace"],
-  },
-};
-
-function normalizeHeader(value) {
-  return String(value ?? "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, "")
-    .toLowerCase();
-}
-
-function normalizeSearchText(value) {
-  return String(value ?? "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-}
 
 function detectDelimiter(text) {
   const firstLine = String(text ?? "").split(/\r?\n/).find((line) => line.trim());
@@ -184,91 +74,13 @@ function splitCsvLine(line, delimiter) {
   return values;
 }
 
-function normalizeType(value) {
-  const normalized = normalizeHeader(value);
-
-  if (["income", "receita", "entrada", "credito", "credit"].includes(normalized)) {
-    return "income";
-  }
-
-  if (["expense", "despesa", "saida", "debito", "debit"].includes(normalized)) {
-    return "expense";
-  }
-
-  return "";
-}
-
-function normalizeDate(value) {
-  const raw = String(value ?? "").trim();
-
-  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
-    return raw;
-  }
-
-  const match = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  if (match) {
-    return `${match[3]}-${match[2]}-${match[1]}`;
-  }
-
-  return "";
-}
-
-function mapCategoryByName(type, value) {
-  const categories = getTransactionCategories(type);
-  const raw = String(value ?? "").trim();
-
-  if (!raw) {
-    return "";
-  }
-
-  return (
-    categories.find((category) => normalizeHeader(category) === normalizeHeader(raw)) || ""
-  );
-}
-
-function inferCategory(type, categoryValue, description) {
-  const haystack = `${categoryValue || ""} ${description || ""}`.trim();
-  const normalizedHaystack = normalizeSearchText(haystack);
-  const keywordMap = CATEGORY_KEYWORDS[type] || {};
-
-  for (const [categoryKey, keywords] of Object.entries(keywordMap)) {
-    if (keywords.some((keyword) => normalizedHaystack.includes(normalizeSearchText(keyword)))) {
-      return mapCategoryByName(type, categoryKey);
-    }
-  }
-
-  return "";
-}
-
-function normalizeCategory(type, value, description) {
-  const categories = getTransactionCategories(type);
-  const raw = String(value ?? "").trim();
-
-  const exactCategory = mapCategoryByName(type, raw);
-  if (exactCategory) {
-    return exactCategory;
-  }
-
-  const inferredCategory = inferCategory(type, raw, description);
-  if (inferredCategory) {
-    return inferredCategory;
-  }
-
-  return raw || categories[categories.length - 1] || "Outros";
-}
-
 function mapHeaders(headerRow) {
-  return headerRow.map((header) => HEADER_ALIASES[normalizeHeader(header)] || "");
+  return headerRow.map((header) => HEADER_ALIASES[normalizeImportKey(header)] || "");
 }
 
 function getValue(row, headers, key) {
   const index = headers.indexOf(key);
   return index >= 0 ? row[index] ?? "" : "";
-}
-
-function parseRawAmount(value) {
-  const parsed = parseMoneyToCents(value);
-  return Number.isFinite(parsed) ? parsed : NaN;
 }
 
 function parseRawCents(value) {
@@ -285,7 +97,7 @@ function parseAmountData(row, headers) {
     };
   }
 
-  const creditValue = parseRawAmount(getValue(row, headers, "creditAmount"));
+  const creditValue = parseImportMoneyToCents(getValue(row, headers, "creditAmount"));
   if (Number.isFinite(creditValue) && creditValue > 0) {
     return {
       amountCents: creditValue,
@@ -293,7 +105,7 @@ function parseAmountData(row, headers) {
     };
   }
 
-  const debitValue = parseRawAmount(getValue(row, headers, "debitAmount"));
+  const debitValue = parseImportMoneyToCents(getValue(row, headers, "debitAmount"));
   if (Number.isFinite(debitValue) && debitValue > 0) {
     return {
       amountCents: debitValue,
@@ -301,7 +113,7 @@ function parseAmountData(row, headers) {
     };
   }
 
-  const amountValue = parseRawAmount(getValue(row, headers, "amount"));
+  const amountValue = parseImportMoneyToCents(getValue(row, headers, "amount"));
   if (Number.isFinite(amountValue) && amountValue !== 0) {
     return {
       amountCents: Math.abs(amountValue),
@@ -351,12 +163,16 @@ export function parseTransactionsCsv(text) {
 
   return lines.slice(1).map((line, lineIndex) => {
     const row = splitCsvLine(line, delimiter);
-    const explicitType = normalizeType(getValue(row, headers, "type"));
-    const date = normalizeDate(getValue(row, headers, "date"));
+    const explicitType = normalizeImportType(getValue(row, headers, "type"));
+    const date = normalizeImportDate(getValue(row, headers, "date"));
     const description = String(getValue(row, headers, "description")).trim();
     const { amountCents, inferredType } = parseAmountData(row, headers);
     const type = explicitType || inferredType;
-    const category = normalizeCategory(type, getValue(row, headers, "category"), description);
+    const category = normalizeImportCategory(
+      type,
+      getValue(row, headers, "category"),
+      description
+    );
 
     if (!type || !date || !description || !Number.isFinite(amountCents) || amountCents <= 0) {
       throw new Error(`A linha ${lineIndex + 2} do CSV esta invalida e precisa ser revisada.`);

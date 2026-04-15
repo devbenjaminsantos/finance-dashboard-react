@@ -93,6 +93,11 @@ export default function TransactionImportModal({
           accumulator.importDuplicateCount += 1;
         }
 
+        if (transaction.duplicateSource === "existing_and_import") {
+          accumulator.existingDuplicateCount += 1;
+          accumulator.importDuplicateCount += 1;
+        }
+
         if (selectedIndexes.has(index)) {
           accumulator.selectedCount += 1;
         }
@@ -220,6 +225,10 @@ export default function TransactionImportModal({
 
     if (transaction.duplicateSource === "import") {
       return <span className="finova-badge-neutral">Repetida no arquivo</span>;
+    }
+
+    if (transaction.duplicateSource === "existing_and_import") {
+      return <span className="finova-badge-neutral">Histórico e arquivo</span>;
     }
 
     return <span className="finova-badge-neutral">Possível duplicata</span>;

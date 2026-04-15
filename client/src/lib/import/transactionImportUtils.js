@@ -1,7 +1,7 @@
 import { getTransactionCategories } from "../constants/transactionCategories";
 import { parseMoneyToCents } from "../format/currency";
 
-const CATEGORY_KEYWORDS = {
+const CATEGORY_SIGNALS = {
   expense: {
     Alimentacao: [
       "aliment",
@@ -15,6 +15,15 @@ const CATEGORY_KEYWORDS = {
       "cafe",
       "acougue",
       "feira",
+      "burger",
+      "pizza",
+      "sorvete",
+      "habibs",
+      "mcdonald",
+      "bk brasil",
+      "outback",
+      "hortifruti",
+      "zé delivery",
     ],
     Transporte: [
       "uber",
@@ -30,6 +39,11 @@ const CATEGORY_KEYWORDS = {
       "pedagio",
       "mobilidade",
       "shell",
+      "ipiranga",
+      "sem parar",
+      "conectcar",
+      "localiza",
+      "movida",
     ],
     Moradia: [
       "alug",
@@ -42,6 +56,12 @@ const CATEGORY_KEYWORDS = {
       "moradia",
       "iptu",
       "internet",
+      "enel",
+      "sabesp",
+      "copasa",
+      "vivo fibra",
+      "claro net",
+      "tim live",
     ],
     Lazer: [
       "cinema",
@@ -51,6 +71,16 @@ const CATEGORY_KEYWORDS = {
       "lazer",
       "jogo",
       "ingresso",
+      "steam",
+      "epic games",
+      "playstation",
+      "xbox",
+      "spotify show",
+      "hotel",
+      "airbnb",
+      "decolar",
+      "booking",
+      "cinemark",
     ],
     Saude: [
       "saude",
@@ -61,6 +91,14 @@ const CATEGORY_KEYWORDS = {
       "consulta",
       "odont",
       "exame",
+      "unimed",
+      "amil",
+      "bradesco saude",
+      "droga",
+      "drogasil",
+      "droga raia",
+      "pague menos",
+      "notredame",
     ],
     Educacao: [
       "educ",
@@ -70,17 +108,34 @@ const CATEGORY_KEYWORDS = {
       "livro",
       "mensalidade",
       "treinamento",
+      "alura",
+      "udemy",
+      "ebac",
+      "cultura inglesa",
+      "wizard",
+      "kumon",
+      "estacio",
+      "anhanguera",
     ],
     Assinaturas: [
       "assin",
       "netflix",
       "spotify",
       "amazon prime",
-      "youtube",
+      "prime video",
+      "youtube premium",
       "adobe",
       "microsoft",
       "icloud",
       "google one",
+      "chatgpt",
+      "openai",
+      "dropbox",
+      "notion",
+      "canva",
+      "deezer",
+      "max ",
+      "disney",
     ],
   },
   income: {
@@ -92,15 +147,76 @@ const CATEGORY_KEYWORDS = {
       "holerite",
       "credito em conta",
       "credito conta",
-      "deposito",
-      "transferencia recebida",
+      "deposito salario",
+      "empresa",
+      "folha pg",
+      "transferencia empregador",
     ],
-    Freelancer: ["freelancer", "freela", "projeto", "servico"],
-    Comissao: ["comissao", "bonus venda", "premiacao"],
-    Investimentos: ["dividendo", "rendimento", "juros", "invest", "aplicacao"],
-    Reembolso: ["reembolso", "estorno", "devolucao"],
-    Vendas: ["venda", "recebimento venda", "loja", "marketplace"],
+    Freelancer: [
+      "freelancer",
+      "freela",
+      "projeto",
+      "servico",
+      "prestacao",
+      "cliente",
+      "honorario",
+      "consultoria",
+    ],
+    Comissao: ["comissao", "bonus venda", "premiacao", "premio", "variavel"],
+    Investimentos: [
+      "dividendo",
+      "rendimento",
+      "juros",
+      "invest",
+      "aplicacao",
+      "tesouro",
+      "cdb",
+      "fii",
+      "acoes",
+    ],
+    Reembolso: [
+      "reembolso",
+      "estorno",
+      "devolucao",
+      "cashback",
+      "chargeback",
+      "cancelamento",
+    ],
+    Vendas: [
+      "venda",
+      "recebimento venda",
+      "loja",
+      "marketplace",
+      "mercado livre",
+      "shopee",
+      "elo7",
+      "pagseguro",
+      "stone",
+      "infinitepay",
+      "maquininha",
+      "pix cliente",
+    ],
   },
+};
+
+const CATEGORY_PRIORITY = {
+  expense: [
+    "Alimentacao",
+    "Transporte",
+    "Moradia",
+    "Saude",
+    "Educacao",
+    "Assinaturas",
+    "Lazer",
+  ],
+  income: [
+    "Salario",
+    "Freelancer",
+    "Comissao",
+    "Investimentos",
+    "Reembolso",
+    "Vendas",
+  ],
 };
 
 export function normalizeImportText(value) {
@@ -166,18 +282,44 @@ function mapCategoryByName(type, value) {
   );
 }
 
-function inferCategory(type, categoryValue, description) {
-  const haystack = `${categoryValue || ""} ${description || ""}`.trim();
-  const normalizedHaystack = normalizeImportText(haystack);
-  const keywordMap = CATEGORY_KEYWORDS[type] || {};
+function computeSignalScore(haystack, signal) {
+  const normalizedSignal = normalizeImportText(signal);
 
-  for (const [categoryKey, keywords] of Object.entries(keywordMap)) {
-    if (keywords.some((keyword) => normalizedHaystack.includes(normalizeImportText(keyword)))) {
-      return mapCategoryByName(type, categoryKey);
+  if (!normalizedSignal || !haystack.includes(normalizedSignal)) {
+    return 0;
+  }
+
+  const exactWordMatch = haystack.match(new RegExp(`\\b${normalizedSignal.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "g"));
+  if (exactWordMatch?.length) {
+    return 3 * exactWordMatch.length;
+  }
+
+  return 1;
+}
+
+function inferCategory(type, categoryValue, description) {
+  const haystack = normalizeImportText(`${categoryValue || ""} ${description || ""}`.trim());
+  const categorySignals = CATEGORY_SIGNALS[type] || {};
+  const categories = CATEGORY_PRIORITY[type] || [];
+
+  let bestCategory = "";
+  let bestScore = 0;
+
+  for (const categoryKey of categories) {
+    const signals = categorySignals[categoryKey] || [];
+    const score = signals.reduce((sum, signal) => sum + computeSignalScore(haystack, signal), 0);
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestCategory = categoryKey;
     }
   }
 
-  return "";
+  if (!bestCategory || bestScore === 0) {
+    return "";
+  }
+
+  return mapCategoryByName(type, bestCategory);
 }
 
 export function normalizeImportCategory(type, value, description) {

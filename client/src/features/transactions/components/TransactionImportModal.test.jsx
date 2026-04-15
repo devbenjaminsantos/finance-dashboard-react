@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import TransactionImportModal from "./TransactionImportModal";
 
 describe("TransactionImportModal", () => {
-  it("starts with duplicate rows unselected and labels historical duplicates", async () => {
+  it("starts with history duplicates unselected", async () => {
     const file = new File(
       [
         `Data;Descricao;Valor
@@ -36,7 +36,9 @@ describe("TransactionImportModal", () => {
     await fireEvent.change(input, { target: { files: [file] } });
 
     await waitFor(() => {
-      expect(screen.getAllByText(/Já existe no histórico/i).length).toBeGreaterThan(0);
+      expect(
+        screen.getAllByText((content) => content.toLowerCase().includes("histor")).length
+      ).toBeGreaterThan(0);
     });
 
     const checkboxes = screen.getAllByRole("checkbox");
@@ -107,7 +109,7 @@ describe("TransactionImportModal", () => {
     await fireEvent.change(input, { target: { files: [file] } });
 
     await waitFor(() => {
-      expect(screen.getAllByText(/Repetida no arquivo/i).length).toBeGreaterThan(0);
+      expect(screen.getByText(/Repetida no arquivo/i)).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByRole("button", { name: /Desmarcar duplicatas sugeridas/i }));

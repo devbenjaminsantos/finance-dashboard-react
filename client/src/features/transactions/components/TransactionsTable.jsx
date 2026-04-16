@@ -123,6 +123,11 @@ export default function TransactionsTable({
                             {t("transactions.recurringMonthly")}
                           </span>
                         ) : null}
+                        {transaction.installmentCount > 1 ? (
+                          <span className="finova-badge-warning">
+                            {`Parcela ${transaction.installmentIndex}/${transaction.installmentCount}`}
+                          </span>
+                        ) : null}
                         {(transaction.tagNames || []).map((tagName) => (
                           <span key={`${transaction.id}-${tagName}`} className="finova-badge-primary">
                             #{tagName}

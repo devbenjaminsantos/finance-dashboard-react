@@ -66,22 +66,21 @@ namespace FinanceDashboard.Api.Controllers
         {
             var userId = _currentUserService.GetRequiredUserId();
 
-            if (!TryBuildOccurrenceDates(dto, out var occurrenceDates, out var validationError))
+            if (!TryBuildCreationPlan(dto, out var creationPlan, out var validationError))
             {
-                ModelState.AddModelError(nameof(dto.RecurrenceEndDate), validationError);
+                ModelState.AddModelError(nameof(dto.InstallmentCount), validationError);
                 return ValidationProblem(ModelState);
             }
 
-            var recurrenceGroupId = dto.IsRecurring
-                ? Guid.NewGuid().ToString("N")
-                : null;
-
-            var transactions = occurrenceDates
-                .Select(date => BuildTransactionEntity(
+            var transactions = creationPlan
+                .Select(item => BuildTransactionEntity(
                     dto,
                     userId,
-                    date,
-                    recurrenceGroupId,
+                    item.Date,
+                    item.RecurrenceGroupId,
+                    item.InstallmentIndex,
+                    item.InstallmentCount,
+                    item.InstallmentGroupId,
                     source: "manual",
                     importedAtUtc: null))
                 .ToList();
@@ -91,7 +90,9 @@ namespace FinanceDashboard.Api.Controllers
             await _context.SaveChangesAsync();
 
             var firstTransaction = transactions[0];
-            var summary = dto.IsRecurring
+            var summary = dto.InstallmentCount > 1
+                ? $"Compra parcelada criada: {firstTransaction.Description} ({dto.InstallmentCount} parcelas mensais)."
+                : dto.IsRecurring
                 ? $"Serie recorrente criada: {firstTransaction.Description} ({transactions.Count} lancamentos mensais)."
                 : $"Transacao criada: {firstTransaction.Description} ({firstTransaction.Type}).";
 
@@ -145,6 +146,9 @@ namespace FinanceDashboard.Api.Controllers
                     userId,
                     item.Date.Date,
                     recurrenceGroupId: null,
+                    installmentIndex: null,
+                    installmentCount: null,
+                    installmentGroupId: null,
                     source: source,
                     importedAtUtc: importedAtUtc));
             }
@@ -225,19 +229,53 @@ namespace FinanceDashboard.Api.Controllers
             return NoContent();
         }
 
-        private static bool TryBuildOccurrenceDates(
+        private static bool TryBuildCreationPlan(
             TransactionRequest dto,
-            out List<DateTime> occurrenceDates,
+            out List<TransactionCreationItem> creationPlan,
             out string validationError)
         {
-            occurrenceDates = new List<DateTime>();
+            creationPlan = new List<TransactionCreationItem>();
             validationError = string.Empty;
 
             var startDate = dto.Date.Date;
+            var installmentCount = Math.Max(1, dto.InstallmentCount);
+
+            if (dto.IsRecurring && installmentCount > 1)
+            {
+                validationError = "Escolha recorrencia mensal ou parcelamento, nao os dois ao mesmo tempo.";
+                return false;
+            }
+
+            if (installmentCount > 1)
+            {
+                if (dto.Type != "expense")
+                {
+                    validationError = "Parcelamento esta disponivel apenas para despesas nesta etapa.";
+                    return false;
+                }
+
+                var installmentGroupId = Guid.NewGuid().ToString("N");
+
+                for (var installmentIndex = 1; installmentIndex <= installmentCount; installmentIndex += 1)
+                {
+                    creationPlan.Add(new TransactionCreationItem
+                    {
+                        Date = startDate.AddMonths(installmentIndex - 1),
+                        InstallmentIndex = installmentIndex,
+                        InstallmentCount = installmentCount,
+                        InstallmentGroupId = installmentGroupId
+                    });
+                }
+
+                return true;
+            }
 
             if (!dto.IsRecurring)
             {
-                occurrenceDates.Add(startDate);
+                creationPlan.Add(new TransactionCreationItem
+                {
+                    Date = startDate
+                });
                 return true;
             }
 
@@ -257,12 +295,17 @@ namespace FinanceDashboard.Api.Controllers
             }
 
             var currentDate = startDate;
+            var recurrenceGroupId = Guid.NewGuid().ToString("N");
 
             while (currentDate <= endDate)
             {
-                occurrenceDates.Add(currentDate);
+                creationPlan.Add(new TransactionCreationItem
+                {
+                    Date = currentDate,
+                    RecurrenceGroupId = recurrenceGroupId
+                });
 
-                if (occurrenceDates.Count > 60)
+                if (creationPlan.Count > 60)
                 {
                     validationError = "Limite de 60 lancamentos recorrentes por serie.";
                     return false;
@@ -279,6 +322,9 @@ namespace FinanceDashboard.Api.Controllers
             int userId,
             DateTime date,
             string? recurrenceGroupId,
+            int? installmentIndex,
+            int? installmentCount,
+            string? installmentGroupId,
             string source,
             DateTime? importedAtUtc)
         {
@@ -297,6 +343,9 @@ namespace FinanceDashboard.Api.Controllers
                 IsRecurring = dto.IsRecurring,
                 RecurrenceEndDate = dto.IsRecurring ? dto.RecurrenceEndDate?.Date : null,
                 RecurrenceGroupId = recurrenceGroupId,
+                InstallmentIndex = installmentIndex,
+                InstallmentCount = installmentCount,
+                InstallmentGroupId = installmentGroupId,
                 UserId = userId
             };
         }
@@ -401,8 +450,20 @@ namespace FinanceDashboard.Api.Controllers
                     .ToList(),
                 IsRecurring = transaction.IsRecurring,
                 RecurrenceEndDate = transaction.RecurrenceEndDate,
-                RecurrenceGroupId = transaction.RecurrenceGroupId
+                RecurrenceGroupId = transaction.RecurrenceGroupId,
+                InstallmentIndex = transaction.InstallmentIndex,
+                InstallmentCount = transaction.InstallmentCount,
+                InstallmentGroupId = transaction.InstallmentGroupId
             };
+        }
+
+        private sealed class TransactionCreationItem
+        {
+            public DateTime Date { get; set; }
+            public string? RecurrenceGroupId { get; set; }
+            public int? InstallmentIndex { get; set; }
+            public int? InstallmentCount { get; set; }
+            public string? InstallmentGroupId { get; set; }
         }
     }
 }

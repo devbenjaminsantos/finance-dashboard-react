@@ -67,6 +67,8 @@ export default function TransactionModal({
   const [category, setCategory] = useState(getTransactionCategories("expense")[0]);
   const [amount, setAmount] = useState("");
   const [tagNamesInput, setTagNamesInput] = useState("");
+  const [isInstallment, setIsInstallment] = useState(false);
+  const [installmentCount, setInstallmentCount] = useState("2");
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
   const [error, setError] = useState("");
@@ -95,6 +97,8 @@ export default function TransactionModal({
       setCategory(initial.category || nextCategories[0]);
       setAmount(centsToInput(initial.amountCents));
       setTagNamesInput(formatTagNamesForInput(initial.tagNames));
+      setIsInstallment(Boolean(initial.installmentCount && initial.installmentCount > 1));
+      setInstallmentCount(String(initial.installmentCount || 2));
       setIsRecurring(Boolean(initial.isRecurring));
       setRecurrenceEndDate((initial.recurrenceEndDate || "").slice(0, 10));
     } else {
@@ -106,6 +110,8 @@ export default function TransactionModal({
       setCategory(getTransactionCategories("expense")[0]);
       setAmount("");
       setTagNamesInput("");
+      setIsInstallment(false);
+      setInstallmentCount("2");
       setIsRecurring(false);
       setRecurrenceEndDate(addMonthsISO(baseDate, 1));
     }
@@ -168,6 +174,22 @@ export default function TransactionModal({
       return;
     }
 
+    const parsedInstallmentCount = Number(installmentCount) || 1;
+
+    if (isInstallment) {
+      if (type !== "expense") {
+        setError("Parcelamento esta disponivel apenas para despesas nesta etapa.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (parsedInstallmentCount < 2) {
+        setError("Informe pelo menos 2 parcelas para uma compra parcelada.");
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     if (isRecurring) {
       if (!recurrenceEndDate) {
         setError("Informe até quando a recorrência mensal deve ser gerada.");
@@ -191,6 +213,7 @@ export default function TransactionModal({
         amountCents,
         tagNames: parseTagNames(tagNamesInput),
         isRecurring,
+        installmentCount: isInstallment ? parsedInstallmentCount : 1,
         recurrenceEndDate: isRecurring ? recurrenceEndDate : null,
       });
 
@@ -284,6 +307,11 @@ export default function TransactionModal({
                     const nextCategories = getTransactionCategories(nextType);
                     setType(nextType);
                     setCategory(nextCategories[0]);
+
+                    if (nextType !== "expense") {
+                      setIsInstallment(false);
+                      setInstallmentCount("2");
+                    }
                   }}
                 >
                   <option value="expense">Despesa</option>
@@ -343,6 +371,60 @@ export default function TransactionModal({
 
               {!isEdit ? (
                 <>
+                  {type === "expense" ? (
+                    <div className="col-12 col-md-6">
+                      <div className="form-check">
+                        <input
+                          id="transaction-installment"
+                          type="checkbox"
+                          className="form-check-input"
+                          checked={isInstallment}
+                          onChange={(event) => {
+                            const checked = event.target.checked;
+                            setIsInstallment(checked);
+
+                            if (checked) {
+                              setIsRecurring(false);
+                              setRecurrenceEndDate("");
+                            }
+                          }}
+                        />
+                        <label
+                          className="form-check-label text-dark fw-medium"
+                          htmlFor="transaction-installment"
+                        >
+                          Compra parcelada
+                        </label>
+                      </div>
+                      <p className="form-text mb-0">
+                        Use para compras no credito ou pagamentos divididos ao longo dos proximos meses.
+                      </p>
+                    </div>
+                  ) : null}
+
+                  {isInstallment ? (
+                    <div className="col-12 col-md-6">
+                      <label
+                        className="form-label text-dark fw-medium"
+                        htmlFor="transaction-installment-count"
+                      >
+                        Quantidade de parcelas
+                      </label>
+                      <input
+                        id="transaction-installment-count"
+                        type="number"
+                        min="2"
+                        max="48"
+                        className="form-control finova-input"
+                        value={installmentCount}
+                        onChange={(event) => setInstallmentCount(event.target.value)}
+                      />
+                      <p className="form-text mb-0">
+                        O sistema vai criar uma parcela por mes, mantendo o mesmo dia base.
+                      </p>
+                    </div>
+                  ) : null}
+
                   <div className="col-12">
                     <div className="form-check">
                       <input
@@ -357,7 +439,13 @@ export default function TransactionModal({
                           if (checked && !recurrenceEndDate) {
                             setRecurrenceEndDate(addMonthsISO(date, 1));
                           }
+
+                          if (checked) {
+                            setIsInstallment(false);
+                            setInstallmentCount("2");
+                          }
                         }}
+                        disabled={isInstallment}
                       />
                       <label
                         className="form-check-label text-dark fw-medium"

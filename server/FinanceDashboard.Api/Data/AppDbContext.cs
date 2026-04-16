@@ -57,6 +57,9 @@ namespace FinanceDashboard.Api.Data
                 entity.Property(transaction => transaction.RecurrenceGroupId)
                     .HasMaxLength(40);
 
+                entity.Property(transaction => transaction.InstallmentGroupId)
+                    .HasMaxLength(40);
+
                 entity.ToTable(table =>
                 {
                     table.HasCheckConstraint(
@@ -69,6 +72,7 @@ namespace FinanceDashboard.Api.Data
                 });
 
                 entity.HasIndex(transaction => new { transaction.UserId, transaction.RecurrenceGroupId });
+                entity.HasIndex(transaction => new { transaction.UserId, transaction.InstallmentGroupId });
                 entity.HasIndex(transaction => new { transaction.UserId, transaction.Source, transaction.SourceReference });
 
                 entity.HasOne(transaction => transaction.FinancialAccount)

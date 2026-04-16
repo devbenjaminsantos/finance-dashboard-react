@@ -14,6 +14,9 @@ namespace FinanceDashboard.Api.Models
         public bool IsRecurring { get; set; }
         public DateTime? RecurrenceEndDate { get; set; }
         public string? RecurrenceGroupId { get; set; }
+        public int? InstallmentIndex { get; set; }
+        public int? InstallmentCount { get; set; }
+        public string? InstallmentGroupId { get; set; }
         public int? FinancialAccountId { get; set; }
         public FinancialAccount? FinancialAccount { get; set; }
         public ICollection<TransactionTagLink> TagLinks { get; set; } = new List<TransactionTagLink>();

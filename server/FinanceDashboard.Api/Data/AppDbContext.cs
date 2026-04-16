@@ -13,6 +13,8 @@ namespace FinanceDashboard.Api.Data
         public DbSet<User> Users { get; set; }
         public DbSet<FinancialAccount> FinancialAccounts { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
+        public DbSet<TransactionTag> TransactionTags { get; set; }
+        public DbSet<TransactionTagLink> TransactionTagLinks { get; set; }
         public DbSet<BudgetGoal> BudgetGoals { get; set; }
         public DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; }
         public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
@@ -73,6 +75,40 @@ namespace FinanceDashboard.Api.Data
                     .WithMany(account => account.Transactions)
                     .HasForeignKey(transaction => transaction.FinancialAccountId)
                     .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasMany(transaction => transaction.TagLinks)
+                    .WithOne(link => link.Transaction)
+                    .HasForeignKey(link => link.TransactionId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<TransactionTag>(entity =>
+            {
+                entity.Property(tag => tag.Name)
+                    .HasMaxLength(40);
+
+                entity.HasIndex(tag => new { tag.UserId, tag.Name })
+                    .IsUnique();
+
+                entity.HasOne(tag => tag.User)
+                    .WithMany(user => user.TransactionTags)
+                    .HasForeignKey(tag => tag.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<TransactionTagLink>(entity =>
+            {
+                entity.HasKey(link => new { link.TransactionId, link.TransactionTagId });
+
+                entity.HasOne(link => link.Transaction)
+                    .WithMany(transaction => transaction.TagLinks)
+                    .HasForeignKey(link => link.TransactionId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(link => link.TransactionTag)
+                    .WithMany(tag => tag.TransactionLinks)
+                    .HasForeignKey(link => link.TransactionTagId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<FinancialAccount>(entity =>

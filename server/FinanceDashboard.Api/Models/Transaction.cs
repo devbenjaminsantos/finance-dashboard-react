@@ -16,6 +16,7 @@ namespace FinanceDashboard.Api.Models
         public string? RecurrenceGroupId { get; set; }
         public int? FinancialAccountId { get; set; }
         public FinancialAccount? FinancialAccount { get; set; }
+        public ICollection<TransactionTagLink> TagLinks { get; set; } = new List<TransactionTagLink>();
 
         public int UserId { get; set; }
         public User User { get; set; } = null!;

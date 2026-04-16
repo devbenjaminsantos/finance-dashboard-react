@@ -12,6 +12,7 @@ namespace FinanceDashboard.Api.DTOs
         public string? SourceReference { get; set; }
         public DateTime? ImportedAtUtc { get; set; }
         public int? FinancialAccountId { get; set; }
+        public IReadOnlyList<string> TagNames { get; set; } = Array.Empty<string>();
         public bool IsRecurring { get; set; }
         public DateTime? RecurrenceEndDate { get; set; }
         public string? RecurrenceGroupId { get; set; }

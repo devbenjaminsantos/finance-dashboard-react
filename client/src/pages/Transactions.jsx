@@ -27,6 +27,7 @@ export default function Transactions() {
     () =>
       loadJSON(FILTERS_KEY, {
         q: "",
+        tagFilter: "all",
         typeFilter: "all",
         categoryFilter: "all",
         month: "",
@@ -36,6 +37,7 @@ export default function Transactions() {
   );
 
   const [q, setQ] = useState(() => saved.q);
+  const [tagFilter, setTagFilter] = useState(() => saved.tagFilter ?? "all");
   const [typeFilter, setTypeFilter] = useState(() => saved.typeFilter);
   const [categoryFilter, setCategoryFilter] = useState(() => saved.categoryFilter);
   const [month, setMonth] = useState(() => saved.month);
@@ -49,8 +51,8 @@ export default function Transactions() {
   const [highlightImportedSince, setHighlightImportedSince] = useState("");
 
   useEffect(() => {
-    saveJSON(FILTERS_KEY, { q, typeFilter, categoryFilter, month, sortBy });
-  }, [q, typeFilter, categoryFilter, month, sortBy]);
+    saveJSON(FILTERS_KEY, { q, tagFilter, typeFilter, categoryFilter, month, sortBy });
+  }, [q, tagFilter, typeFilter, categoryFilter, month, sortBy]);
 
   const categories = useMemo(() => {
     const baseCategories =
@@ -73,11 +75,29 @@ export default function Transactions() {
     return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [transactions, typeFilter]);
 
+  const tags = useMemo(() => {
+    const set = new Set();
+
+    for (const transaction of transactions) {
+      for (const tagName of transaction.tagNames || []) {
+        set.add(tagName);
+      }
+    }
+
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [transactions]);
+
   useEffect(() => {
     if (categoryFilter !== "all" && !categories.includes(categoryFilter)) {
       setCategoryFilter("all");
     }
   }, [categories, categoryFilter]);
+
+  useEffect(() => {
+    if (tagFilter !== "all" && !tags.includes(tagFilter)) {
+      setTagFilter("all");
+    }
+  }, [tagFilter, tags]);
 
   const filtered = useMemo(() => {
     let list = [...transactions];
@@ -85,8 +105,13 @@ export default function Transactions() {
     if (q.trim()) {
       const search = q.trim().toLowerCase();
       list = list.filter((transaction) =>
-        (transaction.description || "").toLowerCase().includes(search)
+        (transaction.description || "").toLowerCase().includes(search) ||
+        (transaction.tagNames || []).some((tagName) => tagName.toLowerCase().includes(search))
       );
+    }
+
+    if (tagFilter !== "all") {
+      list = list.filter((transaction) => (transaction.tagNames || []).includes(tagFilter));
     }
 
     if (typeFilter !== "all") {
@@ -118,7 +143,7 @@ export default function Transactions() {
     }
 
     return list;
-  }, [transactions, q, typeFilter, categoryFilter, month, sortBy]);
+  }, [transactions, q, tagFilter, typeFilter, categoryFilter, month, sortBy]);
 
   function openCreate() {
     if (isMutating) {
@@ -211,6 +236,7 @@ export default function Transactions() {
 
   function resetFilters() {
     setQ("");
+    setTagFilter("all");
     setTypeFilter("all");
     setCategoryFilter("all");
     setMonth("");
@@ -218,6 +244,7 @@ export default function Transactions() {
 
     saveJSON(FILTERS_KEY, {
       q: "",
+      tagFilter: "all",
       typeFilter: "all",
       categoryFilter: "all",
       month: "",
@@ -230,6 +257,7 @@ export default function Transactions() {
       formatDate(transaction.date),
       transaction.description || "",
       transaction.category || t("transactions.noCategory"),
+      (transaction.tagNames || []).join(", "),
       transaction.type === "income" ? t("transactions.income") : t("transactions.expense"),
       formatCurrencyFromCents(transaction.amountCents),
       Number(transaction.amountCents) || 0,
@@ -242,6 +270,7 @@ export default function Transactions() {
         t("common.date"),
         t("common.description"),
         t("common.category"),
+        t("common.tags"),
         t("common.type"),
         t("common.value"),
         "Cents",
@@ -266,6 +295,7 @@ export default function Transactions() {
         t("common.date"),
         t("common.description"),
         t("common.category"),
+        t("common.tags"),
         t("common.type"),
         t("common.value"),
         "Cents",
@@ -315,6 +345,8 @@ export default function Transactions() {
       <TransactionsFilters
         q={q}
         setQ={setQ}
+        tagFilter={tagFilter}
+        setTagFilter={setTagFilter}
         typeFilter={typeFilter}
         setTypeFilter={setTypeFilter}
         categoryFilter={categoryFilter}
@@ -324,6 +356,7 @@ export default function Transactions() {
         sortBy={sortBy}
         setSortBy={setSortBy}
         categories={categories}
+        tags={tags}
         onReset={resetFilters}
       />
 

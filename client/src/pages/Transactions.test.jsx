@@ -20,6 +20,7 @@ vi.mock("../lib/export/pdf", () => ({
 vi.mock("../lib/storage/jsonStorage", () => ({
   loadJSON: vi.fn(() => ({
     q: "",
+    tagFilter: "all",
     typeFilter: "all",
     categoryFilter: "all",
     month: "",
@@ -60,6 +61,7 @@ const transactionsFixture = [
     id: 1,
     description: "Mercado",
     category: "Alimentacao",
+    tagNames: ["casa", "essencial"],
     amountCents: 15000,
     date: "2026-04-11",
     type: "expense",
@@ -70,6 +72,7 @@ const transactionsFixture = [
     id: 2,
     description: "Salario",
     category: "Salario",
+    tagNames: ["trabalho"],
     amountCents: 500000,
     date: "2026-04-05",
     type: "income",
@@ -103,6 +106,17 @@ describe("Transactions page", () => {
     expect(screen.queryByRole("cell", { name: "Salario" })).not.toBeInTheDocument();
   });
 
+  it("filters transactions by tag", () => {
+    render(<Transactions />);
+
+    fireEvent.change(screen.getByLabelText("Tags"), {
+      target: { value: "trabalho" },
+    });
+
+    expect(screen.getAllByText("Salario").length).toBeGreaterThan(0);
+    expect(screen.queryByRole("cell", { name: "Mercado" })).not.toBeInTheDocument();
+  });
+
   it("exports the currently filtered rows to CSV", () => {
     render(<Transactions />);
 
@@ -117,13 +131,15 @@ describe("Transactions page", () => {
     expect(filename).toContain("finova-transacoes");
     expect(rows).toHaveLength(2);
     expect(rows[1][1]).toBe("Salario");
+    expect(rows[1][3]).toBe("trabalho");
   });
 
-  it("shows the transaction origin badges", () => {
+  it("shows the transaction origin badges and tags", () => {
     render(<Transactions />);
 
     expect(screen.getByText("Manual")).toBeInTheDocument();
     expect(screen.getByText("Importada via CSV")).toBeInTheDocument();
+    expect(screen.getAllByText("#casa").length).toBeGreaterThan(0);
   });
 
   it("shows import feedback after confirming an import", async () => {
@@ -132,6 +148,8 @@ describe("Transactions page", () => {
     fireEvent.click(screen.getByRole("button", { name: "Importar arquivo" }));
     fireEvent.click(screen.getByRole("button", { name: "Confirmar importacao mock" }));
 
-    expect(await screen.findByText("1 transacao importada com sucesso via CSV.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("1 transacao importada com sucesso via CSV.")
+    ).toBeInTheDocument();
   });
 });

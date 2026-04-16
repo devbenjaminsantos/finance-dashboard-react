@@ -21,7 +21,7 @@ describe("TransactionModal", () => {
     expect(screen.getByLabelText("Repetir até")).toBeInTheDocument();
   });
 
-  it("sends recurrence data on submit", async () => {
+  it("sends recurrence data and tags on submit", async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
 
     render(
@@ -40,6 +40,9 @@ describe("TransactionModal", () => {
     fireEvent.change(screen.getByLabelText("Valor"), {
       target: { value: "450,00" },
     });
+    fireEvent.change(screen.getByLabelText("Tags"), {
+      target: { value: "casa, fixa, casa" },
+    });
     fireEvent.click(screen.getByLabelText("Recorrência mensal"));
     fireEvent.change(screen.getByLabelText("Repetir até"), {
       target: { value: "2026-12-05" },
@@ -52,6 +55,7 @@ describe("TransactionModal", () => {
         expect.objectContaining({
           description: "Condomínio",
           amountCents: 45000,
+          tagNames: ["casa", "fixa"],
           isRecurring: true,
           recurrenceEndDate: "2026-12-05",
         })

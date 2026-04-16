@@ -34,12 +34,13 @@ namespace FinanceDashboard.Api.Controllers
             var userId = _currentUserService.GetRequiredUserId();
 
             var transactions = await _context.Transactions
+                .Include(transaction => transaction.TagLinks)
+                .ThenInclude(link => link.TransactionTag)
                 .Where(transaction => transaction.UserId == userId)
                 .OrderByDescending(transaction => transaction.Date)
-                .Select(transaction => ToResponse(transaction))
                 .ToListAsync();
 
-            return Ok(transactions);
+            return Ok(transactions.Select(ToResponse).ToList());
         }
 
         [HttpGet("{id:int}")]
@@ -48,16 +49,16 @@ namespace FinanceDashboard.Api.Controllers
             var userId = _currentUserService.GetRequiredUserId();
 
             var transaction = await _context.Transactions
-                .Where(transaction => transaction.Id == id && transaction.UserId == userId)
-                .Select(transaction => ToResponse(transaction))
-                .FirstOrDefaultAsync();
+                .Include(existing => existing.TagLinks)
+                .ThenInclude(link => link.TransactionTag)
+                .FirstOrDefaultAsync(transaction => transaction.Id == id && transaction.UserId == userId);
 
             if (transaction is null)
             {
                 return NotFound();
             }
 
-            return Ok(transaction);
+            return Ok(ToResponse(transaction));
         }
 
         [HttpPost]
@@ -86,6 +87,7 @@ namespace FinanceDashboard.Api.Controllers
                 .ToList();
 
             _context.Transactions.AddRange(transactions);
+            await AttachTagsAsync(transactions, dto.TagNames, userId);
             await _context.SaveChangesAsync();
 
             var firstTransaction = transactions[0];
@@ -148,6 +150,10 @@ namespace FinanceDashboard.Api.Controllers
             }
 
             _context.Transactions.AddRange(transactions);
+            for (var index = 0; index < transactions.Count; index += 1)
+            {
+                await AttachTagsAsync(new[] { transactions[index] }, dto.Transactions[index].TagNames, userId);
+            }
             await _context.SaveChangesAsync();
 
             await _auditLogService.WriteAsync(
@@ -181,6 +187,7 @@ namespace FinanceDashboard.Api.Controllers
             transaction.AmountCents = dto.AmountCents;
             transaction.Date = dto.Date.Date;
             transaction.Type = dto.Type.Trim().ToLowerInvariant();
+            await ReplaceTagsAsync(transaction, dto.TagNames, userId);
 
             await _context.SaveChangesAsync();
             await _auditLogService.WriteAsync(
@@ -294,6 +301,86 @@ namespace FinanceDashboard.Api.Controllers
             };
         }
 
+        private async Task AttachTagsAsync(
+            IEnumerable<Transaction> transactions,
+            IEnumerable<string>? rawTagNames,
+            int userId)
+        {
+            var normalizedTagNames = NormalizeTagNames(rawTagNames);
+
+            if (normalizedTagNames.Count == 0)
+            {
+                return;
+            }
+
+            var existingTags = await _context.TransactionTags
+                .Where(tag => tag.UserId == userId && normalizedTagNames.Contains(tag.Name))
+                .ToListAsync();
+
+            var existingNames = existingTags
+                .Select(tag => tag.Name)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            var newTags = normalizedTagNames
+                .Where(name => !existingNames.Contains(name))
+                .Select(name => new TransactionTag
+                {
+                    Name = name,
+                    UserId = userId
+                })
+                .ToList();
+
+            if (newTags.Count > 0)
+            {
+                _context.TransactionTags.AddRange(newTags);
+                existingTags.AddRange(newTags);
+            }
+
+            var tagsByName = existingTags.ToDictionary(tag => tag.Name, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var transaction in transactions)
+            {
+                foreach (var tagName in normalizedTagNames)
+                {
+                    if (!tagsByName.TryGetValue(tagName, out var tag))
+                    {
+                        continue;
+                    }
+
+                    transaction.TagLinks.Add(new TransactionTagLink
+                    {
+                        Transaction = transaction,
+                        TransactionTag = tag
+                    });
+                }
+            }
+        }
+
+        private async Task ReplaceTagsAsync(Transaction transaction, IEnumerable<string>? rawTagNames, int userId)
+        {
+            await _context.Entry(transaction)
+                .Collection(existing => existing.TagLinks)
+                .Query()
+                .Include(link => link.TransactionTag)
+                .LoadAsync();
+
+            _context.TransactionTagLinks.RemoveRange(transaction.TagLinks);
+            transaction.TagLinks.Clear();
+
+            await AttachTagsAsync(new[] { transaction }, rawTagNames, userId);
+        }
+
+        private static List<string> NormalizeTagNames(IEnumerable<string>? rawTagNames)
+        {
+            return (rawTagNames ?? Array.Empty<string>())
+                .Select(name => name?.Trim() ?? string.Empty)
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Select(name => name.Length > 40 ? name[..40] : name)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(name => name)
+                .ToList();
+        }
+
         private static TransactionResponse ToResponse(Transaction transaction)
         {
             return new TransactionResponse
@@ -308,6 +395,10 @@ namespace FinanceDashboard.Api.Controllers
                 SourceReference = transaction.SourceReference,
                 ImportedAtUtc = transaction.ImportedAtUtc,
                 FinancialAccountId = transaction.FinancialAccountId,
+                TagNames = transaction.TagLinks
+                    .Select(link => link.TransactionTag.Name)
+                    .OrderBy(name => name)
+                    .ToList(),
                 IsRecurring = transaction.IsRecurring,
                 RecurrenceEndDate = transaction.RecurrenceEndDate,
                 RecurrenceGroupId = transaction.RecurrenceGroupId

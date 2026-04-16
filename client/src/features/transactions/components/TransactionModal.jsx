@@ -37,6 +37,21 @@ function centsToInput(value) {
   return (Number(value) / 100).toFixed(2).replace(".", ",");
 }
 
+function formatTagNamesForInput(tagNames) {
+  return Array.isArray(tagNames) ? tagNames.join(", ") : "";
+}
+
+function parseTagNames(rawValue) {
+  return rawValue
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .filter(
+      (item, index, array) =>
+        array.findIndex((entry) => entry.toLowerCase() === item.toLowerCase()) === index
+    );
+}
+
 export default function TransactionModal({
   mode,
   isOpen,
@@ -51,6 +66,7 @@ export default function TransactionModal({
   const [type, setType] = useState("expense");
   const [category, setCategory] = useState(getTransactionCategories("expense")[0]);
   const [amount, setAmount] = useState("");
+  const [tagNamesInput, setTagNamesInput] = useState("");
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
   const [error, setError] = useState("");
@@ -78,6 +94,7 @@ export default function TransactionModal({
       setType(nextType);
       setCategory(initial.category || nextCategories[0]);
       setAmount(centsToInput(initial.amountCents));
+      setTagNamesInput(formatTagNamesForInput(initial.tagNames));
       setIsRecurring(Boolean(initial.isRecurring));
       setRecurrenceEndDate((initial.recurrenceEndDate || "").slice(0, 10));
     } else {
@@ -88,6 +105,7 @@ export default function TransactionModal({
       setType("expense");
       setCategory(getTransactionCategories("expense")[0]);
       setAmount("");
+      setTagNamesInput("");
       setIsRecurring(false);
       setRecurrenceEndDate(addMonthsISO(baseDate, 1));
     }
@@ -171,6 +189,7 @@ export default function TransactionModal({
         type,
         category,
         amountCents,
+        tagNames: parseTagNames(tagNamesInput),
         isRecurring,
         recurrenceEndDate: isRecurring ? recurrenceEndDate : null,
       });
@@ -303,6 +322,23 @@ export default function TransactionModal({
                   placeholder="150,00"
                   inputMode="decimal"
                 />
+              </div>
+
+              <div className="col-12">
+                <label className="form-label text-dark fw-medium" htmlFor="transaction-tags">
+                  Tags
+                </label>
+                <input
+                  id="transaction-tags"
+                  type="text"
+                  className="form-control finova-input"
+                  value={tagNamesInput}
+                  onChange={(event) => setTagNamesInput(event.target.value)}
+                  placeholder="Ex: viagem, reembolsavel, trabalho"
+                />
+                <p className="form-text mb-0">
+                  Separe por virgula para agrupar temas livres que fazem sentido para voce.
+                </p>
               </div>
 
               {!isEdit ? (

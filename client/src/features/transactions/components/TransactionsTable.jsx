@@ -123,6 +123,11 @@ export default function TransactionsTable({
                             {t("transactions.recurringMonthly")}
                           </span>
                         ) : null}
+                        {(transaction.tagNames || []).map((tagName) => (
+                          <span key={`${transaction.id}-${tagName}`} className="finova-badge-primary">
+                            #{tagName}
+                          </span>
+                        ))}
                       </div>
                       {transaction.importedAtUtc ? (
                         <div className="small text-muted mt-2">

@@ -3,6 +3,8 @@ import { useI18n } from "../../../i18n/LanguageProvider";
 export default function TransactionsFilters({
   q,
   setQ,
+  tagFilter,
+  setTagFilter,
   typeFilter,
   setTypeFilter,
   categoryFilter,
@@ -12,6 +14,7 @@ export default function TransactionsFilters({
   sortBy,
   setSortBy,
   categories,
+  tags,
   onReset,
 }) {
   const { t } = useI18n();
@@ -20,8 +23,11 @@ export default function TransactionsFilters({
     <div className="finova-card p-4 mb-4">
       <div className="row g-3">
         <div className="col-12 col-lg-4">
-          <label className="form-label text-dark fw-medium">{t("common.search")}</label>
+          <label className="form-label text-dark fw-medium" htmlFor="transactions-search">
+            {t("common.search")}
+          </label>
           <input
+            id="transactions-search"
             type="text"
             className="form-control finova-input"
             placeholder={t("transactions.searchPlaceholder")}
@@ -31,8 +37,11 @@ export default function TransactionsFilters({
         </div>
 
         <div className="col-6 col-lg-2">
-          <label className="form-label text-dark fw-medium">{t("common.type")}</label>
+          <label className="form-label text-dark fw-medium" htmlFor="transactions-type-filter">
+            {t("common.type")}
+          </label>
           <select
+            id="transactions-type-filter"
             className="form-select finova-select"
             value={typeFilter}
             onChange={(event) => setTypeFilter(event.target.value)}
@@ -44,8 +53,11 @@ export default function TransactionsFilters({
         </div>
 
         <div className="col-6 col-lg-2">
-          <label className="form-label text-dark fw-medium">{t("common.category")}</label>
+          <label className="form-label text-dark fw-medium" htmlFor="transactions-category-filter">
+            {t("common.category")}
+          </label>
           <select
+            id="transactions-category-filter"
             className="form-select finova-select"
             value={categoryFilter}
             onChange={(event) => setCategoryFilter(event.target.value)}
@@ -60,8 +72,30 @@ export default function TransactionsFilters({
         </div>
 
         <div className="col-6 col-lg-2">
-          <label className="form-label text-dark fw-medium">{t("common.month")}</label>
+          <label className="form-label text-dark fw-medium" htmlFor="transactions-tag-filter">
+            {t("common.tags")}
+          </label>
+          <select
+            id="transactions-tag-filter"
+            className="form-select finova-select"
+            value={tagFilter}
+            onChange={(event) => setTagFilter(event.target.value)}
+          >
+            <option value="all">{t("transactions.allTags")}</option>
+            {tags.map((tag) => (
+              <option key={tag} value={tag}>
+                #{tag}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="col-6 col-lg-1">
+          <label className="form-label text-dark fw-medium" htmlFor="transactions-month-filter">
+            {t("common.month")}
+          </label>
           <input
+            id="transactions-month-filter"
             type="month"
             className="form-control finova-input"
             value={month}
@@ -69,9 +103,12 @@ export default function TransactionsFilters({
           />
         </div>
 
-        <div className="col-6 col-lg-2">
-          <label className="form-label text-dark fw-medium">{t("common.sort")}</label>
+        <div className="col-6 col-lg-1">
+          <label className="form-label text-dark fw-medium" htmlFor="transactions-sort-filter">
+            {t("common.sort")}
+          </label>
           <select
+            id="transactions-sort-filter"
             className="form-select finova-select"
             value={sortBy}
             onChange={(event) => setSortBy(event.target.value)}

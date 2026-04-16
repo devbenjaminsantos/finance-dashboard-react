@@ -481,7 +481,14 @@ export default function TransactionImportModal({
               </p>
             </div>
 
-            <button type="button" className="btn-close" aria-label="Fechar" onClick={onClose} />
+            <button
+              type="button"
+              className="btn-close"
+              aria-label="Fechar"
+              title="Fechar"
+              data-tooltip="Fechar"
+              onClick={onClose}
+            />
           </div>
 
           <div className="modal-body px-4 pb-4 pt-3">

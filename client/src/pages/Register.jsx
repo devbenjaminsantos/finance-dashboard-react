@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
+import PasswordToggleButton from "../components/PasswordToggleButton";
 import { useI18n } from "../i18n/LanguageProvider";
 import { hasValidSession, registerRequest } from "../lib/api/auth";
 import { isPasswordStrong } from "../lib/auth/passwordPolicy";
@@ -96,14 +97,11 @@ export default function Register() {
                   disabled={isSubmitting}
                   required
                 />
-                <button
-                  type="button"
-                  className="btn finova-btn-light finova-password-toggle"
-                  onClick={() => setIsPasswordVisible((current) => !current)}
+                <PasswordToggleButton
+                  isVisible={isPasswordVisible}
+                  onToggle={() => setIsPasswordVisible((current) => !current)}
                   disabled={isSubmitting}
-                >
-                  {isPasswordVisible ? t("common.hidePassword") : t("common.showPassword")}
-                </button>
+                />
               </div>
               <div className="form-text">{t("passwordPolicy.message")}</div>
             </div>

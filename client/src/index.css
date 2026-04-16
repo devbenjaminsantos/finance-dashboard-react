@@ -118,10 +118,58 @@ a {
   box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.06);
 }
 
+.finova-input:disabled,
+.finova-input[readonly] {
+  color: var(--text);
+  -webkit-text-fill-color: var(--text);
+  background: var(--surface-soft);
+  opacity: 1;
+}
+
+.finova-icon-tooltip {
+  position: relative;
+}
+
+.finova-icon-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.55rem);
+  transform: translateX(-50%) translateY(4px);
+  padding: 0.35rem 0.55rem;
+  border-radius: 0.55rem;
+  background: var(--text);
+  color: var(--surface);
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms ease, transform 140ms ease;
+  box-shadow: var(--shadow-sm);
+  z-index: 5;
+}
+
+.finova-icon-tooltip:hover::after,
+.finova-icon-tooltip:focus-visible::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 .finova-password-toggle {
-  min-width: 84px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 46px;
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+.btn-close.finova-icon-tooltip::after {
+  bottom: calc(100% + 0.35rem);
 }
 
 .finova-btn-primary {

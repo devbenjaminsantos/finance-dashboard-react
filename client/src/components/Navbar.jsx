@@ -46,10 +46,11 @@ export default function Navbar() {
         <div className="d-flex align-items-center order-lg-2 ms-auto finova-navbar-actions">
           <button
             type="button"
-            className="btn finova-theme-toggle"
+            className="btn finova-theme-toggle finova-icon-tooltip"
             onClick={toggleTheme}
             aria-label={isDark ? t("navbar.openLight") : t("navbar.openDark")}
             title={isDark ? t("navbar.openLight") : t("navbar.openDark")}
+            data-tooltip={isDark ? t("navbar.openLight") : t("navbar.openDark")}
           >
             <span className="finova-theme-toggle-icon" aria-hidden="true">
               {theme === "dark" ? "\u2600" : "\u263E"}
@@ -70,13 +71,15 @@ export default function Navbar() {
           </select>
 
           <button
-            className="navbar-toggler finova-navbar-toggler"
+            className="navbar-toggler finova-navbar-toggler finova-icon-tooltip"
             type="button"
             data-bs-toggle="collapse"
             data-bs-target="#nav"
             aria-controls="nav"
             aria-expanded="false"
             aria-label={t("navbar.toggleNav")}
+            title={t("navbar.toggleNav")}
+            data-tooltip={t("navbar.toggleNav")}
           >
             <span className="navbar-toggler-icon" />
           </button>

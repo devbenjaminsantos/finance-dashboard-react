@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
+import PasswordToggleButton from "../components/PasswordToggleButton";
 import { useI18n } from "../i18n/LanguageProvider";
 import {
   consumePostLoginRedirect,
@@ -166,14 +167,11 @@ export default function Login() {
                   disabled={isSubmitting || isDemoSubmitting || isResendingVerification}
                   required
                 />
-                <button
-                  type="button"
-                  className="btn finova-btn-light finova-password-toggle"
-                  onClick={() => setIsPasswordVisible((current) => !current)}
+                <PasswordToggleButton
+                  isVisible={isPasswordVisible}
+                  onToggle={() => setIsPasswordVisible((current) => !current)}
                   disabled={isSubmitting || isDemoSubmitting || isResendingVerification}
-                >
-                  {isPasswordVisible ? t("common.hidePassword") : t("common.showPassword")}
-                </button>
+                />
               </div>
             </div>
 

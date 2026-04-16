@@ -213,6 +213,8 @@ export default function TransactionModal({
               type="button"
               className="btn-close"
               aria-label="Fechar"
+              title="Fechar"
+              data-tooltip="Fechar"
               onClick={onClose}
             />
           </div>

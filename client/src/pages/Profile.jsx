@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import PasswordToggleButton from "../components/PasswordToggleButton";
 import { useI18n } from "../i18n/LanguageProvider";
 import { getProfile, updateProfileRequest } from "../lib/api/auth";
 import { isPasswordStrong } from "../lib/auth/passwordPolicy";
@@ -14,6 +15,9 @@ export default function Profile() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCurrentPasswordVisible, setIsCurrentPasswordVisible] = useState(false);
+  const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
+  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -150,36 +154,57 @@ export default function Profile() {
 
             <div className="col-12 col-md-4">
               <label className="form-label text-dark fw-medium">{t("common.currentPassword")}</label>
-              <input
-                type="password"
-                className="form-control finova-input"
-                value={form.currentPassword}
-                onChange={(e) => updateField("currentPassword", e.target.value)}
-                disabled={isSubmitting}
-              />
+              <div className="input-group">
+                <input
+                  type={isCurrentPasswordVisible ? "text" : "password"}
+                  className="form-control finova-input"
+                  value={form.currentPassword}
+                  onChange={(e) => updateField("currentPassword", e.target.value)}
+                  disabled={isSubmitting}
+                />
+                <PasswordToggleButton
+                  isVisible={isCurrentPasswordVisible}
+                  onToggle={() => setIsCurrentPasswordVisible((current) => !current)}
+                  disabled={isSubmitting}
+                />
+              </div>
             </div>
 
             <div className="col-12 col-md-4">
               <label className="form-label text-dark fw-medium">{t("common.newPassword")}</label>
-              <input
-                type="password"
-                className="form-control finova-input"
-                value={form.newPassword}
-                onChange={(e) => updateField("newPassword", e.target.value)}
-                disabled={isSubmitting}
-              />
+              <div className="input-group">
+                <input
+                  type={isNewPasswordVisible ? "text" : "password"}
+                  className="form-control finova-input"
+                  value={form.newPassword}
+                  onChange={(e) => updateField("newPassword", e.target.value)}
+                  disabled={isSubmitting}
+                />
+                <PasswordToggleButton
+                  isVisible={isNewPasswordVisible}
+                  onToggle={() => setIsNewPasswordVisible((current) => !current)}
+                  disabled={isSubmitting}
+                />
+              </div>
               <div className="form-text">{t("passwordPolicy.message")}</div>
             </div>
 
             <div className="col-12 col-md-4">
               <label className="form-label text-dark fw-medium">{t("common.confirmPassword")}</label>
-              <input
-                type="password"
-                className="form-control finova-input"
-                value={form.confirmPassword}
-                onChange={(e) => updateField("confirmPassword", e.target.value)}
-                disabled={isSubmitting}
-              />
+              <div className="input-group">
+                <input
+                  type={isConfirmPasswordVisible ? "text" : "password"}
+                  className="form-control finova-input"
+                  value={form.confirmPassword}
+                  onChange={(e) => updateField("confirmPassword", e.target.value)}
+                  disabled={isSubmitting}
+                />
+                <PasswordToggleButton
+                  isVisible={isConfirmPasswordVisible}
+                  onToggle={() => setIsConfirmPasswordVisible((current) => !current)}
+                  disabled={isSubmitting}
+                />
+              </div>
             </div>
 
             {error ? (

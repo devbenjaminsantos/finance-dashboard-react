@@ -41,7 +41,7 @@ export default function Navbar() {
           Finova
         </NavLink>
 
-        <div className="d-flex align-items-center gap-2 order-lg-2 ms-auto">
+        <div className="d-flex align-items-center order-lg-2 ms-auto finova-navbar-actions">
           <button
             type="button"
             className="btn finova-theme-toggle"
@@ -68,7 +68,7 @@ export default function Navbar() {
         </div>
 
         <div className="collapse navbar-collapse order-lg-1" id="nav">
-          <div className="navbar-nav ms-auto align-items-lg-center">
+          <div className="navbar-nav ms-auto align-items-lg-center finova-navbar-links">
             {hasSession ? (
               <>
                 <NavLink className={linkClass} to="/">
@@ -99,12 +99,12 @@ export default function Navbar() {
                   Perfil
                 </NavLink>
 
-                <span className="text-white-50 small ms-lg-3 me-lg-3 mt-2 mt-lg-0">
+                <span className="text-white-50 small ms-lg-3 me-lg-3 mt-2 mt-lg-0 finova-navbar-user">
                   {user?.name}
                 </span>
 
                 <button
-                  className="btn finova-btn-light btn-sm mt-2 mt-lg-0"
+                  className="btn finova-btn-light btn-sm mt-2 mt-lg-0 finova-navbar-logout"
                   onClick={handleLogout}
                 >
                   Sair

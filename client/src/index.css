@@ -179,6 +179,27 @@ a {
   border-color: rgba(255, 255, 255, 0.28);
 }
 
+.finova-navbar-actions {
+  gap: 0.75rem;
+}
+
+.finova-navbar-links {
+  gap: 0.3rem;
+}
+
+.finova-navbar-user {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0.25rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.finova-navbar-logout {
+  margin-left: 0;
+}
+
 .navbar .nav-link {
   border-radius: 999px;
   transition: background 160ms ease, color 160ms ease;
@@ -195,6 +216,33 @@ a {
 
 .finova-navbar-toggler .navbar-toggler-icon {
   filter: invert(1);
+}
+
+@media (min-width: 992px) {
+  .finova-navbar-logout {
+    margin-left: 1.1rem;
+  }
+}
+
+@media (max-width: 991.98px) {
+  .finova-navbar-actions {
+    gap: 0.5rem;
+  }
+
+  .finova-navbar-links {
+    align-items: stretch !important;
+    gap: 0.45rem;
+    padding-top: 1rem;
+  }
+
+  .finova-navbar-user {
+    margin-top: 0.85rem;
+    justify-content: center;
+  }
+
+  .finova-navbar-logout {
+    margin-top: 0.25rem !important;
+  }
 }
 
 .finova-badge-income {
@@ -256,6 +304,81 @@ a {
 .finova-section-space {
   padding-top: 2rem;
   padding-bottom: 2rem;
+}
+
+.finova-page-stack {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.finova-page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  margin-bottom: 1.75rem;
+}
+
+.finova-page-header-copy {
+  flex: 1 1 360px;
+  max-width: 720px;
+}
+
+.finova-page-header-copy .finova-title {
+  margin-bottom: 0.35rem !important;
+}
+
+.finova-page-header-copy .finova-subtitle {
+  max-width: 62ch;
+}
+
+.finova-page-header-side {
+  flex: 0 1 240px;
+  width: min(100%, 240px);
+}
+
+.finova-page-header-side .form-label {
+  margin-bottom: 0.45rem;
+}
+
+.finova-page-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.finova-page-header-actions .btn {
+  min-width: 156px;
+}
+
+@media (max-width: 767.98px) {
+  .finova-section-space {
+    padding-top: 1.5rem;
+    padding-bottom: 1.75rem;
+  }
+
+  .finova-page-stack {
+    gap: 1.25rem;
+  }
+
+  .finova-page-header {
+    margin-bottom: 1.25rem;
+  }
+
+  .finova-page-header-side {
+    width: 100%;
+  }
+
+  .finova-page-header-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .finova-page-header-actions .btn {
+    flex: 1 1 180px;
+  }
 }
 
 .finova-auth-shell {
@@ -598,4 +721,22 @@ hr {
   gap: 0.65rem 1rem;
   color: var(--text-muted);
   font-size: 0.95rem;
+}
+
+.finova-segmented-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.finova-segmented-actions .btn {
+  min-width: 110px;
+}
+
+.finova-row-highlight {
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.finova-row-highlight td {
+  background: transparent !important;
 }

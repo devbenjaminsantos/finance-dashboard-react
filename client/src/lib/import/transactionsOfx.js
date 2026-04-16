@@ -1,8 +1,8 @@
 import {
-  normalizeImportCategory,
   normalizeImportDate,
   normalizeImportType,
   parseImportMoneyToCents,
+  resolveImportCategory,
 } from "./transactionImportUtils";
 
 const OFX_TYPE_ALIASES = {
@@ -80,7 +80,7 @@ export function parseTransactionsOfx(text) {
     const memo = extractTagValue(block, "MEMO");
     const description = memo || name || trnType || `Transacao OFX ${index + 1}`;
     const type = inferType(trnType, amountCentsSigned);
-    const category = normalizeImportCategory(type, memo || name, description);
+    const categoryResolution = resolveImportCategory(type, memo || name, description);
 
     if (
       !type ||
@@ -96,7 +96,9 @@ export function parseTransactionsOfx(text) {
       date,
       description,
       type,
-      category,
+      category: categoryResolution.category,
+      categoryConfidence: categoryResolution.confidence,
+      categorySource: categoryResolution.source,
       amountCents: Math.abs(amountCentsSigned),
       sourceReference: fitId || null,
       isRecurring: false,

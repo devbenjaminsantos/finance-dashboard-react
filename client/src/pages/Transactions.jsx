@@ -45,6 +45,8 @@ export default function Transactions() {
   const [mode, setMode] = useState("create");
   const [selected, setSelected] = useState(null);
   const [isMutating, setIsMutating] = useState(false);
+  const [importFeedback, setImportFeedback] = useState("");
+  const [highlightImportedSince, setHighlightImportedSince] = useState("");
 
   useEffect(() => {
     saveJSON(FILTERS_KEY, { q, typeFilter, categoryFilter, month, sortBy });
@@ -143,6 +145,7 @@ export default function Transactions() {
       return;
     }
 
+    setImportFeedback("");
     setIsImportOpen(true);
   }
 
@@ -172,14 +175,28 @@ export default function Transactions() {
     setIsMutating(true);
 
     try {
-      return await importTransactions(items);
+      const result = await importTransactions(items);
+      const importedCount = Number(result?.importedCount) || 0;
+      const importLabel = items.importFormat?.toUpperCase() || "CSV";
+      const importStartedAt = new Date().toISOString();
+
+      setImportFeedback(
+        importedCount > 0
+          ? `${importedCount} transacao${importedCount === 1 ? "" : "oes"} importada${
+              importedCount === 1 ? "" : "s"
+            } com sucesso via ${importLabel}.`
+          : `A revisao foi concluida, mas nenhuma transacao nova foi importada via ${importLabel}.`
+      );
+      setHighlightImportedSince(importedCount > 0 ? importStartedAt : "");
+
+      return result;
     } finally {
       setIsMutating(false);
     }
   }
 
   async function handleRemove(id) {
-    if (!window.confirm("Remover esta transação?")) {
+    if (!window.confirm("Remover esta transacao?")) {
       return;
     }
 
@@ -221,7 +238,7 @@ export default function Transactions() {
 
   function exportFilteredTransactionsCsv() {
     const rows = [
-      ["Data", "Descrição", "Categoria", "Tipo", "Valor", "Valor em centavos"],
+      ["Data", "Descricao", "Categoria", "Tipo", "Valor", "Valor em centavos"],
       ...getExportRows(),
     ];
 
@@ -234,26 +251,26 @@ export default function Transactions() {
 
     exportTransactionsToPdf({
       filename: `finova-transacoes-${monthLabel}.pdf`,
-      title: "Relatório de transações",
+      title: "Relatorio de transacoes",
       subtitle: month
-        ? `Período filtrado: ${month} | ${filtered.length} registro(s)`
-        : `Todos os períodos | ${filtered.length} registro(s)`,
-      columns: ["Data", "Descrição", "Categoria", "Tipo", "Valor", "Centavos"],
+        ? `Periodo filtrado: ${month} | ${filtered.length} registro(s)`
+        : `Todos os periodos | ${filtered.length} registro(s)`,
+      columns: ["Data", "Descricao", "Categoria", "Tipo", "Valor", "Centavos"],
       rows: getExportRows(),
     });
   }
 
   return (
     <section className="finova-section-space">
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 gap-3">
-        <div>
-          <h1 className="finova-title mb-1">Transações</h1>
+      <div className="finova-page-header">
+        <div className="finova-page-header-copy">
+          <h1 className="finova-title">Transacoes</h1>
           <p className="finova-subtitle mb-0">
             Gerencie receitas e despesas com controle total do seu fluxo financeiro.
           </p>
         </div>
 
-        <div className="finova-actions-row">
+        <div className="finova-page-header-actions">
           <button
             className="btn finova-btn-light px-4"
             onClick={openImport}
@@ -267,7 +284,7 @@ export default function Transactions() {
             onClick={openCreate}
             disabled={isMutating}
           >
-            Nova transação
+            Nova transacao
           </button>
         </div>
       </div>
@@ -302,7 +319,13 @@ export default function Transactions() {
         onReset={resetFilters}
       />
 
-      <div className="mt-4">
+      <div>
+        {importFeedback ? (
+          <div className="alert alert-success mb-4" role="status">
+            {importFeedback}
+          </div>
+        ) : null}
+
         <TransactionsTable
           transactions={filtered}
           totalTransactionsCount={transactions.length}
@@ -310,6 +333,7 @@ export default function Transactions() {
           onRemove={handleRemove}
           onExportCsv={exportFilteredTransactionsCsv}
           onExportPdf={exportFilteredTransactionsPdf}
+          highlightImportedSince={highlightImportedSince}
           isLoading={isLoading}
           isMutating={isMutating}
         />

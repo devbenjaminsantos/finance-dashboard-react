@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import Transactions from "./Transactions";
 
 const mockDownloadCsv = vi.fn();
@@ -28,25 +28,53 @@ vi.mock("../lib/storage/jsonStorage", () => ({
   saveJSON: vi.fn(),
 }));
 
+vi.mock("../features/transactions/components/TransactionImportModal", () => ({
+  default: ({ isOpen, onImport }) =>
+    isOpen ? (
+      <button
+        type="button"
+        onClick={() =>
+          onImport({
+            transactions: [
+              {
+                description: "Importada",
+                category: "Outros",
+                amountCents: 1000,
+                date: "2026-04-20",
+                type: "expense",
+              },
+            ],
+            importFormat: "csv",
+          })
+        }
+      >
+        Confirmar importacao mock
+      </button>
+    ) : null,
+}));
+
 import { useTransactions } from "../features/transactions/useTransactions";
 
 const transactionsFixture = [
   {
     id: 1,
     description: "Mercado",
-    category: "Alimentação",
+    category: "Alimentacao",
     amountCents: 15000,
     date: "2026-04-11",
     type: "expense",
+    source: "manual",
     isRecurring: false,
   },
   {
     id: 2,
-    description: "Salário",
-    category: "Salário",
+    description: "Salario",
+    category: "Salario",
     amountCents: 500000,
     date: "2026-04-05",
     type: "income",
+    source: "import_csv",
+    importedAtUtc: "2026-04-16T10:30:00Z",
     isRecurring: true,
   },
 ];
@@ -57,6 +85,7 @@ describe("Transactions page", () => {
     useTransactions.mockReturnValue({
       transactions: transactionsFixture,
       addTransaction: vi.fn(),
+      importTransactions: vi.fn().mockResolvedValue({ importedCount: 1 }),
       removeTransaction: vi.fn(),
       updateTransaction: vi.fn(),
       isLoading: false,
@@ -71,7 +100,7 @@ describe("Transactions page", () => {
     });
 
     expect(screen.getByText("Mercado")).toBeInTheDocument();
-    expect(screen.queryByRole("cell", { name: "Salário" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("cell", { name: "Salario" })).not.toBeInTheDocument();
   });
 
   it("exports the currently filtered rows to CSV", () => {
@@ -87,6 +116,22 @@ describe("Transactions page", () => {
 
     expect(filename).toContain("finova-transacoes");
     expect(rows).toHaveLength(2);
-    expect(rows[1][1]).toBe("Salário");
+    expect(rows[1][1]).toBe("Salario");
+  });
+
+  it("shows the transaction origin badges", () => {
+    render(<Transactions />);
+
+    expect(screen.getByText("Manual")).toBeInTheDocument();
+    expect(screen.getByText("Importada via CSV")).toBeInTheDocument();
+  });
+
+  it("shows import feedback after confirming an import", async () => {
+    render(<Transactions />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Importar arquivo" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirmar importacao mock" }));
+
+    expect(await screen.findByText("1 transacao importada com sucesso via CSV.")).toBeInTheDocument();
   });
 });

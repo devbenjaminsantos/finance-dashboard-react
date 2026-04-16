@@ -568,15 +568,15 @@ export default function Home() {
 
   return (
     <section className="finova-section-space">
-      <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end mb-4 gap-3">
-        <div>
-          <h1 className="finova-title mb-1">Home</h1>
+      <div className="finova-page-header">
+        <div className="finova-page-header-copy">
+          <h1 className="finova-title">Home</h1>
           <p className="finova-subtitle mb-0">
             Monte sua entrada principal com os blocos que mais ajudam no seu dia a dia.
           </p>
         </div>
 
-        <div style={{ minWidth: 220 }}>
+        <div className="finova-page-header-side">
           <label className="form-label text-dark fw-medium">Recorte rapido</label>
           <select
             className="form-select finova-select"

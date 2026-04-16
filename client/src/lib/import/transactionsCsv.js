@@ -1,9 +1,9 @@
 import {
-  normalizeImportCategory,
   normalizeImportDate,
   normalizeImportKey,
   normalizeImportType,
   parseImportMoneyToCents,
+  resolveImportCategory,
 } from "./transactionImportUtils";
 
 const HEADER_ALIASES = {
@@ -168,7 +168,7 @@ export function parseTransactionsCsv(text) {
     const description = String(getValue(row, headers, "description")).trim();
     const { amountCents, inferredType } = parseAmountData(row, headers);
     const type = explicitType || inferredType;
-    const category = normalizeImportCategory(
+    const categoryResolution = resolveImportCategory(
       type,
       getValue(row, headers, "category"),
       description
@@ -182,7 +182,9 @@ export function parseTransactionsCsv(text) {
       date,
       description,
       type,
-      category,
+      category: categoryResolution.category,
+      categoryConfidence: categoryResolution.confidence,
+      categorySource: categoryResolution.source,
       amountCents,
       isRecurring: false,
       recurrenceEndDate: null,

@@ -54,16 +54,16 @@ export default function AuditLogs() {
 
   return (
     <section className="finova-section-space">
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 gap-3">
-        <div>
-          <h1 className="finova-title mb-1">Historico da conta</h1>
+      <div className="finova-page-header">
+        <div className="finova-page-header-copy">
+          <h1 className="finova-title">Historico da conta</h1>
           <p className="finova-subtitle mb-0">
             Acompanhe as acoes mais relevantes da sua conta, como acessos, mudancas de perfil,
             transacoes e metas.
           </p>
         </div>
 
-        <div style={{ minWidth: 180 }}>
+        <div className="finova-page-header-side">
           <label className="form-label text-dark fw-medium">Exibir</label>
           <select
             className="form-select finova-select"

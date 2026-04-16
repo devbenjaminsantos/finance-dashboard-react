@@ -46,17 +46,17 @@ export default function Comparisons() {
 
   return (
     <section className="finova-section-space">
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 gap-3">
-        <div>
-          <h1 className="finova-title mb-1">Comparativos</h1>
+      <div className="finova-page-header">
+        <div className="finova-page-header-copy">
+          <h1 className="finova-title">Comparativos</h1>
           <p className="finova-subtitle mb-0">
-            Compare janelas equivalentes para identificar mudanças de ritmo, pressão no saldo e
+            Compare janelas equivalentes para identificar mudancas de ritmo, pressao no saldo e
             categorias que mais alteraram o resultado.
           </p>
         </div>
 
-        <div style={{ minWidth: 180 }}>
-          <label className="form-label text-dark fw-medium">Janela de comparação</label>
+        <div className="finova-page-header-side">
+          <label className="form-label text-dark fw-medium">Janela de comparacao</label>
           <select
             className="form-select finova-select"
             value={comparisonRange}
@@ -78,16 +78,16 @@ export default function Comparisons() {
               <div className="finova-subtitle small mb-1">Leitura comparativa</div>
               <div className="finova-title h6 mb-2">O que mudou de uma janela para outra</div>
               <p className="finova-subtitle mb-0">
-                Use este bloco para detectar rapidamente oscilações em receitas, despesas e saldo.
+                Use este bloco para detectar rapidamente oscilacoes em receitas, despesas e saldo.
               </p>
             </div>
           </div>
           <div className="col-12 col-lg-4">
             <div className="finova-card-soft p-3 h-100">
               <div className="finova-subtitle small mb-1">Categoria em destaque</div>
-              <div className="finova-title h6 mb-2">Onde o período pesou mais</div>
+              <div className="finova-title h6 mb-2">Onde o periodo pesou mais</div>
               <p className="finova-subtitle mb-0">
-                O comparativo também aponta qual categoria puxou o resultado para cima ou para
+                O comparativo tambem aponta qual categoria puxou o resultado para cima ou para
                 baixo.
               </p>
             </div>
@@ -97,7 +97,7 @@ export default function Comparisons() {
               <div className="finova-subtitle small mb-1">Uso recomendado</div>
               <div className="finova-title h6 mb-2">Cruze com insights e metas</div>
               <p className="finova-subtitle mb-0">
-                Depois de encontrar uma mudança forte, vale abrir os insights ou revisar as metas
+                Depois de encontrar uma mudanca forte, vale abrir os insights ou revisar as metas
                 da categoria envolvida.
               </p>
             </div>
@@ -111,9 +111,9 @@ export default function Comparisons() {
         ) : (
           <>
             <div className="mb-3">
-              <h2 className="finova-title h5 mb-1">Resumo da comparação</h2>
+              <h2 className="finova-title h5 mb-1">Resumo da comparacao</h2>
               <p className="finova-subtitle mb-0">
-                A janela atual é sempre comparada com a imediatamente anterior de mesmo tamanho.
+                A janela atual e sempre comparada com a imediatamente anterior de mesmo tamanho.
               </p>
             </div>
 

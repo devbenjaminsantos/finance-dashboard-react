@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeImportCategory } from "./transactionImportUtils";
+import { normalizeImportCategory, resolveImportCategory } from "./transactionImportUtils";
 
 describe("transaction import category inference", () => {
   it("maps common expense merchants to Finova categories", () => {
@@ -34,5 +34,23 @@ describe("transaction import category inference", () => {
     expect(
       normalizeImportCategory("expense", "Moradia", "Conta de energia")
     ).toBe("Moradia");
+  });
+
+  it("marks fallback and weak inferences as low confidence", () => {
+    expect(resolveImportCategory("expense", "", "Compra generica sem pistas")).toMatchObject({
+      category: "Outros",
+      confidence: "low",
+    });
+
+    expect(resolveImportCategory("expense", "", "pix")).toMatchObject({
+      category: "Outros",
+      confidence: "low",
+    });
+
+    expect(resolveImportCategory("expense", "", "Uber trip centro")).toMatchObject({
+      category: "Transporte",
+      confidence: "high",
+      source: "inferred",
+    });
   });
 });

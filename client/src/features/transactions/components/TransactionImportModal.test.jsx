@@ -119,4 +119,142 @@ describe("TransactionImportModal", () => {
     expect(checkboxes[1]).not.toBeChecked();
     expect(checkboxes[2]).toBeChecked();
   });
+
+  it("applies a category in bulk to selected rows of the same type", async () => {
+    const file = new File(
+      [
+        `Data;Descricao;Valor
+14/04/2026;Mercado;-120,00
+15/04/2026;Farmacia;-80,00`,
+      ],
+      "extrato.csv",
+      { type: "text/csv" }
+    );
+
+    render(
+      <TransactionImportModal
+        isOpen={true}
+        onClose={vi.fn()}
+        onImport={vi.fn()}
+        existingTransactions={[]}
+      />
+    );
+
+    const input = document.querySelector('input[type="file"]');
+    expect(input).not.toBeNull();
+    await fireEvent.change(input, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(screen.getByText("Mercado")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText("Aplicar categoria"), {
+      target: { value: "Saúde" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Aplicar cat." }));
+
+    const categorySelects = screen.getAllByDisplayValue("Saúde");
+    expect(categorySelects.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("removes all selected rows at once", async () => {
+    const file = new File(
+      [
+        `Data;Descricao;Valor
+14/04/2026;Mercado;-120,00
+15/04/2026;Farmacia;-80,00`,
+      ],
+      "extrato.csv",
+      { type: "text/csv" }
+    );
+
+    render(
+      <TransactionImportModal
+        isOpen={true}
+        onClose={vi.fn()}
+        onImport={vi.fn()}
+        existingTransactions={[]}
+      />
+    );
+
+    const input = document.querySelector('input[type="file"]');
+    expect(input).not.toBeNull();
+    await fireEvent.change(input, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(screen.getByText("Mercado")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Remover selecionadas" }));
+
+    await waitFor(() => {
+      expect(screen.queryByText("Mercado")).not.toBeInTheDocument();
+    });
+
+    expect(screen.queryByText("Farmacia")).not.toBeInTheDocument();
+  });
+
+  it("highlights low confidence categories for review", async () => {
+    const file = new File(
+      [
+        `Data;Descricao;Valor
+14/04/2026;Compra generica sem pistas;-120,00`,
+      ],
+      "extrato.csv",
+      { type: "text/csv" }
+    );
+
+    render(
+      <TransactionImportModal
+        isOpen={true}
+        onClose={vi.fn()}
+        onImport={vi.fn()}
+        existingTransactions={[]}
+      />
+    );
+
+    const input = document.querySelector('input[type="file"]');
+    expect(input).not.toBeNull();
+    await fireEvent.change(input, { target: { files: [file] } });
+
+    expect(await screen.findByText("Revisar categoria")).toBeInTheDocument();
+    expect(await screen.findByText(/ainda pedem revisão manual/i)).toBeInTheDocument();
+  });
+
+  it("replaces the description in bulk for selected rows", async () => {
+    const file = new File(
+      [
+        `Data;Descricao;Valor
+14/04/2026;Mercado;-120,00
+15/04/2026;Farmacia;-80,00`,
+      ],
+      "extrato.csv",
+      { type: "text/csv" }
+    );
+
+    render(
+      <TransactionImportModal
+        isOpen={true}
+        onClose={vi.fn()}
+        onImport={vi.fn()}
+        existingTransactions={[]}
+      />
+    );
+
+    const input = document.querySelector('input[type="file"]');
+    expect(input).not.toBeNull();
+    await fireEvent.change(input, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(screen.getByText("Mercado")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText("Substituir descrição"), {
+      target: { value: "Compra cartão final 1234" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Substituir" }));
+
+    const replaced = screen.getAllByText("Compra cartão final 1234");
+    expect(replaced.length).toBeGreaterThanOrEqual(2);
+  });
 });

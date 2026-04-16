@@ -247,11 +247,12 @@ export default function FinancialAccounts() {
 
   return (
     <section className="finova-section-space">
-      <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3 mb-4">
-        <div>
-          <h1 className="finova-title mb-1">Contas financeiras</h1>
+      <div className="finova-page-header">
+        <div className="finova-page-header-copy">
+          <h1 className="finova-title">Contas financeiras</h1>
           <p className="finova-subtitle mb-0">
-            Centralize contas manuais e contas conectadas. Nesta etapa, o Pluggy ja entra como integracao bancaria real do produto.
+            Centralize contas manuais e contas conectadas. Nesta etapa, o Pluggy ja entra como
+            integracao bancaria real do produto.
           </p>
         </div>
       </div>

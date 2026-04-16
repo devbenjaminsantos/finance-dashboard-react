@@ -1,10 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { getTransactionCategories } from "../../../lib/constants/transactionCategories";
 import { formatBRLFromCents } from "../../../lib/format/currency";
 import {
   buildDefaultImportSelection,
   detectImportDuplicates,
 } from "../../../lib/import/transactionDuplicates";
 import { parseTransactionsImport } from "../../../lib/import/transactionsImport";
+
+const PREVIEW_FILTERS = [
+  { key: "all", label: "Todas" },
+  { key: "new", label: "Novas" },
+  { key: "duplicates", label: "Duplicatas" },
+  { key: "selected", label: "Selecionadas" },
+];
 
 export default function TransactionImportModal({
   isOpen,
@@ -20,6 +28,12 @@ export default function TransactionImportModal({
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [previewFilter, setPreviewFilter] = useState("all");
+  const [previewSearch, setPreviewSearch] = useState("");
+  const [bulkType, setBulkType] = useState("");
+  const [bulkCategory, setBulkCategory] = useState("");
+  const [bulkDescriptionPrefix, setBulkDescriptionPrefix] = useState("");
+  const [bulkDescriptionReplace, setBulkDescriptionReplace] = useState("");
 
   useEffect(() => {
     if (!isOpen) {
@@ -33,6 +47,12 @@ export default function TransactionImportModal({
     setError("");
     setFeedback("");
     setIsSubmitting(false);
+    setPreviewFilter("all");
+    setPreviewSearch("");
+    setBulkType("");
+    setBulkCategory("");
+    setBulkDescriptionPrefix("");
+    setBulkDescriptionReplace("");
   }, [isOpen]);
 
   useEffect(() => {
@@ -60,12 +80,39 @@ export default function TransactionImportModal({
     () => detectImportDuplicates(preview, existingTransactions),
     [preview, existingTransactions]
   );
+  const filteredPreview = useMemo(() => {
+    const normalizedSearch = previewSearch.trim().toLowerCase();
+
+    return reconciledPreview.filter((transaction, index) => {
+      if (previewFilter === "new" && transaction.isPossibleDuplicate) {
+        return false;
+      }
+
+      if (previewFilter === "duplicates" && !transaction.isPossibleDuplicate) {
+        return false;
+      }
+
+      if (previewFilter === "selected" && !selectedIndexes.has(index)) {
+        return false;
+      }
+
+      if (!normalizedSearch) {
+        return true;
+      }
+
+      return [transaction.description, transaction.category, transaction.date]
+        .join(" ")
+        .toLowerCase()
+        .includes(normalizedSearch);
+    });
+  }, [previewFilter, previewSearch, reconciledPreview, selectedIndexes]);
   const previewRows = useMemo(
     () =>
-      reconciledPreview
-        .slice(0, 8)
-        .map((transaction, index) => ({ transaction, originalIndex: index })),
-    [reconciledPreview]
+      filteredPreview.map((transaction) => ({
+        transaction,
+        originalIndex: reconciledPreview.indexOf(transaction),
+      })),
+    [filteredPreview, reconciledPreview]
   );
   const selectedTransactions = useMemo(
     () => reconciledPreview.filter((_, index) => selectedIndexes.has(index)),
@@ -85,6 +132,10 @@ export default function TransactionImportModal({
           accumulator.duplicateCount += 1;
         }
 
+        if (transaction.categoryConfidence === "low") {
+          accumulator.lowConfidenceCount += 1;
+        }
+
         if (transaction.duplicateSource === "existing") {
           accumulator.existingDuplicateCount += 1;
         }
@@ -100,6 +151,11 @@ export default function TransactionImportModal({
 
         if (selectedIndexes.has(index)) {
           accumulator.selectedCount += 1;
+          accumulator.selectedAmount += Number(transaction.amountCents) || 0;
+          accumulator.selectedTypes.add(transaction.type);
+          if (transaction.categoryConfidence === "low") {
+            accumulator.lowConfidenceSelectedCount += 1;
+          }
         }
 
         accumulator.categories.add(transaction.category);
@@ -112,10 +168,27 @@ export default function TransactionImportModal({
         existingDuplicateCount: 0,
         importDuplicateCount: 0,
         selectedCount: 0,
+        selectedAmount: 0,
+        selectedTypes: new Set(),
+        lowConfidenceCount: 0,
+        lowConfidenceSelectedCount: 0,
         categories: new Set(),
       }
     );
   }, [reconciledPreview, selectedIndexes]);
+
+  const selectedType = useMemo(() => {
+    if (summary.selectedTypes.size !== 1) {
+      return "";
+    }
+
+    return Array.from(summary.selectedTypes)[0] || "";
+  }, [summary.selectedTypes]);
+
+  const bulkCategoryOptions = useMemo(
+    () => (selectedType ? getTransactionCategories(selectedType) : []),
+    [selectedType]
+  );
 
   async function handleFileChange(event) {
     const file = event.target.files?.[0];
@@ -178,6 +251,17 @@ export default function TransactionImportModal({
     setSelectedIndexes(new Set(reconciledPreview.map((_, index) => index)));
   }
 
+  function selectOnlyNewRows() {
+    setSelectedIndexes(
+      new Set(
+        reconciledPreview
+          .map((transaction, index) => ({ transaction, index }))
+          .filter(({ transaction }) => !transaction.isPossibleDuplicate)
+          .map(({ index }) => index)
+      )
+    );
+  }
+
   function removePreviewRow(indexToRemove) {
     setPreview((current) => current.filter((_, index) => index !== indexToRemove));
     setSelectedIndexes((current) => {
@@ -193,6 +277,139 @@ export default function TransactionImportModal({
 
       return next;
     });
+  }
+
+  function updatePreviewRow(indexToUpdate, updater) {
+    setPreview((current) =>
+      current.map((transaction, index) => {
+        if (index !== indexToUpdate) {
+          return transaction;
+        }
+
+        return typeof updater === "function"
+          ? updater(transaction)
+          : { ...transaction, ...updater };
+      })
+    );
+  }
+
+  function updateTransactionType(indexToUpdate, nextType) {
+    updatePreviewRow(indexToUpdate, (transaction) => {
+      const availableCategories = getTransactionCategories(nextType);
+
+      return {
+        ...transaction,
+        type: nextType,
+        category: availableCategories.includes(transaction.category)
+          ? transaction.category
+          : availableCategories[availableCategories.length - 1],
+      };
+    });
+  }
+
+  function updateTransactionCategory(indexToUpdate, nextCategory) {
+    updatePreviewRow(indexToUpdate, { category: nextCategory });
+  }
+
+  function applyBulkType() {
+    if (!bulkType || summary.selectedCount === 0) {
+      return;
+    }
+
+    setPreview((current) =>
+      current.map((transaction, index) => {
+        if (!selectedIndexes.has(index)) {
+          return transaction;
+        }
+
+        const availableCategories = getTransactionCategories(bulkType);
+        return {
+          ...transaction,
+          type: bulkType,
+          category: availableCategories.includes(transaction.category)
+            ? transaction.category
+            : availableCategories[availableCategories.length - 1],
+        };
+      })
+    );
+
+    setBulkCategory("");
+  }
+
+  function applyBulkCategory() {
+    if (!bulkCategory || summary.selectedCount === 0 || !selectedType) {
+      return;
+    }
+
+    setPreview((current) =>
+      current.map((transaction, index) =>
+        selectedIndexes.has(index)
+          ? {
+              ...transaction,
+              category: bulkCategory,
+              categoryConfidence: "high",
+              categorySource: "manual_review",
+            }
+          : transaction
+      )
+    );
+  }
+
+  function applyBulkDescriptionPrefix() {
+    const normalizedPrefix = bulkDescriptionPrefix.trim();
+
+    if (!normalizedPrefix || summary.selectedCount === 0) {
+      return;
+    }
+
+    setPreview((current) =>
+      current.map((transaction, index) => {
+        if (!selectedIndexes.has(index)) {
+          return transaction;
+        }
+
+        if (
+          transaction.description
+            .toLowerCase()
+            .startsWith(`${normalizedPrefix.toLowerCase()} `)
+        ) {
+          return transaction;
+        }
+
+        return {
+          ...transaction,
+          description: `${normalizedPrefix} ${transaction.description}`.trim(),
+        };
+      })
+    );
+  }
+
+  function applyBulkDescriptionReplace() {
+    const normalizedDescription = bulkDescriptionReplace.trim();
+
+    if (!normalizedDescription || summary.selectedCount === 0) {
+      return;
+    }
+
+    setPreview((current) =>
+      current.map((transaction, index) =>
+        selectedIndexes.has(index)
+          ? {
+              ...transaction,
+              description: normalizedDescription,
+            }
+          : transaction
+      )
+    );
+  }
+
+  function removeSelectedRows() {
+    if (summary.selectedCount === 0) {
+      return;
+    }
+
+    setPreview((current) => current.filter((_, index) => !selectedIndexes.has(index)));
+    setSelectedIndexes(new Set());
   }
 
   async function handleImport() {
@@ -264,12 +481,7 @@ export default function TransactionImportModal({
               </p>
             </div>
 
-            <button
-              type="button"
-              className="btn-close"
-              aria-label="Fechar"
-              onClick={onClose}
-            />
+            <button type="button" className="btn-close" aria-label="Fechar" onClick={onClose} />
           </div>
 
           <div className="modal-body px-4 pb-4 pt-3">
@@ -278,8 +490,8 @@ export default function TransactionImportModal({
                 <div>
                   <div className="finova-title h6 mb-1">Arquivo CSV ou OFX</div>
                   <p className="finova-subtitle mb-0">
-                    O Finova tenta reconhecer cabeçalhos bancários, detectar possíveis duplicatas
-                    e deixar a decisão final de revisão com você.
+                    O Finova reconhece cabeçalhos bancários, sugere possíveis duplicatas e agora
+                    também permite filtrar e editar em lote antes da confirmação.
                   </p>
                 </div>
 
@@ -311,14 +523,26 @@ export default function TransactionImportModal({
                   <div>
                     <h3 className="finova-title h5 mb-1">Prévia da importação</h3>
                     <p className="finova-subtitle mb-0">
-                      Mostrando {previewRows.length} de {reconciledPreview.length} linhas. As
-                      sugestões agora diferenciam o que já existe no histórico do que veio repetido
-                      dentro do próprio arquivo.
+                      Revise, filtre e ajuste em lote antes de confirmar. As sugestões diferenciam
+                      o que já existe no histórico do que veio repetido no próprio arquivo.
                     </p>
+                    {summary.lowConfidenceCount > 0 ? (
+                      <div className="small text-muted mt-2">
+                        {summary.lowConfidenceCount} linha
+                        {summary.lowConfidenceCount === 1 ? "" : "s"} ainda pedem revisão manual
+                        de categoria.
+                      </div>
+                    ) : null}
                   </div>
-                  <span className="finova-badge-primary">
-                    {summary.selectedCount} selecionadas
-                  </span>
+
+                  <div className="d-flex flex-column align-items-end gap-2">
+                    <span className="finova-badge-primary">
+                      {summary.selectedCount} selecionadas
+                    </span>
+                    <span className="finova-badge-neutral">
+                      Total selecionado: {formatBRLFromCents(summary.selectedAmount)}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="row g-3 mb-3">
@@ -352,6 +576,14 @@ export default function TransactionImportModal({
                   <button
                     type="button"
                     className="btn finova-btn-light"
+                    onClick={selectOnlyNewRows}
+                    disabled={isSubmitting || reconciledPreview.length === 0}
+                  >
+                    Selecionar apenas novas
+                  </button>
+                  <button
+                    type="button"
+                    className="btn finova-btn-light"
                     onClick={deselectSuggestedDuplicates}
                     disabled={isSubmitting || summary.duplicateCount === 0}
                   >
@@ -365,6 +597,221 @@ export default function TransactionImportModal({
                   >
                     Selecionar todas
                   </button>
+                  <button
+                    type="button"
+                    className="btn finova-btn-light"
+                    onClick={removeSelectedRows}
+                    disabled={isSubmitting || summary.selectedCount === 0}
+                  >
+                    Remover selecionadas
+                  </button>
+                </div>
+
+                <div className="finova-card-soft p-3 mb-3">
+                  <div className="row g-3 align-items-end">
+                    <div className="col-12 col-xl-4">
+                      <label
+                        className="form-label text-dark fw-medium"
+                        htmlFor="import-preview-search"
+                      >
+                        Buscar na prévia
+                      </label>
+                      <input
+                        id="import-preview-search"
+                        type="text"
+                        className="form-control finova-input"
+                        placeholder="Descrição, categoria ou data"
+                        value={previewSearch}
+                        onChange={(event) => setPreviewSearch(event.target.value)}
+                        disabled={isSubmitting}
+                      />
+                    </div>
+
+                    <div className="col-12 col-xl-8">
+                      <label className="form-label text-dark fw-medium">Filtrar linhas</label>
+                      <div className="finova-segmented-actions">
+                        {PREVIEW_FILTERS.map((filter) => (
+                          <button
+                            key={filter.key}
+                            type="button"
+                            className={
+                              previewFilter === filter.key
+                                ? "btn finova-btn-primary"
+                                : "btn finova-btn-light"
+                            }
+                            onClick={() => setPreviewFilter(filter.key)}
+                            disabled={isSubmitting}
+                          >
+                            {filter.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="finova-card-soft p-3 mb-3">
+                  <div className="d-flex flex-column gap-3">
+                    <div>
+                      <div className="finova-title h6 mb-1">Edição em lote</div>
+                      <p className="finova-subtitle mb-0">
+                        Ajuste o tipo ou a categoria das linhas selecionadas sem editar uma por
+                        uma.
+                      </p>
+                      {summary.lowConfidenceSelectedCount > 0 ? (
+                        <div className="small text-muted mt-2">
+                          {summary.lowConfidenceSelectedCount} linha
+                          {summary.lowConfidenceSelectedCount === 1 ? "" : "s"} selecionada
+                          {summary.lowConfidenceSelectedCount === 1 ? "" : "s"} com categoria de
+                          baixa confiança.
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div className="row g-3 align-items-end">
+                      <div className="col-12 col-lg-6">
+                        <label
+                          className="form-label text-dark fw-medium"
+                          htmlFor="bulk-import-description-prefix"
+                        >
+                          Prefixar descrição
+                        </label>
+                        <input
+                          id="bulk-import-description-prefix"
+                          type="text"
+                          className="form-control finova-input"
+                          placeholder="Ex.: Cartao, Reembolso, Ajustado"
+                          value={bulkDescriptionPrefix}
+                          onChange={(event) => setBulkDescriptionPrefix(event.target.value)}
+                          disabled={isSubmitting}
+                        />
+                      </div>
+
+                      <div className="col-12 col-lg-2">
+                        <button
+                          type="button"
+                          className="btn finova-btn-light w-100"
+                          onClick={applyBulkDescriptionPrefix}
+                          disabled={
+                            isSubmitting ||
+                            !bulkDescriptionPrefix.trim() ||
+                            summary.selectedCount === 0
+                          }
+                        >
+                          Aplicar texto
+                        </button>
+                      </div>
+
+                      <div className="col-12 col-lg-6">
+                        <label
+                          className="form-label text-dark fw-medium"
+                          htmlFor="bulk-import-description-replace"
+                        >
+                          Substituir descrição
+                        </label>
+                        <input
+                          id="bulk-import-description-replace"
+                          type="text"
+                          className="form-control finova-input"
+                          placeholder="Ex.: Compra cartão final 1234"
+                          value={bulkDescriptionReplace}
+                          onChange={(event) => setBulkDescriptionReplace(event.target.value)}
+                          disabled={isSubmitting}
+                        />
+                      </div>
+
+                      <div className="col-12 col-lg-2">
+                        <button
+                          type="button"
+                          className="btn finova-btn-light w-100"
+                          onClick={applyBulkDescriptionReplace}
+                          disabled={
+                            isSubmitting ||
+                            !bulkDescriptionReplace.trim() ||
+                            summary.selectedCount === 0
+                          }
+                        >
+                          Substituir
+                        </button>
+                      </div>
+
+                      <div className="col-12 col-lg-4">
+                        <label
+                          className="form-label text-dark fw-medium"
+                          htmlFor="bulk-import-type"
+                        >
+                          Aplicar tipo
+                        </label>
+                        <select
+                          id="bulk-import-type"
+                          className="form-select finova-select"
+                          value={bulkType}
+                          onChange={(event) => setBulkType(event.target.value)}
+                          disabled={isSubmitting}
+                        >
+                          <option value="">Selecione</option>
+                          <option value="expense">Despesa</option>
+                          <option value="income">Receita</option>
+                        </select>
+                      </div>
+
+                      <div className="col-12 col-lg-2">
+                        <button
+                          type="button"
+                          className="btn finova-btn-light w-100"
+                          onClick={applyBulkType}
+                          disabled={isSubmitting || !bulkType || summary.selectedCount === 0}
+                        >
+                          Aplicar tipo
+                        </button>
+                      </div>
+
+                      <div className="col-12 col-lg-4">
+                        <label
+                          className="form-label text-dark fw-medium"
+                          htmlFor="bulk-import-category"
+                        >
+                          Aplicar categoria
+                        </label>
+                        <select
+                          id="bulk-import-category"
+                          className="form-select finova-select"
+                          value={bulkCategory}
+                          onChange={(event) => setBulkCategory(event.target.value)}
+                          disabled={
+                            isSubmitting || summary.selectedCount === 0 || !selectedType
+                          }
+                        >
+                          <option value="">
+                            {selectedType
+                              ? "Selecione"
+                              : "Selecione linhas do mesmo tipo"}
+                          </option>
+                          {bulkCategoryOptions.map((category) => (
+                            <option key={category} value={category}>
+                              {category}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="col-12 col-lg-2">
+                        <button
+                          type="button"
+                          className="btn finova-btn-light w-100"
+                          onClick={applyBulkCategory}
+                          disabled={
+                            isSubmitting ||
+                            !bulkCategory ||
+                            summary.selectedCount === 0 ||
+                            !selectedType
+                          }
+                        >
+                          Aplicar cat.
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="table-responsive">
@@ -386,9 +833,7 @@ export default function TransactionImportModal({
                         const isSelected = selectedIndexes.has(originalIndex);
 
                         return (
-                          <tr
-                            key={`${transaction.date}-${transaction.description}-${originalIndex}`}
-                          >
+                          <tr key={`${transaction.date}-${transaction.description}-${originalIndex}`}>
                             <td>
                               <input
                                 type="checkbox"
@@ -401,12 +846,46 @@ export default function TransactionImportModal({
                             <td>{transaction.date}</td>
                             <td>
                               <div>{transaction.description}</div>
+                              <div className="mt-1 d-flex flex-wrap gap-2">
+                                {transaction.categoryConfidence === "low" ? (
+                                  <span className="finova-badge-warning">
+                                    Revisar categoria
+                                  </span>
+                                ) : null}
+                              </div>
                               {transaction.duplicateReason ? (
                                 <div className="small text-muted">{transaction.duplicateReason}</div>
                               ) : null}
                             </td>
-                            <td>{transaction.category}</td>
-                            <td>{transaction.type === "income" ? "Receita" : "Despesa"}</td>
+                            <td>
+                              <select
+                                className="form-select form-select-sm finova-select"
+                                value={transaction.category}
+                                onChange={(event) =>
+                                  updateTransactionCategory(originalIndex, event.target.value)
+                                }
+                                disabled={isSubmitting}
+                              >
+                                {getTransactionCategories(transaction.type).map((category) => (
+                                  <option key={category} value={category}>
+                                    {category}
+                                  </option>
+                                ))}
+                              </select>
+                            </td>
+                            <td>
+                              <select
+                                className="form-select form-select-sm finova-select"
+                                value={transaction.type}
+                                onChange={(event) =>
+                                  updateTransactionType(originalIndex, event.target.value)
+                                }
+                                disabled={isSubmitting}
+                              >
+                                <option value="expense">Despesa</option>
+                                <option value="income">Receita</option>
+                              </select>
+                            </td>
                             <td>{renderDuplicateStatus(transaction)}</td>
                             <td className="text-end fw-semibold">
                               {formatBRLFromCents(transaction.amountCents)}
@@ -427,6 +906,13 @@ export default function TransactionImportModal({
                     </tbody>
                   </table>
                 </div>
+
+                {previewRows.length === 0 ? (
+                  <div className="finova-page-note mt-3">
+                    Nenhuma linha corresponde ao filtro atual. Ajuste a busca, troque o recorte ou
+                    reative outras linhas selecionadas.
+                  </div>
+                ) : null}
               </>
             ) : (
               <div className="finova-card-soft p-4">

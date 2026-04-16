@@ -39,15 +39,15 @@ export default function Dashboard() {
 
   return (
     <section className="finova-section-space">
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 gap-3">
-        <div>
-          <h1 className="finova-title mb-1">Graficos</h1>
+      <div className="finova-page-header">
+        <div className="finova-page-header-copy">
+          <h1 className="finova-title">Graficos</h1>
           <p className="finova-subtitle mb-0">
             Sua visao geral financeira com foco em resumo e graficos do periodo selecionado.
           </p>
         </div>
 
-        <div style={{ minWidth: 220 }}>
+        <div className="finova-page-header-side">
           <label className="form-label text-dark fw-medium">Periodo</label>
           <select
             className="form-select finova-select"

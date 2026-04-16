@@ -1,5 +1,19 @@
 import { formatBRLFromCents } from "../../../lib/format/currency";
-import { formatBRDate } from "../../../lib/format/date";
+import { formatBRDate, formatDateTimeBR } from "../../../lib/format/date";
+
+function getTransactionOriginMeta(transaction) {
+  switch (transaction.source) {
+    case "import_ofx":
+      return { label: "Importada via OFX", className: "finova-badge-primary" };
+    case "import_csv":
+      return { label: "Importada via CSV", className: "finova-badge-primary" };
+    case "bank_sync":
+      return { label: "Sincronizada", className: "finova-badge-income" };
+    case "manual":
+    default:
+      return { label: "Manual", className: "finova-badge-neutral" };
+  }
+}
 
 export default function TransactionsTable({
   transactions,
@@ -8,6 +22,7 @@ export default function TransactionsTable({
   onRemove,
   onExportCsv,
   onExportPdf,
+  highlightImportedSince = "",
   isLoading = false,
   isMutating = false,
 }) {
@@ -80,15 +95,38 @@ export default function TransactionsTable({
             </thead>
 
             <tbody>
-              {transactions.map((transaction) => (
-                <tr key={transaction.id}>
+              {transactions.map((transaction) => {
+                const isRecentlyImported =
+                  transaction.importedAtUtc &&
+                  highlightImportedSince &&
+                  new Date(transaction.importedAtUtc).getTime() >=
+                    new Date(highlightImportedSince).getTime() - 10000;
+
+                return (
+                <tr
+                  key={transaction.id}
+                  className={isRecentlyImported ? "finova-row-highlight" : undefined}
+                >
                   <td>{formatBRDate(transaction.date)}</td>
 
                   <td>
                     <div className="fw-medium text-dark">{transaction.description}</div>
-                    {transaction.isRecurring ? (
-                      <div className="mt-1">
+                    <div className="mt-1 d-flex flex-wrap gap-2">
+                      <span className={getTransactionOriginMeta(transaction).className}>
+                        {getTransactionOriginMeta(transaction).label}
+                      </span>
+                      {transaction.isRecurring ? (
                         <span className="finova-badge-neutral">Recorrente mensal</span>
+                      ) : null}
+                    </div>
+                    {transaction.importedAtUtc ? (
+                      <div className="small text-muted mt-2">
+                        Entrou no sistema em {formatDateTimeBR(transaction.importedAtUtc)}
+                      </div>
+                    ) : null}
+                    {isRecentlyImported ? (
+                      <div className="small mt-2">
+                        <span className="finova-badge-warning">Nova nesta importação</span>
                       </div>
                     ) : null}
                   </td>
@@ -137,7 +175,7 @@ export default function TransactionsTable({
                     </div>
                   </td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
         </div>

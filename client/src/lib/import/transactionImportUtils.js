@@ -316,25 +316,51 @@ function inferCategory(type, categoryValue, description) {
   }
 
   if (!bestCategory || bestScore === 0) {
-    return "";
+    return {
+      category: "",
+      confidence: "low",
+      source: "fallback",
+      score: 0,
+    };
   }
 
-  return mapCategoryByName(type, bestCategory);
+  const mappedCategory = mapCategoryByName(type, bestCategory);
+
+  return {
+    category: mappedCategory,
+    confidence: bestScore >= 3 ? "high" : "low",
+    source: "inferred",
+    score: bestScore,
+  };
 }
 
 export function normalizeImportCategory(type, value, description) {
+  return resolveImportCategory(type, value, description).category;
+}
+
+export function resolveImportCategory(type, value, description) {
   const categories = getTransactionCategories(type);
   const raw = String(value ?? "").trim();
 
   const exactCategory = mapCategoryByName(type, raw);
   if (exactCategory) {
-    return exactCategory;
+    return {
+      category: exactCategory,
+      confidence: "high",
+      source: "explicit",
+      score: 999,
+    };
   }
 
   const inferredCategory = inferCategory(type, raw, description);
-  if (inferredCategory) {
+  if (inferredCategory.category) {
     return inferredCategory;
   }
 
-  return raw || categories[categories.length - 1] || "Outros";
+  return {
+    category: raw || categories[categories.length - 1] || "Outros",
+    confidence: "low",
+    source: raw ? "provided_unknown" : "fallback",
+    score: 0,
+  };
 }

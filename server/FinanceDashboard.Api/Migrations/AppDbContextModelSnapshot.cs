@@ -485,7 +485,7 @@ namespace FinanceDashboard.Api.Migrations
                     b.HasOne("FinanceDashboard.Api.Models.Transaction", "Transaction")
                         .WithMany("TagLinks")
                         .HasForeignKey("TransactionId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("FinanceDashboard.Api.Models.TransactionTag", "TransactionTag")

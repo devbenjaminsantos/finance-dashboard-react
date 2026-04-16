@@ -77,6 +77,9 @@ namespace FinanceDashboard.Api.Data
 
             modelBuilder.Entity<FinancialAccount>(entity =>
             {
+                entity.Property(account => account.AccountType)
+                    .HasMaxLength(40);
+
                 entity.Property(account => account.Provider)
                     .HasMaxLength(40);
 
@@ -102,13 +105,19 @@ namespace FinanceDashboard.Api.Data
                     .HasMaxLength(30);
 
                 entity.ToTable(table =>
+                {
                     table.HasCheckConstraint(
                         "CK_FinancialAccounts_Status",
-                        "[Status] IN ('disconnected', 'pending', 'connected', 'error')"));
+                        "[Status] IN ('disconnected', 'pending', 'connected', 'error')");
+
+                    table.HasCheckConstraint(
+                        "CK_FinancialAccounts_AccountType",
+                        "[AccountType] IN ('bank_account', 'wallet', 'cash', 'credit_card')");
+                });
 
                 entity.HasIndex(account => new { account.UserId, account.ExternalAccountId });
                 entity.HasIndex(account => new { account.UserId, account.ProviderItemId });
-                entity.HasIndex(account => new { account.UserId, account.Provider, account.InstitutionName });
+                entity.HasIndex(account => new { account.UserId, account.AccountType, account.Provider, account.InstitutionName });
 
                 entity.HasOne(account => account.User)
                     .WithMany(user => user.FinancialAccounts)

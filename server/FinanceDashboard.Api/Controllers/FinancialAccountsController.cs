@@ -58,6 +58,7 @@ namespace FinanceDashboard.Api.Controllers
 
             var account = new FinancialAccount
             {
+                AccountType = dto.AccountType.Trim().ToLowerInvariant(),
                 Provider = dto.Provider.Trim().ToLowerInvariant(),
                 InstitutionName = dto.InstitutionName.Trim(),
                 InstitutionCode = dto.InstitutionCode?.Trim(),
@@ -216,6 +217,7 @@ namespace FinanceDashboard.Api.Controllers
             return new FinancialAccountResponse
             {
                 Id = account.Id,
+                AccountType = account.AccountType,
                 Provider = account.Provider,
                 InstitutionName = account.InstitutionName,
                 InstitutionCode = account.InstitutionCode,

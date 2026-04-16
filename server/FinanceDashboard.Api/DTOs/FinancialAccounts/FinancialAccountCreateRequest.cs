@@ -6,6 +6,10 @@ namespace FinanceDashboard.Api.DTOs
     {
         [Required]
         [StringLength(40, MinimumLength = 2)]
+        public string AccountType { get; set; } = "bank_account";
+
+        [Required]
+        [StringLength(40, MinimumLength = 2)]
         public string Provider { get; set; } = string.Empty;
 
         [Required]

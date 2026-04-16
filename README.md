@@ -327,6 +327,285 @@ Guias extras:
 - o fluxo de recuperacao de senha nao deve expor o link de redefinicao em producao aberta
 - a sessao deve ser invalidada quando o token expirar ou quando houver inatividade prolongada
 
+## Planejamento Tecnico da V6
+
+Antes de avancar para a V6, vale tratar a etapa como uma evolucao estrutural do produto, nao apenas como um conjunto de telas novas. A base atual ja cobre autenticacao, transacoes, contas financeiras, metas, recorrencias simples, importacao e envio de e-mails, mas a maior parte das ideias da V6 exige revisar modelo de dados, automacao e regras de negocio.
+
+### O que o projeto ja tem e pode ser reaproveitado
+
+- `Transaction` ja possui:
+  - `FinancialAccountId`
+  - `Source`
+  - `SourceReference`
+  - `ImportedAtUtc`
+  - `IsRecurring`
+  - `RecurrenceEndDate`
+  - `RecurrenceGroupId`
+- `FinancialAccount` ja cobre:
+  - provedor
+  - instituicao
+  - nome da conta
+  - mascara
+  - sincronizacao e vinculacao com agregador
+- existe envio de e-mail via `IEmailSender` e `SmtpEmailSender`
+- existe historico de acoes sensiveis com `AuditLog`
+- existe base de filtros, importacao, exportacao e conciliacao de transacoes no frontend
+- existe i18n inicial, o que ajuda bastante em recursos compartilhaveis e notificacoes futuras
+
+### O que precisa ser refatorado antes das features da V6
+
+- `Transaction` hoje acumula responsabilidades de:
+  - lancamento manual
+  - importacao
+  - recorrencia simples
+  - sincronizacao bancaria
+- recorrencia atual funciona como geracao imediata de serie no `TransactionsController`
+  - isso nao atende recorrencia automatica real, com geracao mensal sem intervencao
+- `FinancialAccount` ainda nao diferencia de forma explicita:
+  - conta corrente
+  - carteira
+  - dinheiro fisico
+  - cartao de credito
+  - conta de passagem
+- `IEmailSender` hoje cobre apenas:
+  - redefinicao de senha
+  - confirmacao de e-mail
+  - para alertas e relatorios mensais, a interface precisa crescer
+- ainda nao existe infraestrutura dedicada para jobs agendados
+  - a V6 vai precisar de processamento recorrente, idempotente e auditavel
+
+### O que precisa ser criado do zero
+
+#### Gestao financeira avancada
+
+- `FinancialAccountType` ou campo equivalente para diferenciar:
+  - banco
+  - carteira
+  - dinheiro
+  - cartao de credito
+  - conta manual
+- transferencias entre contas com tratamento proprio
+- entidade para parcelamentos e dividas
+  - ex.: `InstallmentPlan`, `InstallmentPayment`, `DebtPlan`
+- tags livres por usuario
+  - ex.: `TransactionTag` e tabela de associacao `TransactionTagLink`
+- regra recorrente real
+  - ex.: `RecurringRule`
+- modulo de previsao futura
+  - ex.: `CashFlowForecastSnapshot` ou servico dedicado de forecast
+
+#### Notificacoes e alertas proativos
+
+- preferencias de notificacao por usuario
+  - ex.: `NotificationPreference`
+- historico de notificacoes enviadas
+  - ex.: `NotificationDelivery`
+- gerador de relatorio mensal
+- links publicos compartilhaveis com token e expiracao
+  - ex.: `SharedDashboardLink`
+
+### Checklist tecnico por iniciativa
+
+#### 1. Contas e carteiras separadas
+
+Precisa revisar:
+
+- adicionar tipo da conta no backend e no frontend
+- revisar tela de contas para mostrar natureza da conta
+- decidir se cartao de credito entra como conta, passivo ou ambos
+- criar fluxo de transferencia entre contas sem duplicar saldo
+
+Dependencias:
+
+- migration nova
+- ajustes em `FinancialAccountsController`
+- ajustes em importacao e sincronizacao bancaria
+- filtro por conta na pagina de transacoes e nos dashboards
+
+#### 2. Dividas e parcelamentos
+
+Precisa revisar:
+
+- se cada parcela vira transacao persistida ou projeção derivada
+- como mostrar saldo restante, parcela atual e parcela futura
+- como relacionar parcelamento com conta/cartao e categoria
+
+Precisa criar:
+
+- entidade principal de parcelamento
+- endpoint proprio
+- UI dedicada
+- impacto em dashboard, comparativos e metas
+
+Risco atual:
+
+- tentar encaixar parcelamento apenas em `Transaction` tende a deixar a modelagem fragil
+
+#### 3. Tags livres nas transacoes
+
+Precisa revisar:
+
+- se tags sao totalmente livres por usuario
+- se tera autocomplete e deduplicacao por nome
+- como isso afeta filtros, importacao e exportacao
+
+Precisa criar:
+
+- entidade de tag
+- relacao N:N entre transacao e tag
+- filtro por tags
+- exibicao de tags em tabela, modal e exportacao
+
+#### 4. Recorrencias automaticas reais
+
+Estado atual:
+
+- hoje a recorrencia e gerada no momento da criacao, com serie fechada
+
+Para a V6:
+
+- substituir ou complementar essa abordagem por regras recorrentes persistidas
+- executar geracao automatica periodica
+- garantir idempotencia para nao gerar duplicados
+- tratar excecoes:
+  - pausa
+  - encerramento
+  - exclusao de uma ocorrencia isolada
+
+Precisa criar:
+
+- `RecurringRule`
+- job agendado
+- logs de execucao
+- possivel tabela de ocorrencias geradas
+
+#### 5. Planejamento futuro com previsao
+
+Precisa revisar:
+
+- se a previsao inicial sera:
+  - media simples dos ultimos meses
+  - media ponderada
+  - mistura entre recorrencias futuras e historico recente
+- como separar previsao confiavel de chute exploratorio
+
+Precisa criar:
+
+- servico de forecast
+- cards ou pagina propria de previsao
+- indicacao visual de confianca
+
+Dependencia forte:
+
+- recorrencias e contas bem modeladas melhoram muito a qualidade da previsao
+
+#### 6. Alerta por e-mail ao atingir percentual da meta
+
+Precisa revisar:
+
+- em qual percentual dispara
+- se dispara uma vez por mes ou varias vezes
+- quais metas entram:
+  - geral
+  - por categoria
+  - ambas
+
+Precisa criar:
+
+- preferencias de notificacao
+- servico que avalia metas
+- novo metodo no `IEmailSender`
+- persistencia do envio para evitar duplicidade
+
+#### 7. Relatorio mensal automatico
+
+Precisa revisar:
+
+- quando roda exatamente:
+  - primeiro dia do mes
+  - horario fixo
+  - timezone do usuario ou timezone do servidor
+- o que entra no resumo:
+  - total de receitas
+  - total de despesas
+  - economia
+  - metas batidas ou estouradas
+  - categorias de maior peso
+
+Precisa criar:
+
+- job mensal
+- template de e-mail
+- snapshot de dados do periodo
+- trilha de auditoria de envio
+
+#### 8. Dashboard publico compartilhavel via link
+
+Precisa revisar:
+
+- quais dados podem aparecer em modo publico
+- se o link expira
+- se o usuario pode revogar manualmente
+- se o link mostra valores completos ou uma versao reduzida
+
+Precisa criar:
+
+- token de compartilhamento
+- endpoint publico somente leitura
+- tela publica separada
+- camada de seguranca para nao reaproveitar o dashboard autenticado sem filtros
+
+Maior cuidado da V6:
+
+- essa e a feature mais sensivel em privacidade e deve entrar por ultimo
+
+### Infraestrutura que precisa ser decidida antes de comecar
+
+Para a V6, o projeto passa a precisar de execucao automatica e agendada. Antes de implementar, decidir:
+
+- `Hangfire`, `Quartz.NET`, `BackgroundService` ou cron externo
+- estrategia de retry
+- estrategia de idempotencia
+- onde registrar falhas
+- como monitorar jobs em producao
+
+Sem isso, as features de recorrencia automatica, alerta por e-mail e relatorio mensal tendem a ficar instaveis.
+
+### Ordem recomendada de implementacao
+
+Para reduzir retrabalho, a V6 pode seguir esta ordem:
+
+1. tipagem real de contas e carteiras
+2. tags livres nas transacoes
+3. dividas e parcelamentos
+4. recorrencias automaticas reais
+5. previsao futura
+6. alerta por e-mail ligado a metas
+7. relatorio mensal automatico
+8. dashboard publico compartilhavel
+
+### Status recomendado da V6 no backlog
+
+#### Pronto para detalhar
+
+- contas e carteiras separadas
+- tags livres nas transacoes
+
+#### Precisa fechar regra de negocio antes
+
+- dividas e parcelamentos
+- recorrencias automaticas reais
+- planejamento futuro com previsao
+
+#### Precisa fechar infraestrutura antes
+
+- alerta por e-mail ao atingir meta
+- relatorio mensal automatico
+
+#### Precisa fechar seguranca e privacidade antes
+
+- dashboard publico compartilhavel via link
+
 ## Checklist por Versao
 
 ### V1
@@ -391,6 +670,17 @@ Guias extras:
 - [x] V5.7 Sincronizacao automatica com conta bancaria
 - [ ] Avaliar se ainda faz sentido incluir 2FA em um cenario mais maduro do produto
 - [ ] Dominio customizado como fechamento final da experiencia
+
+### V6
+
+- [ ] Contas e carteiras separadas por tipo
+- [ ] Tags livres nas transacoes
+- [ ] Dividas e parcelamentos com saldo por parcela
+- [ ] Recorrencias automaticas reais com geracao mensal
+- [ ] Planejamento futuro com previsao baseada em historico
+- [ ] Alerta por e-mail ao atingir percentual da meta
+- [ ] Relatorio mensal automatico no primeiro dia do mes
+- [ ] Dashboard publico compartilhavel via link somente leitura
 
 ## Autor
 

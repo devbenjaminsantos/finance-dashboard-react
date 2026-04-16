@@ -56,6 +56,7 @@ describe("FinancialAccounts page", () => {
     getFinancialAccounts.mockResolvedValue([
       {
         id: 1,
+        accountType: "bank_account",
         provider: "pluggy",
         institutionName: "Nubank",
         institutionCode: null,
@@ -74,12 +75,14 @@ describe("FinancialAccounts page", () => {
 
     expect(await screen.findByText("Nubank")).toBeInTheDocument();
     expect(screen.getByText("Conta principal")).toBeInTheDocument();
+    expect(screen.getAllByText("Conta bancaria").length).toBeGreaterThan(0);
     expect(screen.getByText("Pendente")).toBeInTheDocument();
   });
 
   it("creates a new financial account", async () => {
     createFinancialAccount.mockResolvedValue({
       id: 2,
+      accountType: "bank_account",
       provider: "pluggy",
       institutionName: "Banco Inter",
       institutionCode: null,
@@ -107,6 +110,7 @@ describe("FinancialAccounts page", () => {
 
     await waitFor(() => {
       expect(createFinancialAccount).toHaveBeenCalledWith({
+        accountType: "bank_account",
         provider: "pluggy",
         institutionName: "Banco Inter",
         institutionCode: null,
@@ -138,6 +142,7 @@ describe("FinancialAccounts page", () => {
       .mockResolvedValueOnce([
         {
           id: 1,
+          accountType: "bank_account",
           provider: "pluggy",
           institutionName: "Nubank",
           institutionCode: null,
@@ -152,6 +157,7 @@ describe("FinancialAccounts page", () => {
       .mockResolvedValueOnce([
         {
           id: 1,
+          accountType: "bank_account",
           provider: "pluggy",
           institutionName: "Nubank",
           institutionCode: null,
@@ -187,6 +193,7 @@ describe("FinancialAccounts page", () => {
 
     linkFinancialAccountItem.mockResolvedValue({
       id: 1,
+      accountType: "bank_account",
       provider: "pluggy",
       institutionName: "Nubank",
       institutionCode: null,

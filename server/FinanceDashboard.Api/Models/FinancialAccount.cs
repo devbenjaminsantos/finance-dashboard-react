@@ -3,6 +3,7 @@ namespace FinanceDashboard.Api.Models
     public class FinancialAccount
     {
         public int Id { get; set; }
+        public string AccountType { get; set; } = "bank_account";
         public string Provider { get; set; } = string.Empty;
         public string InstitutionName { get; set; } = string.Empty;
         public string? InstitutionCode { get; set; }

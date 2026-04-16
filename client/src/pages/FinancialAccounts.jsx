@@ -24,7 +24,31 @@ const PROVIDER_OPTIONS = [
   },
 ];
 
+const ACCOUNT_TYPE_OPTIONS = [
+  {
+    value: "bank_account",
+    label: "Conta bancaria",
+    description: "Conta corrente, conta digital ou conta principal do dia a dia.",
+  },
+  {
+    value: "wallet",
+    label: "Carteira",
+    description: "Carteira digital, saldo separado ou conta de uso pontual.",
+  },
+  {
+    value: "cash",
+    label: "Dinheiro fisico",
+    description: "Valores em especie para controle fora do banco.",
+  },
+  {
+    value: "credit_card",
+    label: "Cartao de credito",
+    description: "Conta voltada para compras no credito e futuros parcelamentos.",
+  },
+];
+
 const INITIAL_FORM = {
+  accountType: ACCOUNT_TYPE_OPTIONS[0].value,
   provider: PROVIDER_OPTIONS[0].value,
   institutionName: "",
   institutionCode: "",
@@ -44,6 +68,20 @@ function getStatusMeta(status) {
     case "pending":
     default:
       return { label: "Pendente", className: "finova-badge-warning" };
+  }
+}
+
+function getAccountTypeMeta(accountType) {
+  switch ((accountType || "").toLowerCase()) {
+    case "wallet":
+      return { label: "Carteira", className: "finova-badge-primary" };
+    case "cash":
+      return { label: "Dinheiro", className: "finova-badge-warning" };
+    case "credit_card":
+      return { label: "Cartao de credito", className: "finova-badge-danger" };
+    case "bank_account":
+    default:
+      return { label: "Conta bancaria", className: "finova-badge-income" };
   }
 }
 
@@ -117,12 +155,14 @@ export default function FinancialAccounts() {
     const connectedCount = accounts.filter((account) => account.status === "connected").length;
     const pendingCount = accounts.filter((account) => account.status === "pending").length;
     const syncedCount = accounts.filter((account) => account.lastSyncedAtUtc).length;
+    const creditCardCount = accounts.filter((account) => account.accountType === "credit_card").length;
 
     return {
       total: accounts.length,
       connected: connectedCount,
       pending: pendingCount,
       synced: syncedCount,
+      creditCards: creditCardCount,
     };
   }, [accounts]);
 
@@ -161,6 +201,7 @@ export default function FinancialAccounts() {
 
     try {
       const created = await createFinancialAccount({
+        accountType: form.accountType,
         provider: form.provider,
         institutionName: form.institutionName.trim(),
         institutionCode: form.institutionCode.trim() || null,
@@ -297,6 +338,12 @@ export default function FinancialAccounts() {
                 <div className="finova-title h4 mb-0">{summary.synced}</div>
               </div>
             </div>
+            <div className="col-12 col-md-6 col-xl-3">
+              <div className="finova-card-soft p-3 h-100">
+                <div className="finova-subtitle small mb-1">Cartoes de credito</div>
+                <div className="finova-title h4 mb-0">{summary.creditCards}</div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -311,6 +358,28 @@ export default function FinancialAccounts() {
               </div>
 
               <form className="row g-3" onSubmit={handleSubmit}>
+                <div className="col-12">
+                  <label className="form-label text-dark fw-medium" htmlFor="financial-account-type">
+                    Tipo da conta
+                  </label>
+                  <select
+                    id="financial-account-type"
+                    className="form-select finova-select"
+                    value={form.accountType}
+                    onChange={(event) => updateField("accountType", event.target.value)}
+                    disabled={isSubmitting}
+                  >
+                    {ACCOUNT_TYPE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="form-text">
+                    {ACCOUNT_TYPE_OPTIONS.find((option) => option.value === form.accountType)?.description}
+                  </div>
+                </div>
+
                 <div className="col-12">
                   <label className="form-label text-dark fw-medium" htmlFor="financial-provider">
                     Provedor
@@ -487,6 +556,7 @@ export default function FinancialAccounts() {
                 <div className="d-grid gap-3">
                   {accounts.map((account) => {
                     const statusMeta = getStatusMeta(account.status);
+                    const accountTypeMeta = getAccountTypeMeta(account.accountType);
                     const isSyncing = syncingAccountId === account.id;
                     const isConnecting = connectingAccountId === account.id;
                     const canUsePluggy = account.provider === "pluggy";
@@ -498,6 +568,7 @@ export default function FinancialAccounts() {
                             <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
                               <h3 className="finova-title h6 mb-0">{account.institutionName}</h3>
                               <span className={statusMeta.className}>{statusMeta.label}</span>
+                              <span className={accountTypeMeta.className}>{accountTypeMeta.label}</span>
                               <span className="finova-badge-neutral">
                                 {formatProviderLabel(account.provider)}
                               </span>
@@ -506,6 +577,9 @@ export default function FinancialAccounts() {
                             <div className="finova-financial-account-meta">
                               <span>
                                 <strong>Conta:</strong> {account.accountName}
+                              </span>
+                              <span>
+                                <strong>Tipo:</strong> {accountTypeMeta.label}
                               </span>
                               {account.accountMask ? (
                                 <span>

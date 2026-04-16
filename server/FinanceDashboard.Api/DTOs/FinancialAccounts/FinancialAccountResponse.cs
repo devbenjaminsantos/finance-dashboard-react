@@ -3,6 +3,7 @@ namespace FinanceDashboard.Api.DTOs
     public class FinancialAccountResponse
     {
         public int Id { get; set; }
+        public string AccountType { get; set; } = string.Empty;
         public string Provider { get; set; } = string.Empty;
         public string InstitutionName { get; set; } = string.Empty;
         public string? InstitutionCode { get; set; }

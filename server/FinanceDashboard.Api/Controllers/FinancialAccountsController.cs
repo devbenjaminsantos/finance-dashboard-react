@@ -3,6 +3,7 @@ using FinanceDashboard.Api.DTOs;
 using FinanceDashboard.Api.Models;
 using FinanceDashboard.Api.Services.Audit;
 using FinanceDashboard.Api.Services.BankSync;
+using FinanceDashboard.Api.Services.BankSync.Pluggy;
 using FinanceDashboard.Api.Services.CurrentUser;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,17 +20,20 @@ namespace FinanceDashboard.Api.Controllers
         private readonly CurrentUserService _currentUserService;
         private readonly AuditLogService _auditLogService;
         private readonly BankSyncService _bankSyncService;
+        private readonly IPluggyClient _pluggyClient;
 
         public FinancialAccountsController(
             AppDbContext context,
             CurrentUserService currentUserService,
             AuditLogService auditLogService,
-            BankSyncService bankSyncService)
+            BankSyncService bankSyncService,
+            IPluggyClient pluggyClient)
         {
             _context = context;
             _currentUserService = currentUserService;
             _auditLogService = auditLogService;
             _bankSyncService = bankSyncService;
+            _pluggyClient = pluggyClient;
         }
 
         [HttpGet]
@@ -77,6 +81,111 @@ namespace FinanceDashboard.Api.Controllers
             return CreatedAtAction(nameof(GetAll), new { id = account.Id }, ToResponse(account));
         }
 
+        [HttpPost("{id:int}/connect-token")]
+        public async Task<ActionResult<FinancialAccountConnectTokenResponse>> CreateConnectToken(
+            int id,
+            CancellationToken cancellationToken)
+        {
+            var userId = _currentUserService.GetRequiredUserId();
+
+            var account = await _context.FinancialAccounts
+                .FirstOrDefaultAsync(item => item.Id == id && item.UserId == userId, cancellationToken);
+
+            if (account is null)
+            {
+                return NotFound();
+            }
+
+            if (!string.Equals(account.Provider, "pluggy", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest(new ProblemDetails
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Title = "Esta conta nao usa o provedor Pluggy."
+                });
+            }
+
+            if (!_pluggyClient.IsConfigured)
+            {
+                return BadRequest(new ProblemDetails
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Title = "Pluggy nao configurado no back-end."
+                });
+            }
+
+            var connectToken = await _pluggyClient.CreateConnectTokenAsync(
+                clientUserId: $"user:{userId}",
+                itemId: account.ProviderItemId,
+                cancellationToken);
+
+            return Ok(new FinancialAccountConnectTokenResponse
+            {
+                ConnectToken = connectToken
+            });
+        }
+
+        [HttpPost("{id:int}/link-item")]
+        public async Task<ActionResult<FinancialAccountResponse>> LinkItem(
+            int id,
+            FinancialAccountLinkItemRequest dto,
+            CancellationToken cancellationToken)
+        {
+            var userId = _currentUserService.GetRequiredUserId();
+
+            var account = await _context.FinancialAccounts
+                .FirstOrDefaultAsync(item => item.Id == id && item.UserId == userId, cancellationToken);
+
+            if (account is null)
+            {
+                return NotFound();
+            }
+
+            if (!string.Equals(account.Provider, "pluggy", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest(new ProblemDetails
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Title = "Esta conta nao usa o provedor Pluggy."
+                });
+            }
+
+            var item = await _pluggyClient.GetItemAsync(dto.ItemId.Trim(), cancellationToken);
+
+            account.ProviderItemId = item.Id;
+            account.Status = NormalizeStatus(item.Status);
+
+            if (!string.IsNullOrWhiteSpace(dto.InstitutionName))
+            {
+                account.InstitutionName = dto.InstitutionName.Trim();
+            }
+            else if (!string.IsNullOrWhiteSpace(item.Connector?.Name))
+            {
+                account.InstitutionName = item.Connector.Name.Trim();
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.AccountName))
+            {
+                account.AccountName = dto.AccountName.Trim();
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.AccountMask))
+            {
+                account.AccountMask = dto.AccountMask.Trim();
+            }
+
+            await _context.SaveChangesAsync(cancellationToken);
+
+            await _auditLogService.WriteAsync(
+                action: "financial-account.linked",
+                entityType: "FinancialAccount",
+                entityId: account.Id.ToString(),
+                userId: userId,
+                summary: $"Conta financeira vinculada ao Pluggy: {account.InstitutionName} - {account.AccountName}.");
+
+            return Ok(ToResponse(account));
+        }
+
         [HttpPost("{id:int}/sync")]
         public async Task<ActionResult<FinancialAccountSyncResponse>> Sync(int id, CancellationToken cancellationToken)
         {
@@ -113,8 +222,23 @@ namespace FinanceDashboard.Api.Controllers
                 AccountName = account.AccountName,
                 AccountMask = account.AccountMask,
                 ExternalAccountId = account.ExternalAccountId,
+                ProviderItemId = account.ProviderItemId,
                 Status = account.Status,
                 LastSyncedAtUtc = account.LastSyncedAtUtc
+            };
+        }
+
+        private static string NormalizeStatus(string? status)
+        {
+            var normalized = (status ?? string.Empty).Trim().ToUpperInvariant();
+
+            return normalized switch
+            {
+                "UPDATED" => "connected",
+                "LOGIN_IN_PROGRESS" => "pending",
+                "WAITING_USER_INPUT" => "pending",
+                "ERROR" => "error",
+                _ => "pending"
             };
         }
     }

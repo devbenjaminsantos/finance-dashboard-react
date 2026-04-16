@@ -9,6 +9,7 @@ namespace FinanceDashboard.Api.Models
         public string AccountName { get; set; } = string.Empty;
         public string? AccountMask { get; set; }
         public string? ExternalAccountId { get; set; }
+        public string? ProviderItemId { get; set; }
         public string Status { get; set; } = "disconnected";
         public DateTime? LastSyncedAtUtc { get; set; }
 

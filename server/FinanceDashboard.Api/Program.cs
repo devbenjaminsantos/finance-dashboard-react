@@ -1,8 +1,10 @@
 using FinanceDashboard.Api.Data;
 using FinanceDashboard.Api.Models;
+using FinanceDashboard.Api.Configuration;
 using FinanceDashboard.Api.Services.Audit;
 using FinanceDashboard.Api.Services.Auth;
 using FinanceDashboard.Api.Services.BankSync;
+using FinanceDashboard.Api.Services.BankSync.Pluggy;
 using FinanceDashboard.Api.Services.CurrentUser;
 using FinanceDashboard.Api.Services.Email;
 using Microsoft.AspNetCore.Diagnostics;
@@ -24,12 +26,25 @@ builder.Configuration.AddJsonFile(
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(GetRequiredConnectionString(builder.Configuration)));
 
+builder.Services.Configure<PluggyOptions>(
+    builder.Configuration.GetSection(PluggyOptions.SectionName));
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient<IPluggyClient, PluggyClient>((serviceProvider, client) =>
+{
+    var options = serviceProvider
+        .GetRequiredService<Microsoft.Extensions.Options.IOptions<PluggyOptions>>()
+        .Value;
+
+    client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/'));
+});
+
 builder.Services.AddScoped<PasswordHasher>();
 builder.Services.AddScoped<PasswordPolicyService>();
 builder.Services.AddScoped<JwTokenService>();
 builder.Services.AddScoped<PasswordResetTokenService>();
 builder.Services.AddScoped<AuditLogService>();
 builder.Services.AddScoped<BankSyncService>();
+builder.Services.AddScoped<IBankSyncProvider, PluggyBankSyncProvider>();
 builder.Services.AddScoped<IBankSyncProvider, PlaceholderBankSyncProvider>();
 builder.Services.AddScoped<CurrentUserService>();
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();

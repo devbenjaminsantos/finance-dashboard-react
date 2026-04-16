@@ -170,6 +170,8 @@ Variaveis esperadas:
 - `Jwt__Audience`
 - `Cors__AllowedOrigins__0`
 - `Client__BaseUrl`
+- `Pluggy__ClientId`
+- `Pluggy__ClientSecret`
 
 Exemplo de execucao:
 
@@ -281,6 +283,19 @@ No App Service, as configuracoes principais sao:
 - `Demo__Enabled`
 - `Demo__Email`
 - `Demo__Password`
+- `Pluggy__ClientId`
+- `Pluggy__ClientSecret`
+
+### Integracao bancaria com Pluggy
+
+Para habilitar a conexao bancaria real da V5:
+
+- configure `Pluggy__ClientId`
+- configure `Pluggy__ClientSecret`
+- cadastre uma conta financeira com provedor `Pluggy`
+- use o botao `Conectar com Pluggy`
+- conclua a conexao no widget do Pluggy
+- depois execute `Sincronizar` para importar as transacoes no Finova
 
 Em `Connection Strings`, a API usa:
 
@@ -372,8 +387,8 @@ Guias extras:
 - [x] V5.3 Tela de revisao antes da confirmacao da importacao
 - [x] V5.4 Conciliacao de transacoes importadas com transacoes manuais
 - [x] V5.5 Categorizacao assistida para lancamentos importados
-- [ ] V5.6 Preparar arquitetura para integracao automatica com Open Finance/agregador
-- [ ] V5.7 Sincronizacao automatica com conta bancaria
+- [x] V5.6 Preparar arquitetura para integracao automatica com Open Finance/agregador
+- [x] V5.7 Sincronizacao automatica com conta bancaria
 - [ ] Avaliar se ainda faz sentido incluir 2FA em um cenario mais maduro do produto
 - [ ] Dominio customizado como fechamento final da experiencia
 

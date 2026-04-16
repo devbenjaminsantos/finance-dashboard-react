@@ -1,27 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
+import { PluggyConnect } from "react-pluggy-connect";
+import { useTransactions } from "../features/transactions/useTransactions";
 import {
   createFinancialAccount,
+  createFinancialAccountConnectToken,
   getFinancialAccounts,
+  linkFinancialAccountItem,
   syncFinancialAccount,
 } from "../lib/api/financialAccounts";
 import { formatDateTimeBR } from "../lib/format/date";
-import { useTransactions } from "../features/transactions/useTransactions";
 
 const PROVIDER_OPTIONS = [
   {
     value: "pluggy",
     label: "Pluggy",
-    description: "Boa base para a futura integracao bancaria automatica.",
-  },
-  {
-    value: "belvo",
-    label: "Belvo",
-    description: "Alternativa comum para agregacao de contas e extratos.",
+    description: "Fluxo real de conexao bancaria habilitado nesta etapa.",
   },
   {
     value: "manual",
     label: "Manual",
-    description: "Conta preparada para importacao assistida e futuras conexoes.",
+    description: "Conta pensada para importacao por arquivo e conciliacao assistida.",
   },
 ];
 
@@ -40,6 +38,8 @@ function getStatusMeta(status) {
       return { label: "Conectada", className: "finova-badge-income" };
     case "error":
       return { label: "Com erro", className: "finova-badge-danger" };
+    case "disconnected":
+      return { label: "Desconectada", className: "finova-badge-neutral" };
     case "pending":
     default:
       return { label: "Pendente", className: "finova-badge-warning" };
@@ -50,6 +50,37 @@ function formatProviderLabel(provider) {
   return PROVIDER_OPTIONS.find((option) => option.value === provider)?.label ?? provider;
 }
 
+function sortAccounts(list) {
+  return [...list].sort((a, b) => {
+    const institutionCompare = (a.institutionName || "").localeCompare(b.institutionName || "");
+    if (institutionCompare !== 0) {
+      return institutionCompare;
+    }
+
+    return (a.accountName || "").localeCompare(b.accountName || "");
+  });
+}
+
+function getPluggyItemId(payload) {
+  return (
+    payload?.item?.id ||
+    payload?.itemId ||
+    payload?.id ||
+    payload?.data?.item?.id ||
+    payload?.data?.itemId ||
+    ""
+  );
+}
+
+function getPluggyInstitutionName(payload) {
+  return (
+    payload?.item?.connector?.name ||
+    payload?.connector?.name ||
+    payload?.data?.item?.connector?.name ||
+    ""
+  );
+}
+
 export default function FinancialAccounts() {
   const { loadAll: reloadTransactions } = useTransactions();
   const [accounts, setAccounts] = useState([]);
@@ -57,6 +88,8 @@ export default function FinancialAccounts() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [syncingAccountId, setSyncingAccountId] = useState(null);
+  const [connectingAccountId, setConnectingAccountId] = useState(null);
+  const [connectToken, setConnectToken] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -65,7 +98,7 @@ export default function FinancialAccounts() {
 
     try {
       const data = await getFinancialAccounts();
-      setAccounts(Array.isArray(data) ? data : []);
+      setAccounts(sortAccounts(Array.isArray(data) ? data : []));
     } catch (err) {
       setAccounts([]);
       setError(err.message || "Nao foi possivel carregar as contas financeiras.");
@@ -91,10 +124,20 @@ export default function FinancialAccounts() {
     };
   }, [accounts]);
 
+  const connectingAccount = useMemo(
+    () => accounts.find((account) => account.id === connectingAccountId) ?? null,
+    [accounts, connectingAccountId]
+  );
+
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
     setError("");
     setSuccess("");
+  }
+
+  function closePluggyWidget() {
+    setConnectToken("");
+    setConnectingAccountId(null);
   }
 
   async function handleSubmit(event) {
@@ -124,20 +167,61 @@ export default function FinancialAccounts() {
         externalAccountId: form.externalAccountId.trim() || null,
       });
 
-      setAccounts((current) => [...current, created].sort((a, b) => {
-        const institutionCompare = (a.institutionName || "").localeCompare(b.institutionName || "");
-        if (institutionCompare !== 0) {
-          return institutionCompare;
-        }
-
-        return (a.accountName || "").localeCompare(b.accountName || "");
-      }));
+      setAccounts((current) => sortAccounts([...current, created]));
       setForm(INITIAL_FORM);
-      setSuccess("Conta financeira adicionada. Agora ja podemos usar essa base na evolucao da integracao.");
+      setSuccess(
+        created.provider === "pluggy"
+          ? "Conta financeira adicionada. Agora voce ja pode conectar essa conta pelo Pluggy."
+          : "Conta financeira adicionada para uso manual e futuras importacoes."
+      );
     } catch (err) {
       setError(err.message || "Nao foi possivel adicionar a conta financeira.");
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleConnect(account) {
+    setError("");
+    setSuccess("");
+    setConnectingAccountId(account.id);
+
+    try {
+      const result = await createFinancialAccountConnectToken(account.id);
+      setConnectToken(result?.connectToken || "");
+    } catch (err) {
+      setConnectingAccountId(null);
+      setConnectToken("");
+      setError(err.message || "Nao foi possivel iniciar a conexao com o Pluggy.");
+    }
+  }
+
+  async function handlePluggySuccess(payload) {
+    const account = accounts.find((item) => item.id === connectingAccountId);
+    const itemId = getPluggyItemId(payload);
+
+    if (!account || !itemId) {
+      closePluggyWidget();
+      setError("A conexao foi concluida, mas o item do Pluggy nao foi retornado corretamente.");
+      return;
+    }
+
+    try {
+      const updated = await linkFinancialAccountItem(account.id, {
+        itemId,
+        institutionName: getPluggyInstitutionName(payload) || account.institutionName,
+        accountName: account.accountName,
+        accountMask: account.accountMask,
+      });
+
+      setAccounts((current) =>
+        sortAccounts(current.map((item) => (item.id === updated.id ? updated : item)))
+      );
+      setSuccess("Conta vinculada ao Pluggy com sucesso. Agora a sincronizacao automatica ja pode ser usada.");
+    } catch (err) {
+      setError(err.message || "Nao foi possivel vincular o item retornado pelo Pluggy.");
+    } finally {
+      closePluggyWidget();
     }
   }
 
@@ -167,10 +251,24 @@ export default function FinancialAccounts() {
         <div>
           <h1 className="finova-title mb-1">Contas financeiras</h1>
           <p className="finova-subtitle mb-0">
-            Organize as contas que vao participar da futura integracao bancaria e centralize as sincronizacoes em uma area propria.
+            Centralize contas manuais e contas conectadas. Nesta etapa, o Pluggy ja entra como integracao bancaria real do produto.
           </p>
         </div>
       </div>
+
+      {connectToken ? (
+        <PluggyConnect
+          connectToken={connectToken}
+          includeSandbox
+          updateItem={connectingAccount?.providerItemId || undefined}
+          onError={(pluggyError) => {
+            closePluggyWidget();
+            setError(pluggyError?.message || "Nao foi possivel concluir a conexao com o Pluggy.");
+          }}
+          onClose={closePluggyWidget}
+          onSuccess={handlePluggySuccess}
+        />
+      ) : null}
 
       <div className="d-grid gap-4">
         <div className="finova-card p-4">
@@ -189,7 +287,7 @@ export default function FinancialAccounts() {
             </div>
             <div className="col-12 col-md-6 col-xl-3">
               <div className="finova-card-soft p-3 h-100">
-                <div className="finova-subtitle small mb-1">Aguardando sync</div>
+                <div className="finova-subtitle small mb-1">Aguardando acao</div>
                 <div className="finova-title h4 mb-0">{summary.pending}</div>
               </div>
             </div>
@@ -208,7 +306,7 @@ export default function FinancialAccounts() {
               <div className="mb-3">
                 <h2 className="finova-title h5 mb-1">Adicionar conta</h2>
                 <p className="finova-subtitle mb-0">
-                  Cadastre a instituicao e deixe a conta pronta para a sincronizacao automatica das proximas etapas.
+                  Cadastre a conta primeiro e depois escolha se ela vai seguir por importacao manual ou conexao bancaria com Pluggy.
                 </p>
               </div>
 
@@ -248,7 +346,7 @@ export default function FinancialAccounts() {
                     className="form-control finova-input"
                     value={form.institutionName}
                     onChange={(event) => updateField("institutionName", event.target.value)}
-                    placeholder="Ex.: Banco do Brasil, Nubank, Itau"
+                    placeholder="Ex.: Nubank, Itau, Banco do Brasil"
                     disabled={isSubmitting}
                   />
                 </div>
@@ -302,7 +400,10 @@ export default function FinancialAccounts() {
                 </div>
 
                 <div className="col-12 col-md-3">
-                  <label className="form-label text-dark fw-medium" htmlFor="financial-account-external-id">
+                  <label
+                    className="form-label text-dark fw-medium"
+                    htmlFor="financial-account-external-id"
+                  >
                     ID externo
                   </label>
                   <input
@@ -349,7 +450,7 @@ export default function FinancialAccounts() {
                 <div>
                   <h2 className="finova-title h5 mb-1">Contas cadastradas</h2>
                   <p className="finova-subtitle mb-0">
-                    Cada conta mostra o status atual e o ultimo ponto de sincronizacao conhecido.
+                    O fluxo com Pluggy ja cria a conexao real. As contas manuais continuam disponiveis para importacoes por arquivo.
                   </p>
                 </div>
 
@@ -361,12 +462,12 @@ export default function FinancialAccounts() {
               <div className="finova-card-soft p-3 mb-3">
                 <div className="d-flex flex-column flex-lg-row justify-content-between gap-3">
                   <div>
-                    <div className="finova-title h6 mb-1">Etapa atual da integracao</div>
+                    <div className="finova-title h6 mb-1">Fluxo real desta etapa</div>
                     <p className="finova-subtitle mb-0">
-                      Esta tela ja prepara o cadastro, o status e o disparo de sync. A conexao bancaria real entra na proxima fase da V5.
+                      Cadastro local, conexao via Pluggy, vinculo do item e sincronizacao das transacoes no Finova.
                     </p>
                   </div>
-                  <span className="finova-badge-primary align-self-start">Base pronta para evoluir</span>
+                  <span className="finova-badge-primary align-self-start">Pluggy ativo</span>
                 </div>
               </div>
 
@@ -379,7 +480,7 @@ export default function FinancialAccounts() {
                 <div className="finova-card-soft p-4 text-center">
                   <h3 className="finova-title h6 mb-2">Nenhuma conta cadastrada</h3>
                   <p className="finova-subtitle mb-0">
-                    Assim que voce cadastrar a primeira conta, ela passa a aparecer aqui com status, historico de sync e proximos passos.
+                    Assim que voce cadastrar a primeira conta, ela passa a aparecer aqui com status, historico de sync e acoes de conexao.
                   </p>
                 </div>
               ) : (
@@ -387,6 +488,8 @@ export default function FinancialAccounts() {
                   {accounts.map((account) => {
                     const statusMeta = getStatusMeta(account.status);
                     const isSyncing = syncingAccountId === account.id;
+                    const isConnecting = connectingAccountId === account.id;
+                    const canUsePluggy = account.provider === "pluggy";
 
                     return (
                       <div key={account.id} className="finova-card-soft p-3">
@@ -409,9 +512,9 @@ export default function FinancialAccounts() {
                                   <strong>Final:</strong> {account.accountMask}
                                 </span>
                               ) : null}
-                              {account.institutionCode ? (
+                              {account.providerItemId ? (
                                 <span>
-                                  <strong>Codigo:</strong> {account.institutionCode}
+                                  <strong>Item Pluggy:</strong> {account.providerItemId}
                                 </span>
                               ) : null}
                               <span>
@@ -424,11 +527,26 @@ export default function FinancialAccounts() {
                           </div>
 
                           <div className="finova-actions-row">
+                            {canUsePluggy ? (
+                              <button
+                                type="button"
+                                className="btn finova-btn-light"
+                                onClick={() => handleConnect(account)}
+                                disabled={isConnecting}
+                              >
+                                {isConnecting
+                                  ? "Abrindo Pluggy..."
+                                  : account.providerItemId
+                                    ? "Reconectar no Pluggy"
+                                    : "Conectar com Pluggy"}
+                              </button>
+                            ) : null}
+
                             <button
                               type="button"
                               className="btn finova-btn-light"
                               onClick={() => handleSync(account)}
-                              disabled={isSyncing}
+                              disabled={isSyncing || (canUsePluggy && !account.providerItemId)}
                             >
                               {isSyncing ? "Sincronizando..." : "Sincronizar"}
                             </button>

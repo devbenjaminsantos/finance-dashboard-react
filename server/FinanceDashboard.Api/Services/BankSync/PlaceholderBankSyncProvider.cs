@@ -6,7 +6,8 @@ namespace FinanceDashboard.Api.Services.BankSync
     {
         public bool CanHandle(FinancialAccount account)
         {
-            return string.Equals(account.Provider, "manual-import", StringComparison.OrdinalIgnoreCase)
+            return string.Equals(account.Provider, "manual", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(account.Provider, "manual-import", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(account.Provider, "open-finance-placeholder", StringComparison.OrdinalIgnoreCase);
         }
 

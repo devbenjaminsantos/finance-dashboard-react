@@ -16,3 +16,16 @@ export function syncFinancialAccount(id) {
     method: "POST",
   });
 }
+
+export function createFinancialAccountConnectToken(id) {
+  return apiRequest(`/financialaccounts/${id}/connect-token`, {
+    method: "POST",
+  });
+}
+
+export function linkFinancialAccountItem(id, payload) {
+  return apiRequest(`/financialaccounts/${id}/link-item`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}

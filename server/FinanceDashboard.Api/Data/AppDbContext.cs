@@ -72,7 +72,7 @@ namespace FinanceDashboard.Api.Data
                 entity.HasOne(transaction => transaction.FinancialAccount)
                     .WithMany(account => account.Transactions)
                     .HasForeignKey(transaction => transaction.FinancialAccountId)
-                    .OnDelete(DeleteBehavior.SetNull);
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 
             modelBuilder.Entity<FinancialAccount>(entity =>
@@ -95,6 +95,9 @@ namespace FinanceDashboard.Api.Data
                 entity.Property(account => account.ExternalAccountId)
                     .HasMaxLength(120);
 
+                entity.Property(account => account.ProviderItemId)
+                    .HasMaxLength(120);
+
                 entity.Property(account => account.Status)
                     .HasMaxLength(30);
 
@@ -104,6 +107,7 @@ namespace FinanceDashboard.Api.Data
                         "[Status] IN ('disconnected', 'pending', 'connected', 'error')"));
 
                 entity.HasIndex(account => new { account.UserId, account.ExternalAccountId });
+                entity.HasIndex(account => new { account.UserId, account.ProviderItemId });
                 entity.HasIndex(account => new { account.UserId, account.Provider, account.InstitutionName });
 
                 entity.HasOne(account => account.User)

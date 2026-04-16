@@ -29,7 +29,7 @@ namespace FinanceDashboard.Api.Migrations
                 type: "nvarchar(30)",
                 maxLength: 30,
                 nullable: false,
-                defaultValue: "");
+                defaultValue: "manual");
 
             migrationBuilder.AddColumn<string>(
                 name: "SourceReference",
@@ -76,6 +76,15 @@ namespace FinanceDashboard.Api.Migrations
                 table: "Transactions",
                 columns: new[] { "UserId", "Source", "SourceReference" });
 
+            migrationBuilder.Sql(
+                """
+                UPDATE [Transactions]
+                SET [Source] = 'manual'
+                WHERE [Source] IS NULL
+                   OR LTRIM(RTRIM([Source])) = ''
+                   OR [Source] NOT IN ('manual', 'import_csv', 'import_ofx', 'bank_sync');
+                """);
+
             migrationBuilder.AddCheckConstraint(
                 name: "CK_Transactions_Source",
                 table: "Transactions",
@@ -97,7 +106,7 @@ namespace FinanceDashboard.Api.Migrations
                 column: "FinancialAccountId",
                 principalTable: "FinancialAccounts",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
+                onDelete: ReferentialAction.NoAction);
         }
 
         /// <inheritdoc />

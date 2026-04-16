@@ -5,6 +5,7 @@ using FinanceDashboard.Api.DTOs;
 using FinanceDashboard.Api.Models;
 using FinanceDashboard.Api.Services.Audit;
 using FinanceDashboard.Api.Services.BankSync;
+using FinanceDashboard.Api.Services.BankSync.Pluggy;
 using FinanceDashboard.Api.Services.CurrentUser;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -23,7 +24,7 @@ public class FinancialAccountsControllerTests
 
         var dto = new FinancialAccountCreateRequest
         {
-            Provider = "manual-import",
+            Provider = "manual",
             InstitutionName = "Banco Finova",
             AccountName = "Conta principal",
             AccountMask = "1234"
@@ -37,7 +38,7 @@ public class FinancialAccountsControllerTests
 
         Assert.Equal(11, entity.UserId);
         Assert.Equal("pending", entity.Status);
-        Assert.Equal("manual-import", payload.Provider);
+        Assert.Equal("manual", payload.Provider);
         Assert.Contains(context.AuditLogs, log => log.Action == "financial-account.created");
     }
 
@@ -48,7 +49,7 @@ public class FinancialAccountsControllerTests
         context.FinancialAccounts.Add(new FinancialAccount
         {
             UserId = 4,
-            Provider = "manual-import",
+            Provider = "manual",
             InstitutionName = "Banco Finova",
             AccountName = "Conta principal",
             Status = "pending"
@@ -71,6 +72,66 @@ public class FinancialAccountsControllerTests
         Assert.Contains(context.AuditLogs, log => log.Action == "financial-account.synced");
     }
 
+    [Fact]
+    public async Task CreateConnectToken_ReturnsTokenForPluggyAccount()
+    {
+        using var context = CreateContext();
+        context.FinancialAccounts.Add(new FinancialAccount
+        {
+            UserId = 8,
+            Provider = "pluggy",
+            InstitutionName = "Nubank",
+            AccountName = "Conta principal",
+            Status = "pending"
+        });
+        await context.SaveChangesAsync();
+
+        var accountId = await context.FinancialAccounts.Select(item => item.Id).SingleAsync();
+        var pluggyClient = new FakePluggyClient();
+        var controller = CreateController(context, userId: 8, pluggyClient: pluggyClient);
+
+        var result = await controller.CreateConnectToken(accountId, CancellationToken.None);
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        var payload = Assert.IsType<FinancialAccountConnectTokenResponse>(ok.Value);
+
+        Assert.Equal("pluggy-connect-token", payload.ConnectToken);
+        Assert.Equal("user:8", pluggyClient.LastClientUserId);
+    }
+
+    [Fact]
+    public async Task LinkItem_PersistsProviderItemIdAndConnectedStatus()
+    {
+        using var context = CreateContext();
+        context.FinancialAccounts.Add(new FinancialAccount
+        {
+            UserId = 9,
+            Provider = "pluggy",
+            InstitutionName = "Conta em configuracao",
+            AccountName = "Carteira principal",
+            Status = "pending"
+        });
+        await context.SaveChangesAsync();
+
+        var accountId = await context.FinancialAccounts.Select(item => item.Id).SingleAsync();
+        var controller = CreateController(context, userId: 9);
+
+        var result = await controller.LinkItem(accountId, new FinancialAccountLinkItemRequest
+        {
+            ItemId = "item-123",
+            InstitutionName = "Nubank"
+        }, CancellationToken.None);
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        var payload = Assert.IsType<FinancialAccountResponse>(ok.Value);
+        var entity = await context.FinancialAccounts.SingleAsync();
+
+        Assert.Equal("item-123", entity.ProviderItemId);
+        Assert.Equal("connected", entity.Status);
+        Assert.Equal("Nubank", payload.InstitutionName);
+        Assert.Contains(context.AuditLogs, log => log.Action == "financial-account.linked");
+    }
+
     private static AppDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
@@ -80,7 +141,10 @@ public class FinancialAccountsControllerTests
         return new AppDbContext(options);
     }
 
-    private static FinancialAccountsController CreateController(AppDbContext context, int userId)
+    private static FinancialAccountsController CreateController(
+        AppDbContext context,
+        int userId,
+        IPluggyClient? pluggyClient = null)
     {
         var claims = new[]
         {
@@ -102,7 +166,8 @@ public class FinancialAccountsControllerTests
             context,
             new CurrentUserService(accessor),
             new AuditLogService(context, accessor),
-            new BankSyncService(context, new IBankSyncProvider[] { new PlaceholderBankSyncProvider() }));
+            new BankSyncService(context, new IBankSyncProvider[] { new PlaceholderBankSyncProvider() }),
+            pluggyClient ?? new FakePluggyClient());
 
         controller.ControllerContext = new ControllerContext
         {
@@ -110,5 +175,45 @@ public class FinancialAccountsControllerTests
         };
 
         return controller;
+    }
+
+    private class FakePluggyClient : IPluggyClient
+    {
+        public bool IsConfigured => true;
+        public string? LastClientUserId { get; private set; }
+
+        public Task<string> CreateConnectTokenAsync(string clientUserId, string? itemId, CancellationToken cancellationToken = default)
+        {
+            LastClientUserId = clientUserId;
+            return Task.FromResult("pluggy-connect-token");
+        }
+
+        public Task<PluggyItemResponse> GetItemAsync(string itemId, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(new PluggyItemResponse
+            {
+                Id = itemId,
+                Status = "UPDATED",
+                Connector = new PluggyConnectorResponse
+                {
+                    Name = "Nubank"
+                }
+            });
+        }
+
+        public Task<List<PluggyAccountResponse>> GetAccountsAsync(string itemId, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(new List<PluggyAccountResponse>());
+        }
+
+        public Task<List<PluggyTransactionResponse>> GetTransactionsAsync(string accountId, DateTime from, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(new List<PluggyTransactionResponse>());
+        }
+
+        public Task UpdateItemAsync(string itemId, CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
     }
 }

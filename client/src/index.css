@@ -196,6 +196,26 @@ a {
   background: rgba(255, 255, 255, 0.08);
 }
 
+.finova-language-select {
+  min-height: 40px;
+  min-width: 88px;
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.finova-language-select:focus {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #fff;
+}
+
+.finova-language-select option {
+  color: var(--text);
+}
+
 .finova-navbar-logout {
   margin-left: 0;
 }

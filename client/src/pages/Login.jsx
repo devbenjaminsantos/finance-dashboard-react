@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
+import { useI18n } from "../i18n/LanguageProvider";
 import {
   consumePostLoginRedirect,
   consumeStoredLogoutReason,
@@ -10,21 +11,14 @@ import {
   resendEmailVerificationRequest,
 } from "../lib/api/auth";
 
-const demoHighlights = [
-  "Conheca a area de graficos com dados prontos e metas ja preenchidas",
-  "Teste filtros, relatórios e fluxos sem criar conta",
-  "Explore autenticação, recuperação de senha e perfil em minutos",
-];
-
 export default function Login() {
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [info, setInfo] = useState(() =>
-    getLogoutMessage(consumeStoredLogoutReason())
-  );
+  const [info, setInfo] = useState(() => getLogoutMessage(consumeStoredLogoutReason()));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDemoSubmitting, setIsDemoSubmitting] = useState(false);
   const [isResendingVerification, setIsResendingVerification] = useState(false);
@@ -34,7 +28,7 @@ export default function Login() {
   }
 
   const shouldShowResendVerification =
-    error.toLowerCase().includes("confirme seu e-mail") && email.trim();
+    /confirme seu e-mail|confirm your email/i.test(error) && email.trim();
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -44,10 +38,10 @@ export default function Login() {
 
     try {
       await loginRequest(email, password);
-      setInfo("Login realizado com sucesso. Redirecionando...");
+      setInfo(t("auth.loginSuccess"));
       navigate(consumePostLoginRedirect(), { replace: true });
     } catch (requestError) {
-      setError(requestError.message || "Falha ao fazer login.");
+      setError(requestError.message || t("auth.loginError"));
     } finally {
       setIsSubmitting(false);
     }
@@ -55,15 +49,15 @@ export default function Login() {
 
   async function handleDemoLogin() {
     setError("");
-    setInfo("Preparando a demonstração...");
+    setInfo(t("auth.preparingDemo"));
     setIsDemoSubmitting(true);
 
     try {
       await demoLoginRequest();
-      setInfo("Demonstração pronta. Redirecionando...");
+      setInfo(t("auth.demoReady"));
       navigate(consumePostLoginRedirect(), { replace: true });
     } catch (requestError) {
-      setError(requestError.message || "Não foi possível abrir a demonstração.");
+      setError(requestError.message || t("auth.demoError"));
       setInfo("");
     } finally {
       setIsDemoSubmitting(false);
@@ -81,44 +75,39 @@ export default function Login() {
       const response = await resendEmailVerificationRequest(email);
       setInfo(
         response.message ||
-          "Se a conta existir e ainda não estiver confirmada, enviaremos um novo link."
+          "Se a conta existir e ainda nao estiver confirmada, enviaremos um novo link."
       );
     } catch (requestError) {
-      setError(requestError.message || "Não foi possível reenviar a confirmação.");
+      setError(requestError.message || t("auth.verifyError"));
     } finally {
       setIsResendingVerification(false);
     }
   }
+
+  const demoHighlights = t("auth.demoHighlights");
 
   return (
     <div className="finova-page d-flex align-items-center justify-content-center px-3">
       <div className="finova-auth-shell finova-auth-shell-lg">
         <div className="text-center mb-4">
           <h1 className="finova-title finova-brand mb-2">Finova</h1>
-          <p className="finova-subtitle mb-0">
-            Seu painel financeiro pessoal, com clareza e controle.
-          </p>
+          <p className="finova-subtitle mb-0">{t("auth.loginPageSubtitle")}</p>
         </div>
 
         <div className="finova-card p-4 p-md-5">
           <div className="mb-4 text-center">
-            <h2 className="finova-title h4 mb-2">Entrar</h2>
-            <p className="finova-subtitle mb-0">
-              Acesse sua conta para visualizar suas transações.
-            </p>
+            <h2 className="finova-title h4 mb-2">{t("auth.loginTitle")}</h2>
+            <p className="finova-subtitle mb-0">{t("auth.loginSubtitle")}</p>
           </div>
 
           <div className="finova-demo-panel p-4 mb-4">
             <div className="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-start">
               <div>
                 <div className="small text-uppercase fw-semibold text-primary mb-2">
-                  Experimente antes de se cadastrar
+                  {t("auth.demoEyebrow")}
                 </div>
-                <h3 className="finova-title h5 mb-2">Explore a conta demo</h3>
-                <p className="finova-subtitle mb-3">
-                  Explore todas as funcionalidades sem criar conta e sem
-                  preencher cadastro.
-                </p>
+                <h3 className="finova-title h5 mb-2">{t("auth.demoTitle")}</h3>
+                <p className="finova-subtitle mb-3">{t("auth.demoDescription")}</p>
                 <div className="d-grid gap-2">
                   {demoHighlights.map((item) => (
                     <div key={item} className="small text-muted">
@@ -134,20 +123,20 @@ export default function Login() {
                 onClick={handleDemoLogin}
                 disabled={isSubmitting || isDemoSubmitting || isResendingVerification}
               >
-                {isDemoSubmitting ? "Abrindo demonstração..." : "Entrar como demonstração"}
+                {isDemoSubmitting ? t("auth.demoButtonLoading") : t("auth.demoButton")}
               </button>
             </div>
           </div>
 
           <div className="finova-divider mb-4">
             <hr />
-            <span className="finova-subtitle small">ou use sua conta</span>
+            <span className="finova-subtitle small">{t("auth.demoDivider")}</span>
             <hr />
           </div>
 
           <form onSubmit={handleSubmit} className="d-grid gap-3">
             <div>
-              <label className="form-label text-dark fw-medium">E-mail</label>
+              <label className="form-label text-dark fw-medium">{t("common.email")}</label>
               <input
                 type="email"
                 className="form-control finova-input"
@@ -161,12 +150,9 @@ export default function Login() {
 
             <div>
               <div className="d-flex justify-content-between align-items-center">
-                <label className="form-label text-dark fw-medium">Senha</label>
-                <Link
-                  to="/forgot-password"
-                  className="small text-decoration-none fw-semibold mb-2"
-                >
-                  Esqueci minha senha
+                <label className="form-label text-dark fw-medium">{t("common.password")}</label>
+                <Link to="/forgot-password" className="small text-decoration-none fw-semibold mb-2">
+                  {t("auth.forgotPassword")}
                 </Link>
               </div>
               <input
@@ -174,7 +160,7 @@ export default function Login() {
                 className="form-control finova-input"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder="Digite sua senha"
+                placeholder={t("common.password")}
                 disabled={isSubmitting || isDemoSubmitting || isResendingVerification}
                 required
               />
@@ -191,8 +177,8 @@ export default function Login() {
                     disabled={isResendingVerification}
                   >
                     {isResendingVerification
-                      ? "Reenviando confirmação..."
-                      : "Reenviar e-mail de confirmação"}
+                      ? t("auth.resendingVerification")
+                      : t("auth.resendVerification")}
                   </button>
                 ) : null}
               </div>
@@ -209,15 +195,15 @@ export default function Login() {
               className="btn finova-btn-primary"
               disabled={isSubmitting || isDemoSubmitting || isResendingVerification}
             >
-              {isSubmitting ? "Entrando..." : "Entrar"}
+              {isSubmitting ? t("auth.submittingLogin") : t("auth.submitLogin")}
             </button>
           </form>
 
           <div className="text-center mt-4">
             <span className="finova-subtitle small">
-              Ainda não tem uma conta?{" "}
+              {t("auth.noAccount")}{" "}
               <Link to="/register" className="text-decoration-none fw-semibold">
-                Criar conta
+                {t("auth.createAccount")}
               </Link>
             </span>
           </div>

@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import { useI18n } from "../i18n/LanguageProvider";
 import { getStoredUser, hasValidSession, logout } from "../lib/api/auth";
 import { useTheme } from "../theme/ThemeProvider";
 
 export default function Navbar() {
   const navigate = useNavigate();
   const { theme, isDark, toggleTheme } = useTheme();
+  const { language, languages, setLanguage, t } = useI18n();
   const [hasSession, setHasSession] = useState(() => hasValidSession());
   const [user, setUser] = useState(() => getStoredUser());
 
@@ -46,13 +48,26 @@ export default function Navbar() {
             type="button"
             className="btn finova-theme-toggle"
             onClick={toggleTheme}
-            aria-label={isDark ? "Ativar tema claro" : "Ativar tema escuro"}
-            title={isDark ? "Ativar tema claro" : "Ativar tema escuro"}
+            aria-label={isDark ? t("navbar.openLight") : t("navbar.openDark")}
+            title={isDark ? t("navbar.openLight") : t("navbar.openDark")}
           >
             <span className="finova-theme-toggle-icon" aria-hidden="true">
               {theme === "dark" ? "\u2600" : "\u263E"}
             </span>
           </button>
+
+          <select
+            className="form-select finova-select finova-language-select"
+            aria-label={t("common.languageLabel")}
+            value={language}
+            onChange={(event) => setLanguage(event.target.value)}
+          >
+            {languages.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
 
           <button
             className="navbar-toggler finova-navbar-toggler"
@@ -61,7 +76,7 @@ export default function Navbar() {
             data-bs-target="#nav"
             aria-controls="nav"
             aria-expanded="false"
-            aria-label="Alternar navegacao"
+            aria-label={t("navbar.toggleNav")}
           >
             <span className="navbar-toggler-icon" />
           </button>
@@ -72,31 +87,31 @@ export default function Navbar() {
             {hasSession ? (
               <>
                 <NavLink className={linkClass} to="/">
-                  Home
+                  {t("navbar.home")}
                 </NavLink>
                 <NavLink className={linkClass} to="/graficos">
-                  Graficos
+                  {t("navbar.charts")}
                 </NavLink>
                 <NavLink className={linkClass} to="/transacoes">
-                  Transacoes
+                  {t("navbar.transactions")}
                 </NavLink>
                 <NavLink className={linkClass} to="/insights">
-                  Insights
+                  {t("navbar.insights")}
                 </NavLink>
                 <NavLink className={linkClass} to="/comparativos">
-                  Comparativos
+                  {t("navbar.comparisons")}
                 </NavLink>
                 <NavLink className={linkClass} to="/metas">
-                  Metas
+                  {t("navbar.goals")}
                 </NavLink>
                 <NavLink className={linkClass} to="/contas">
-                  Contas
+                  {t("navbar.accounts")}
                 </NavLink>
                 <NavLink className={linkClass} to="/historico">
-                  Historico
+                  {t("navbar.history")}
                 </NavLink>
                 <NavLink className={linkClass} to="/perfil">
-                  Perfil
+                  {t("navbar.profile")}
                 </NavLink>
 
                 <span className="text-white-50 small ms-lg-3 me-lg-3 mt-2 mt-lg-0 finova-navbar-user">
@@ -107,7 +122,7 @@ export default function Navbar() {
                   className="btn finova-btn-light btn-sm mt-2 mt-lg-0 finova-navbar-logout"
                   onClick={handleLogout}
                 >
-                  Sair
+                  {t("navbar.logout")}
                 </button>
               </>
             ) : null}

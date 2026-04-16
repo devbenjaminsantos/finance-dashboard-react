@@ -3,6 +3,7 @@ import {
   CategoryInsightCard,
   ComparisonCard,
 } from "../features/dashboard/DashboardCards";
+import { useI18n } from "../i18n/LanguageProvider";
 import {
   COMPARISON_RANGE_OPTIONS,
   getCategoryLeaders,
@@ -12,6 +13,7 @@ import {
 import { useTransactions } from "../features/transactions/useTransactions";
 
 export default function Comparisons() {
+  const { t } = useI18n();
   const { isLoading, transactions } = useTransactions();
   const [comparisonRange, setComparisonRange] = useState(3);
 
@@ -48,15 +50,12 @@ export default function Comparisons() {
     <section className="finova-section-space">
       <div className="finova-page-header">
         <div className="finova-page-header-copy">
-          <h1 className="finova-title">Comparativos</h1>
-          <p className="finova-subtitle mb-0">
-            Compare janelas equivalentes para identificar mudancas de ritmo, pressao no saldo e
-            categorias que mais alteraram o resultado.
-          </p>
+          <h1 className="finova-title">{t("pages.comparisonsTitle")}</h1>
+          <p className="finova-subtitle mb-0">{t("pages.comparisonsSubtitle")}</p>
         </div>
 
         <div className="finova-page-header-side">
-          <label className="form-label text-dark fw-medium">Janela de comparacao</label>
+          <label className="form-label text-dark fw-medium">{t("pages.comparisonsRange")}</label>
           <select
             className="form-select finova-select"
             value={comparisonRange}

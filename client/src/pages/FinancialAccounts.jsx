@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { PluggyConnect } from "react-pluggy-connect";
 import { useTransactions } from "../features/transactions/useTransactions";
+import { useI18n } from "../i18n/LanguageProvider";
 import {
   createFinancialAccount,
   createFinancialAccountConnectToken,
@@ -82,6 +83,7 @@ function getPluggyInstitutionName(payload) {
 }
 
 export default function FinancialAccounts() {
+  const { t } = useI18n();
   const { loadAll: reloadTransactions } = useTransactions();
   const [accounts, setAccounts] = useState([]);
   const [form, setForm] = useState(INITIAL_FORM);
@@ -249,11 +251,8 @@ export default function FinancialAccounts() {
     <section className="finova-section-space">
       <div className="finova-page-header">
         <div className="finova-page-header-copy">
-          <h1 className="finova-title">Contas financeiras</h1>
-          <p className="finova-subtitle mb-0">
-            Centralize contas manuais e contas conectadas. Nesta etapa, o Pluggy ja entra como
-            integracao bancaria real do produto.
-          </p>
+          <h1 className="finova-title">{t("pages.accountsTitle")}</h1>
+          <p className="finova-subtitle mb-0">{t("pages.accountsSubtitle")}</p>
         </div>
       </div>
 

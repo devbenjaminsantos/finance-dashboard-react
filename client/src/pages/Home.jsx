@@ -37,6 +37,7 @@ import {
   loadHomeWidgets,
   saveHomeWidgets,
 } from "../lib/home/homePreferences";
+import { useI18n } from "../i18n/LanguageProvider";
 
 function DemoInfoCard() {
   return (
@@ -324,6 +325,7 @@ function HistoryPreview({ logs, isLoading }) {
 }
 
 export default function Home() {
+  const { t } = useI18n();
   const { isLoading, transactions } = useTransactions();
   const [user, setUser] = useState(() => getStoredUser());
   const [period, setPeriod] = useState("current-month");
@@ -570,14 +572,12 @@ export default function Home() {
     <section className="finova-section-space">
       <div className="finova-page-header">
         <div className="finova-page-header-copy">
-          <h1 className="finova-title">Home</h1>
-          <p className="finova-subtitle mb-0">
-            Monte sua entrada principal com os blocos que mais ajudam no seu dia a dia.
-          </p>
+          <h1 className="finova-title">{t("pages.homeTitle")}</h1>
+          <p className="finova-subtitle mb-0">{t("pages.homeSubtitle")}</p>
         </div>
 
         <div className="finova-page-header-side">
-          <label className="form-label text-dark fw-medium">Recorte rapido</label>
+          <label className="form-label text-dark fw-medium">{t("pages.homePeriod")}</label>
           <select
             className="form-select finova-select"
             value={period}

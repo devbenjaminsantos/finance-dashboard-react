@@ -5,15 +5,15 @@ import TransactionsFilters from "../features/transactions/components/Transaction
 import TransactionsTable from "../features/transactions/components/TransactionsTable";
 import { useTransactions } from "../features/transactions/useTransactions";
 import { getTransactionCategories } from "../lib/constants/transactionCategories";
-import { formatBRLFromCents } from "../lib/format/currency";
-import { formatBRDate } from "../lib/format/date";
 import { downloadCsv } from "../lib/export/csv";
 import { exportTransactionsToPdf } from "../lib/export/pdf";
 import { loadJSON, saveJSON } from "../lib/storage/jsonStorage";
+import { useI18n } from "../i18n/LanguageProvider";
 
 const FILTERS_KEY = "fd_tx_filters_v1";
 
 export default function Transactions() {
+  const { t, formatCurrencyFromCents, formatDate } = useI18n();
   const {
     transactions,
     addTransaction,
@@ -182,10 +182,10 @@ export default function Transactions() {
 
       setImportFeedback(
         importedCount > 0
-          ? `${importedCount} transacao${importedCount === 1 ? "" : "oes"} importada${
-              importedCount === 1 ? "" : "s"
-            } com sucesso via ${importLabel}.`
-          : `A revisao foi concluida, mas nenhuma transacao nova foi importada via ${importLabel}.`
+          ? importedCount === 1
+            ? t("pages.importSuccessSingle", { format: importLabel })
+            : t("pages.importSuccessPlural", { count: importedCount, format: importLabel })
+          : t("pages.importNoNew", { format: importLabel })
       );
       setHighlightImportedSince(importedCount > 0 ? importStartedAt : "");
 
@@ -196,7 +196,7 @@ export default function Transactions() {
   }
 
   async function handleRemove(id) {
-    if (!window.confirm("Remover esta transacao?")) {
+    if (!window.confirm(t("pages.removeTransactionConfirm"))) {
       return;
     }
 
@@ -227,18 +227,25 @@ export default function Transactions() {
 
   function getExportRows() {
     return filtered.map((transaction) => [
-      formatBRDate(transaction.date),
+      formatDate(transaction.date),
       transaction.description || "",
-      transaction.category || "Sem categoria",
-      transaction.type === "income" ? "Receita" : "Despesa",
-      formatBRLFromCents(transaction.amountCents),
+      transaction.category || t("transactions.noCategory"),
+      transaction.type === "income" ? t("transactions.income") : t("transactions.expense"),
+      formatCurrencyFromCents(transaction.amountCents),
       Number(transaction.amountCents) || 0,
     ]);
   }
 
   function exportFilteredTransactionsCsv() {
     const rows = [
-      ["Data", "Descricao", "Categoria", "Tipo", "Valor", "Valor em centavos"],
+      [
+        t("common.date"),
+        t("common.description"),
+        t("common.category"),
+        t("common.type"),
+        t("common.value"),
+        "Cents",
+      ],
       ...getExportRows(),
     ];
 
@@ -251,11 +258,18 @@ export default function Transactions() {
 
     exportTransactionsToPdf({
       filename: `finova-transacoes-${monthLabel}.pdf`,
-      title: "Relatorio de transacoes",
+      title: t("pages.transactionsTitle"),
       subtitle: month
         ? `Periodo filtrado: ${month} | ${filtered.length} registro(s)`
         : `Todos os periodos | ${filtered.length} registro(s)`,
-      columns: ["Data", "Descricao", "Categoria", "Tipo", "Valor", "Centavos"],
+      columns: [
+        t("common.date"),
+        t("common.description"),
+        t("common.category"),
+        t("common.type"),
+        t("common.value"),
+        "Cents",
+      ],
       rows: getExportRows(),
     });
   }
@@ -264,19 +278,13 @@ export default function Transactions() {
     <section className="finova-section-space">
       <div className="finova-page-header">
         <div className="finova-page-header-copy">
-          <h1 className="finova-title">Transacoes</h1>
-          <p className="finova-subtitle mb-0">
-            Gerencie receitas e despesas com controle total do seu fluxo financeiro.
-          </p>
+          <h1 className="finova-title">{t("pages.transactionsTitle")}</h1>
+          <p className="finova-subtitle mb-0">{t("pages.transactionsSubtitle")}</p>
         </div>
 
         <div className="finova-page-header-actions">
-          <button
-            className="btn finova-btn-light px-4"
-            onClick={openImport}
-            disabled={isMutating}
-          >
-            Importar arquivo
+          <button className="btn finova-btn-light px-4" onClick={openImport} disabled={isMutating}>
+            {t("pages.importFile")}
           </button>
 
           <button
@@ -284,7 +292,7 @@ export default function Transactions() {
             onClick={openCreate}
             disabled={isMutating}
           >
-            Nova transacao
+            {t("pages.newTransaction")}
           </button>
         </div>
       </div>

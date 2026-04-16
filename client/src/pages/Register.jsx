@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
+import { useI18n } from "../i18n/LanguageProvider";
 import { hasValidSession, registerRequest } from "../lib/api/auth";
-import {
-  isPasswordStrong,
-  PASSWORD_POLICY_MESSAGE,
-} from "../lib/auth/passwordPolicy";
+import { isPasswordStrong } from "../lib/auth/passwordPolicy";
 
 export default function Register() {
+  const { t } = useI18n();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,7 +23,7 @@ export default function Register() {
     setSuccess("");
 
     if (!isPasswordStrong(password)) {
-      setError(PASSWORD_POLICY_MESSAGE);
+      setError(t("passwordPolicy.message"));
       return;
     }
 
@@ -32,14 +31,12 @@ export default function Register() {
 
     try {
       await registerRequest(name, email, password);
-      setSuccess(
-        "Conta criada com sucesso. Confira seu e-mail e confirme o cadastro antes de entrar."
-      );
+      setSuccess(t("auth.registerSuccess"));
       setName("");
       setEmail("");
       setPassword("");
     } catch (requestError) {
-      setError(requestError.message || "Não foi possível criar a sua conta.");
+      setError(requestError.message || t("auth.registerError"));
     } finally {
       setIsSubmitting(false);
     }
@@ -50,35 +47,31 @@ export default function Register() {
       <div className="finova-auth-shell finova-auth-shell-sm">
         <div className="text-center mb-4">
           <h1 className="finova-title finova-brand mb-2">Finova</h1>
-          <p className="finova-subtitle mb-0">
-            Crie sua conta e comece a organizar sua vida financeira.
-          </p>
+          <p className="finova-subtitle mb-0">{t("auth.registerPageSubtitle")}</p>
         </div>
 
         <div className="finova-card p-4 p-md-5">
           <div className="mb-4 text-center">
-            <h2 className="finova-title h4 mb-2">Criar conta</h2>
-            <p className="finova-subtitle mb-0">
-              Cadastre-se para acessar seu painel financeiro.
-            </p>
+            <h2 className="finova-title h4 mb-2">{t("auth.registerTitle")}</h2>
+            <p className="finova-subtitle mb-0">{t("auth.registerSubtitle")}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="d-grid gap-3">
             <div>
-              <label className="form-label text-dark fw-medium">Nome</label>
+              <label className="form-label text-dark fw-medium">{t("common.name")}</label>
               <input
                 type="text"
                 className="form-control finova-input"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="Seu nome"
+                placeholder={t("common.name")}
                 disabled={isSubmitting}
                 required
               />
             </div>
 
             <div>
-              <label className="form-label text-dark fw-medium">E-mail</label>
+              <label className="form-label text-dark fw-medium">{t("common.email")}</label>
               <input
                 type="email"
                 className="form-control finova-input"
@@ -91,17 +84,17 @@ export default function Register() {
             </div>
 
             <div>
-              <label className="form-label text-dark fw-medium">Senha</label>
+              <label className="form-label text-dark fw-medium">{t("common.password")}</label>
               <input
                 type="password"
                 className="form-control finova-input"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder="Crie uma senha"
+                placeholder={t("common.password")}
                 disabled={isSubmitting}
                 required
               />
-              <div className="form-text">{PASSWORD_POLICY_MESSAGE}</div>
+              <div className="form-text">{t("passwordPolicy.message")}</div>
             </div>
 
             {error ? (
@@ -116,20 +109,16 @@ export default function Register() {
               </div>
             ) : null}
 
-            <button
-              type="submit"
-              className="btn finova-btn-primary"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Criando conta..." : "Criar conta"}
+            <button type="submit" className="btn finova-btn-primary" disabled={isSubmitting}>
+              {isSubmitting ? t("auth.submittingRegister") : t("auth.submitRegister")}
             </button>
           </form>
 
           <div className="text-center mt-4">
             <span className="finova-subtitle small">
-              Já possui uma conta?{" "}
+              {t("auth.alreadyHaveAccount")}{" "}
               <Link to="/login" className="text-decoration-none fw-semibold">
-                Entrar
+                {t("auth.signIn")}
               </Link>
             </span>
           </div>

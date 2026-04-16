@@ -6,9 +6,11 @@ import {
   getActionToneClass,
   VISIBLE_AUDIT_ACTIONS,
 } from "../features/history/auditLogPresentation";
+import { useI18n } from "../i18n/LanguageProvider";
 import { getAuditLogs } from "../lib/api/auditLogs";
 
 export default function AuditLogs() {
+  const { t } = useI18n();
   const [logs, setLogs] = useState([]);
   const [limit, setLimit] = useState(50);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,15 +58,12 @@ export default function AuditLogs() {
     <section className="finova-section-space">
       <div className="finova-page-header">
         <div className="finova-page-header-copy">
-          <h1 className="finova-title">Historico da conta</h1>
-          <p className="finova-subtitle mb-0">
-            Acompanhe as acoes mais relevantes da sua conta, como acessos, mudancas de perfil,
-            transacoes e metas.
-          </p>
+          <h1 className="finova-title">{t("pages.historyTitle")}</h1>
+          <p className="finova-subtitle mb-0">{t("pages.historySubtitle")}</p>
         </div>
 
         <div className="finova-page-header-side">
-          <label className="form-label text-dark fw-medium">Exibir</label>
+          <label className="form-label text-dark fw-medium">{t("pages.historyLimit")}</label>
           <select
             className="form-select finova-select"
             value={limit}

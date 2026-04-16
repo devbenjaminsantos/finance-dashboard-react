@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useI18n } from "../i18n/LanguageProvider";
 import { forgotPasswordRequest } from "../lib/api/auth";
 
 export default function ForgotPassword() {
+  const { t } = useI18n();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -18,13 +20,10 @@ export default function ForgotPassword() {
 
     try {
       const response = await forgotPasswordRequest(email);
-      setSuccess(
-        response.message ||
-          "Se o e-mail estiver cadastrado, enviaremos as instruções de redefinição."
-      );
+      setSuccess(response.message || t("auth.forgotSuccess"));
       setResetUrl(response.resetUrl || "");
     } catch (err) {
-      setError(err.message || "Não foi possível solicitar a redefinição.");
+      setError(err.message || t("auth.forgotError"));
     } finally {
       setIsSubmitting(false);
     }
@@ -46,23 +45,18 @@ export default function ForgotPassword() {
       <div className="finova-auth-shell finova-auth-shell-md">
         <div className="text-center mb-4">
           <h1 className="finova-title finova-brand mb-2">Finova</h1>
-          <p className="finova-subtitle mb-0">
-            Informe seu e-mail para receber um link de redefinição.
-          </p>
+          <p className="finova-subtitle mb-0">{t("auth.forgotPageSubtitle")}</p>
         </div>
 
         <div className="finova-card p-4 p-md-5">
           <div className="mb-4 text-center">
-            <h2 className="finova-title h4 mb-2">Recuperar senha</h2>
-            <p className="finova-subtitle mb-0">
-              Enviaremos as instruções se encontrarmos uma conta vinculada ao
-              e-mail informado.
-            </p>
+            <h2 className="finova-title h4 mb-2">{t("auth.forgotTitle")}</h2>
+            <p className="finova-subtitle mb-0">{t("auth.forgotSubtitle")}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="d-grid gap-3">
             <div>
-              <label className="form-label text-dark fw-medium">E-mail</label>
+              <label className="form-label text-dark fw-medium">{t("common.email")}</label>
               <input
                 type="email"
                 className="form-control finova-input"
@@ -85,24 +79,20 @@ export default function ForgotPassword() {
                 {success}
                 {localResetPath ? (
                   <div className="mt-2">
-                    <Link to={localResetPath}>Abrir link de redefinição</Link>
+                    <Link to={localResetPath}>{t("auth.openResetLink")}</Link>
                   </div>
                 ) : null}
               </div>
             ) : null}
 
-            <button
-              type="submit"
-              className="btn finova-btn-primary"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Enviando instruções..." : "Enviar instruções"}
+            <button type="submit" className="btn finova-btn-primary" disabled={isSubmitting}>
+              {isSubmitting ? t("auth.submittingForgot") : t("auth.submitForgot")}
             </button>
           </form>
 
           <div className="text-center mt-4">
             <Link to="/login" className="text-decoration-none fw-semibold">
-              Voltar para o login
+              {t("common.backToLogin")}
             </Link>
           </div>
         </div>

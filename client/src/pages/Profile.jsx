@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
+import { useI18n } from "../i18n/LanguageProvider";
 import { getProfile, updateProfileRequest } from "../lib/api/auth";
-import {
-  isPasswordStrong,
-  PASSWORD_POLICY_MESSAGE,
-} from "../lib/auth/passwordPolicy";
+import { isPasswordStrong } from "../lib/auth/passwordPolicy";
 
 export default function Profile() {
+  const { t } = useI18n();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -28,14 +27,14 @@ export default function Profile() {
           email: user.email ?? "",
         }));
       } catch (err) {
-        setError(err.message || "Não foi possível carregar seu perfil.");
+        setError(err.message || t("profile.loadError"));
       } finally {
         setIsLoading(false);
       }
     }
 
     loadProfile();
-  }, []);
+  }, [t]);
 
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -49,33 +48,31 @@ export default function Profile() {
     setSuccess("");
 
     if (!form.name.trim()) {
-      setError("Informe seu nome.");
+      setError(t("profile.emptyNameError"));
       return;
     }
 
     const wantsToChangePassword =
-      form.currentPassword.trim() ||
-      form.newPassword.trim() ||
-      form.confirmPassword.trim();
+      form.currentPassword.trim() || form.newPassword.trim() || form.confirmPassword.trim();
 
     if (wantsToChangePassword) {
       if (!form.currentPassword.trim()) {
-        setError("Informe sua senha atual.");
+        setError(t("profile.currentPasswordError"));
         return;
       }
 
       if (!form.newPassword.trim()) {
-        setError("Informe uma nova senha.");
+        setError(t("profile.newPasswordError"));
         return;
       }
 
       if (!isPasswordStrong(form.newPassword)) {
-        setError(PASSWORD_POLICY_MESSAGE);
+        setError(t("passwordPolicy.message"));
         return;
       }
 
       if (form.newPassword !== form.confirmPassword) {
-        setError("A confirmação da senha não confere.");
+        setError(t("profile.confirmMismatchError"));
         return;
       }
     }
@@ -97,9 +94,9 @@ export default function Profile() {
         newPassword: "",
         confirmPassword: "",
       }));
-      setSuccess("Perfil atualizado com sucesso.");
+      setSuccess(t("profile.success"));
     } catch (err) {
-      setError(err.message || "Não foi possível atualizar seu perfil.");
+      setError(err.message || t("profile.updateError"));
     } finally {
       setIsSubmitting(false);
     }
@@ -107,23 +104,23 @@ export default function Profile() {
 
   return (
     <section className="finova-section-space">
-      <div className="mb-4">
-        <h1 className="finova-title mb-1">Perfil</h1>
-        <p className="finova-subtitle mb-0">
-          Atualize seus dados pessoais e altere sua senha quando precisar.
-        </p>
+      <div className="finova-page-header">
+        <div className="finova-page-header-copy">
+          <h1 className="finova-title">{t("profile.title")}</h1>
+          <p className="finova-subtitle mb-0">{t("profile.subtitle")}</p>
+        </div>
       </div>
 
       <div className="finova-card p-4 p-md-5" style={{ maxWidth: 760 }}>
         {isLoading ? (
           <div className="d-flex align-items-center gap-3">
             <div className="spinner-border spinner-border-sm text-primary" />
-            <p className="finova-subtitle mb-0">Carregando perfil...</p>
+            <p className="finova-subtitle mb-0">{t("profile.loading")}</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="row g-3">
             <div className="col-12 col-md-6">
-              <label className="form-label text-dark fw-medium">Nome</label>
+              <label className="form-label text-dark fw-medium">{t("common.name")}</label>
               <input
                 type="text"
                 className="form-control finova-input"
@@ -135,7 +132,7 @@ export default function Profile() {
             </div>
 
             <div className="col-12 col-md-6">
-              <label className="form-label text-dark fw-medium">E-mail</label>
+              <label className="form-label text-dark fw-medium">{t("common.email")}</label>
               <input
                 type="email"
                 className="form-control finova-input"
@@ -147,14 +144,12 @@ export default function Profile() {
 
             <div className="col-12">
               <hr className="my-2" />
-              <h2 className="finova-title h5 mb-1">Alterar senha</h2>
-              <p className="finova-subtitle small mb-0">
-                Preencha os campos abaixo apenas se quiser trocar sua senha atual.
-              </p>
+              <h2 className="finova-title h5 mb-1">{t("profile.changePasswordTitle")}</h2>
+              <p className="finova-subtitle small mb-0">{t("profile.changePasswordSubtitle")}</p>
             </div>
 
             <div className="col-12 col-md-4">
-              <label className="form-label text-dark fw-medium">Senha atual</label>
+              <label className="form-label text-dark fw-medium">{t("common.currentPassword")}</label>
               <input
                 type="password"
                 className="form-control finova-input"
@@ -165,7 +160,7 @@ export default function Profile() {
             </div>
 
             <div className="col-12 col-md-4">
-              <label className="form-label text-dark fw-medium">Nova senha</label>
+              <label className="form-label text-dark fw-medium">{t("common.newPassword")}</label>
               <input
                 type="password"
                 className="form-control finova-input"
@@ -173,11 +168,11 @@ export default function Profile() {
                 onChange={(e) => updateField("newPassword", e.target.value)}
                 disabled={isSubmitting}
               />
-              <div className="form-text">{PASSWORD_POLICY_MESSAGE}</div>
+              <div className="form-text">{t("passwordPolicy.message")}</div>
             </div>
 
             <div className="col-12 col-md-4">
-              <label className="form-label text-dark fw-medium">Confirmar senha</label>
+              <label className="form-label text-dark fw-medium">{t("common.confirmPassword")}</label>
               <input
                 type="password"
                 className="form-control finova-input"
@@ -210,7 +205,7 @@ export default function Profile() {
                   className="btn finova-btn-primary px-4"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Salvando alterações..." : "Salvar perfil"}
+                  {isSubmitting ? t("profile.savingButton") : t("profile.saveButton")}
                 </button>
               </div>
             </div>

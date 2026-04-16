@@ -1,18 +1,17 @@
 import BudgetGoalsSection from "../features/dashboard/BudgetGoalsSection";
 import { useTransactions } from "../features/transactions/useTransactions";
+import { useI18n } from "../i18n/LanguageProvider";
 
 export default function Goals() {
+  const { t } = useI18n();
   const { isLoading, transactions } = useTransactions();
 
   return (
     <section className="finova-section-space">
       <div className="finova-page-header">
         <div className="finova-page-header-copy">
-          <h1 className="finova-title">Metas</h1>
-          <p className="finova-subtitle mb-0">
-            Organize seu orcamento mensal com metas gerais e por categoria em uma area propria,
-            mais focada e facil de revisar.
-          </p>
+          <h1 className="finova-title">{t("pages.goalsTitle")}</h1>
+          <p className="finova-subtitle mb-0">{t("pages.goalsSubtitle")}</p>
         </div>
       </div>
 

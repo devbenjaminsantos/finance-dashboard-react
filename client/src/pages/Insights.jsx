@@ -7,8 +7,10 @@ import {
   PERIOD_OPTIONS,
 } from "../features/dashboard/dashboardAnalytics";
 import { useTransactions } from "../features/transactions/useTransactions";
+import { useI18n } from "../i18n/LanguageProvider";
 
 export default function Insights() {
+  const { t } = useI18n();
   const { isLoading, transactions } = useTransactions();
   const [period, setPeriod] = useState("current-month");
 
@@ -37,15 +39,12 @@ export default function Insights() {
     <section className="finova-section-space">
       <div className="finova-page-header">
         <div className="finova-page-header-copy">
-          <h1 className="finova-title">Insights</h1>
-          <p className="finova-subtitle mb-0">
-            Veja padroes, sinais de atencao e proximos passos sugeridos com base nas suas
-            movimentacoes.
-          </p>
+          <h1 className="finova-title">{t("pages.insightsTitle")}</h1>
+          <p className="finova-subtitle mb-0">{t("pages.insightsSubtitle")}</p>
         </div>
 
         <div className="finova-page-header-side">
-          <label className="form-label text-dark fw-medium">Periodo</label>
+          <label className="form-label text-dark fw-medium">{t("pages.insightsPeriod")}</label>
           <select
             className="form-select finova-select"
             value={period}

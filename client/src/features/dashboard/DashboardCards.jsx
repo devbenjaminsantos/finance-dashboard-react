@@ -1,4 +1,4 @@
-import { formatBRLFromCents } from "../../lib/format/currency";
+import { useI18n } from "../../i18n/LanguageProvider";
 
 export function SummaryCard({ label, value, tone = "default" }) {
   const toneMap = {
@@ -52,6 +52,7 @@ export function ComparisonCard({
   currentRangeLabel,
   previousRangeLabel,
 }) {
+  const { formatCurrencyFromCents } = useI18n();
   const delta = currentValue - previousValue;
   const hasPreviousData = previousValue > 0;
   const percentChange = hasPreviousData ? Math.round((delta / previousValue) * 100) : null;
@@ -63,7 +64,7 @@ export function ComparisonCard({
         ? "finova-badge-expense"
         : "finova-badge-primary";
 
-  const toneText = delta > 0 ? "Subiu" : delta < 0 ? "Caiu" : "Sem variação";
+  const toneText = delta > 0 ? "Subiu" : delta < 0 ? "Caiu" : "Sem variacao";
 
   return (
     <div className="col-12 col-md-4">
@@ -71,20 +72,20 @@ export function ComparisonCard({
         <div className="d-flex justify-content-between align-items-start gap-2 mb-3">
           <div>
             <div className="finova-subtitle small mb-1">{label}</div>
-            <div className="finova-title h5 mb-0">{formatBRLFromCents(currentValue)}</div>
+            <div className="finova-title h5 mb-0">{formatCurrencyFromCents(currentValue)}</div>
           </div>
           <span className={toneClass}>{toneText}</span>
         </div>
 
         <div className="small finova-subtitle mb-2">
-          Base anterior ({previousRangeLabel}): {formatBRLFromCents(previousValue)}
+          Base anterior ({previousRangeLabel}): {formatCurrencyFromCents(previousValue)}
         </div>
 
         <div className="small">
           {hasPreviousData ? (
             <span className="fw-semibold">
               {percentChange > 0 ? "+" : ""}
-              {percentChange}% em relação a {previousRangeLabel}
+              {percentChange}% em relacao a {previousRangeLabel}
             </span>
           ) : (
             <span className="finova-subtitle">
@@ -98,6 +99,7 @@ export function ComparisonCard({
 }
 
 export function CategoryInsightCard({ title, category, value, tone }) {
+  const { formatCurrencyFromCents } = useI18n();
   const badgeClass =
     tone === "up"
       ? "finova-badge-expense"
@@ -105,7 +107,7 @@ export function CategoryInsightCard({ title, category, value, tone }) {
         ? "finova-badge-income"
         : "finova-badge-primary";
 
-  const badgeText = tone === "up" ? "Maior peso" : tone === "down" ? "Maior alívio" : "Sem destaque";
+  const badgeText = tone === "up" ? "Maior peso" : tone === "down" ? "Maior alivio" : "Sem destaque";
 
   return (
     <div className="col-12 col-md-6">
@@ -116,8 +118,8 @@ export function CategoryInsightCard({ title, category, value, tone }) {
             <div className="finova-title h5 mb-1">{category || "Sem categoria dominante"}</div>
             <div className="finova-subtitle small">
               {value > 0
-                ? formatBRLFromCents(value)
-                : "Ainda não há despesas suficientes para destacar uma categoria."}
+                ? formatCurrencyFromCents(value)
+                : "Ainda nao ha despesas suficientes para destacar uma categoria."}
             </div>
           </div>
           <span className={badgeClass}>{badgeText}</span>

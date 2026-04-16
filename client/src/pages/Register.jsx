@@ -66,10 +66,11 @@ export default function Register() {
                 className="form-control finova-input"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder={t("common.name")}
+                placeholder={t("common.preferredNamePlaceholder")}
                 disabled={isSubmitting}
                 required
               />
+              <div className="form-text">{t("common.preferredNameHelp")}</div>
             </div>
 
             <div>

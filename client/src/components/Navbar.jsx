@@ -12,7 +12,7 @@ export default function Navbar() {
   const [user, setUser] = useState(() => getStoredUser());
 
   const linkClass = ({ isActive }) =>
-    "nav-link px-3" + (isActive ? " fw-semibold text-white" : " text-white-50");
+    "nav-link px-2 finova-navbar-link" + (isActive ? " fw-semibold text-white" : " text-white-50");
 
   useEffect(() => {
     function syncSession() {
@@ -35,7 +35,7 @@ export default function Navbar() {
 
   return (
     <nav
-      className="navbar navbar-expand-lg border-bottom"
+      className="navbar navbar-expand-xl border-bottom"
       style={{ background: "var(--primary)", borderColor: "var(--nav-border)" }}
     >
       <div className="container">
@@ -86,7 +86,7 @@ export default function Navbar() {
         </div>
 
         <div className="collapse navbar-collapse order-lg-1" id="nav">
-          <div className="navbar-nav ms-auto align-items-lg-center finova-navbar-links">
+          <div className="navbar-nav ms-auto align-items-xl-center finova-navbar-links">
             {hasSession ? (
               <>
                 <NavLink className={linkClass} to="/">

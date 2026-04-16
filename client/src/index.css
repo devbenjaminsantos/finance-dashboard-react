@@ -118,6 +118,12 @@ a {
   box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.06);
 }
 
+.finova-password-toggle {
+  min-width: 84px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
 .finova-btn-primary {
   background: var(--primary);
   border: 1px solid var(--primary);

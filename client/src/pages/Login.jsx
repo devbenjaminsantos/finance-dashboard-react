@@ -17,6 +17,7 @@ export default function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [error, setError] = useState("");
   const [info, setInfo] = useState(() => getLogoutMessage(consumeStoredLogoutReason()));
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -155,15 +156,25 @@ export default function Login() {
                   {t("auth.forgotPassword")}
                 </Link>
               </div>
-              <input
-                type="password"
-                className="form-control finova-input"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder={t("common.password")}
-                disabled={isSubmitting || isDemoSubmitting || isResendingVerification}
-                required
-              />
+              <div className="input-group">
+                <input
+                  type={isPasswordVisible ? "text" : "password"}
+                  className="form-control finova-input"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder={t("common.password")}
+                  disabled={isSubmitting || isDemoSubmitting || isResendingVerification}
+                  required
+                />
+                <button
+                  type="button"
+                  className="btn finova-btn-light finova-password-toggle"
+                  onClick={() => setIsPasswordVisible((current) => !current)}
+                  disabled={isSubmitting || isDemoSubmitting || isResendingVerification}
+                >
+                  {isPasswordVisible ? t("common.hidePassword") : t("common.showPassword")}
+                </button>
+              </div>
             </div>
 
             {error ? (

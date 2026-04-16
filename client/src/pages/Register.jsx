@@ -9,6 +9,7 @@ export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -85,15 +86,25 @@ export default function Register() {
 
             <div>
               <label className="form-label text-dark fw-medium">{t("common.password")}</label>
-              <input
-                type="password"
-                className="form-control finova-input"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder={t("common.password")}
-                disabled={isSubmitting}
-                required
-              />
+              <div className="input-group">
+                <input
+                  type={isPasswordVisible ? "text" : "password"}
+                  className="form-control finova-input"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder={t("common.password")}
+                  disabled={isSubmitting}
+                  required
+                />
+                <button
+                  type="button"
+                  className="btn finova-btn-light finova-password-toggle"
+                  onClick={() => setIsPasswordVisible((current) => !current)}
+                  disabled={isSubmitting}
+                >
+                  {isPasswordVisible ? t("common.hidePassword") : t("common.showPassword")}
+                </button>
+              </div>
               <div className="form-text">{t("passwordPolicy.message")}</div>
             </div>
 

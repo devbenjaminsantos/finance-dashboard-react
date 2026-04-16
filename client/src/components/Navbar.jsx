@@ -89,6 +89,9 @@ export default function Navbar() {
                 <NavLink className={linkClass} to="/metas">
                   Metas
                 </NavLink>
+                <NavLink className={linkClass} to="/contas">
+                  Contas
+                </NavLink>
                 <NavLink className={linkClass} to="/historico">
                   Historico
                 </NavLink>

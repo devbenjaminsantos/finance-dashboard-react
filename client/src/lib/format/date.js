@@ -10,3 +10,20 @@ export function formatBRDate(isoDate) {
 
   return `${d}/${m}/${y}`;
 }
+
+export function formatDateTimeBR(isoDateTime) {
+  if (!isoDateTime) {
+    return "";
+  }
+
+  const date = new Date(isoDateTime);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(date);
+}

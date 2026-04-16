@@ -11,6 +11,7 @@ import {
 import AuditLogs from "./pages/AuditLogs";
 import Comparisons from "./pages/Comparisons";
 import Dashboard from "./pages/Dashboard";
+import FinancialAccounts from "./pages/FinancialAccounts";
 import ForgotPassword from "./pages/ForgotPassword";
 import Goals from "./pages/Goals";
 import Home from "./pages/Home";
@@ -112,6 +113,15 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Goals />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/contas"
+              element={
+                <ProtectedRoute>
+                  <FinancialAccounts />
                 </ProtectedRoute>
               }
             />

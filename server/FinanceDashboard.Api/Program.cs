@@ -140,6 +140,11 @@ app.UseExceptionHandler(exceptionHandlerApp =>
     exceptionHandlerApp.Run(async context =>
     {
         var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
+        if (exception is not null)
+        {
+            app.Logger.LogError(exception, "Unhandled exception while processing {Method} {Path}", context.Request.Method, context.Request.Path);
+        }
+
         var statusCode = exception switch
         {
             UnauthorizedAccessException => StatusCodes.Status401Unauthorized,

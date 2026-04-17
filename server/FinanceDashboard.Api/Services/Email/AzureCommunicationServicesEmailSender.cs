@@ -18,13 +18,13 @@ namespace FinanceDashboard.Api.Services.Email
             if (string.IsNullOrWhiteSpace(_options.ConnectionString))
             {
                 throw new InvalidOperationException(
-                    "Azure Communication Services Email nao configurado. Defina AzureCommunicationServices:Email:ConnectionString.");
+                    "Azure Communication Services Email não configurado. Defina AzureCommunicationServices:Email:ConnectionString.");
             }
 
             if (string.IsNullOrWhiteSpace(_options.SenderAddress))
             {
                 throw new InvalidOperationException(
-                    "Azure Communication Services Email nao configurado. Defina AzureCommunicationServices:Email:SenderAddress.");
+                    "Azure Communication Services Email não configurado. Defina AzureCommunicationServices:Email:SenderAddress.");
             }
 
             _emailClient = new EmailClient(_options.ConnectionString);
@@ -35,16 +35,16 @@ namespace FinanceDashboard.Api.Services.Email
             return SendAsync(
                 toEmail,
                 name,
-                "Redefinicao de senha - Finova",
+                "Redefinição de senha - Finova",
                 $"""
-                Ola, {name}.
+                Olá, {name}.
 
-                Recebemos uma solicitacao para redefinir sua senha no Finova.
+                Recebemos uma solicitação para redefinir sua senha no Finova.
 
                 Acesse o link abaixo para criar uma nova senha:
                 {resetUrl}
 
-                Se voce nao solicitou essa alteracao, ignore este e-mail.
+                Se você não solicitou essa alteração, ignore este e-mail.
                 """);
         }
 
@@ -53,16 +53,16 @@ namespace FinanceDashboard.Api.Services.Email
             return SendAsync(
                 toEmail,
                 name,
-                "Confirmacao de e-mail - Finova",
+                "Confirmação de e-mail - Finova",
                 $"""
-                Ola, {name}.
+                Olá, {name}.
 
                 Confirme seu e-mail para ativar sua conta no Finova.
 
                 Acesse o link abaixo para concluir a confirmacao:
                 {verificationUrl}
 
-                Se voce nao criou esta conta, ignore este e-mail.
+                Se você não criou esta conta, ignore este e-mail.
                 """);
         }
 
@@ -80,14 +80,14 @@ namespace FinanceDashboard.Api.Services.Email
                 name,
                 $"Alerta de meta mensal - {goalLabel}",
                 $"""
-                Ola, {name}.
+                Olá, {name}.
 
                 Sua meta "{goalLabel}" em {monthLabel} atingiu {progressPercent}% do limite definido.
 
-                Valor gasto ate agora: {spentAmount:C}
+                Valor gasto atá agora: {spentAmount:C}
                 Limite planejado: {targetAmount:C}
 
-                Acesse o Finova para revisar suas movimentacoes e ajustar o plano do mes, se necessario.
+                Acesse o Finova para revisar suas movimentações e ajustar o plano do mês, se necessário.
                 """);
         }
 

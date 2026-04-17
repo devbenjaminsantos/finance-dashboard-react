@@ -13,6 +13,7 @@ namespace FinanceDashboard.Api.Data
         public DbSet<User> Users { get; set; }
         public DbSet<FinancialAccount> FinancialAccounts { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
+        public DbSet<InstallmentPlan> InstallmentPlans { get; set; }
         public DbSet<TransactionTag> TransactionTags { get; set; }
         public DbSet<TransactionTagLink> TransactionTagLinks { get; set; }
         public DbSet<BudgetGoal> BudgetGoals { get; set; }
@@ -80,9 +81,34 @@ namespace FinanceDashboard.Api.Data
                     .HasForeignKey(transaction => transaction.FinancialAccountId)
                     .OnDelete(DeleteBehavior.NoAction);
 
+                entity.HasOne(transaction => transaction.InstallmentPlan)
+                    .WithMany(plan => plan.Transactions)
+                    .HasForeignKey(transaction => transaction.InstallmentPlanId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
                 entity.HasMany(transaction => transaction.TagLinks)
                     .WithOne(link => link.Transaction)
                     .HasForeignKey(link => link.TransactionId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<InstallmentPlan>(entity =>
+            {
+                entity.Property(plan => plan.PublicId)
+                    .HasMaxLength(40);
+
+                entity.Property(plan => plan.Description)
+                    .HasMaxLength(120);
+
+                entity.Property(plan => plan.Category)
+                    .HasMaxLength(60);
+
+                entity.HasIndex(plan => new { plan.UserId, plan.PublicId })
+                    .IsUnique();
+
+                entity.HasOne(plan => plan.User)
+                    .WithMany(user => user.InstallmentPlans)
+                    .HasForeignKey(plan => plan.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
 

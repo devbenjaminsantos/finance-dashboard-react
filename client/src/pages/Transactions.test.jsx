@@ -70,26 +70,77 @@ const transactionsFixture = [
   },
   {
     id: 2,
-    installmentIndex: 3,
-    installmentCount: 10,
+    installmentIndex: 1,
+    installmentCount: 3,
     installmentGroupId: "installment-plan-1",
-    description: "Salario",
-    category: "Salario",
+    description: "Notebook",
+    category: "Tecnologia",
     tagNames: ["trabalho"],
-    amountCents: 500000,
-    date: "2026-04-05",
-    type: "income",
+    amountCents: 200000,
+    date: "2026-03-05",
+    type: "expense",
     source: "import_csv",
     importedAtUtc: "2026-04-16T10:30:00Z",
-    isRecurring: true,
+    isRecurring: false,
+  },
+  {
+    id: 3,
+    installmentIndex: 2,
+    installmentCount: 3,
+    installmentGroupId: "installment-plan-1",
+    description: "Notebook",
+    category: "Tecnologia",
+    tagNames: ["trabalho"],
+    amountCents: 200000,
+    date: "2026-04-05",
+    type: "expense",
+    source: "import_csv",
+    importedAtUtc: "2026-04-16T10:30:00Z",
+    isRecurring: false,
+  },
+  {
+    id: 4,
+    installmentIndex: 3,
+    installmentCount: 3,
+    installmentGroupId: "installment-plan-1",
+    description: "Notebook",
+    category: "Tecnologia",
+    tagNames: ["trabalho"],
+    amountCents: 200000,
+    date: "2026-05-05",
+    type: "expense",
+    source: "import_csv",
+    importedAtUtc: "2026-04-16T10:30:00Z",
+    isRecurring: false,
+  },
+];
+
+const installmentPlansFixture = [
+  {
+    id: "installment-plan-1",
+    description: "Notebook",
+    category: "Tecnologia",
+    tagNames: ["trabalho"],
+    amountPerInstallmentCents: 200000,
+    installmentCount: 3,
+    postedInstallments: 2,
+    remainingInstallments: 1,
+    upcomingInstallments: 1,
+    totalAmountCents: 600000,
+    paidAmountCents: 400000,
+    remainingAmountCents: 200000,
+    nextInstallmentDate: "2026-05-05T00:00:00",
+    nextInstallmentIndex: 3,
   },
 ];
 
 describe("Transactions page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
     useTransactions.mockReturnValue({
       transactions: transactionsFixture,
+      installmentPlans: installmentPlansFixture,
       addTransaction: vi.fn(),
       importTransactions: vi.fn().mockResolvedValue({ importedCount: 1 }),
       removeTransaction: vi.fn(),
@@ -108,7 +159,7 @@ describe("Transactions page", () => {
     });
 
     expect(screen.getByText("Mercado")).toBeInTheDocument();
-    expect(screen.queryByRole("cell", { name: "Salario" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("cell", { name: "Notebook" })).not.toBeInTheDocument();
   });
 
   it("filters transactions by tag", () => {
@@ -118,7 +169,7 @@ describe("Transactions page", () => {
       target: { value: "trabalho" },
     });
 
-    expect(screen.getAllByText("Salario").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Notebook").length).toBeGreaterThan(0);
     expect(screen.queryByRole("cell", { name: "Mercado" })).not.toBeInTheDocument();
   });
 
@@ -126,7 +177,7 @@ describe("Transactions page", () => {
     render(<Transactions />);
 
     fireEvent.change(screen.getByPlaceholderText(/buscar/i), {
-      target: { value: "sal" },
+      target: { value: "note" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Exportar CSV" }));
 
@@ -134,8 +185,8 @@ describe("Transactions page", () => {
     const [filename, rows] = mockDownloadCsv.mock.calls[0];
 
     expect(filename).toContain("finova-transacoes");
-    expect(rows).toHaveLength(2);
-    expect(rows[1][1]).toBe("Salario");
+    expect(rows).toHaveLength(4);
+    expect(rows[1][1]).toBe("Notebook");
     expect(rows[1][3]).toBe("trabalho");
   });
 
@@ -143,14 +194,21 @@ describe("Transactions page", () => {
     render(<Transactions />);
 
     expect(screen.getByText("Manual")).toBeInTheDocument();
-    expect(screen.getByText("Importada via CSV")).toBeInTheDocument();
+    expect(screen.getAllByText("Importada via CSV").length).toBeGreaterThan(0);
     expect(screen.getAllByText("#casa").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Parcela 3/10").length).toBeGreaterThan(0);
-    expect(screen.getByText(/8 parcela\(s\) restantes/i)).toBeInTheDocument();
+    expect(screen.getAllByText("Parcela 2/3").length).toBeGreaterThan(0);
+    expect(screen.getByText(/1 parcela\(s\) restantes/i)).toBeInTheDocument();
     expect(screen.getByText("Compras parceladas")).toBeInTheDocument();
+    expect(screen.getByText("Divida em aberto")).toBeInTheDocument();
+    expect(screen.getByText("Compras em andamento")).toBeInTheDocument();
+    expect(screen.getByText("Proximas parcelas")).toBeInTheDocument();
     expect(screen.getByText("Valor total")).toBeInTheDocument();
     expect(screen.getByText("Ja lancado")).toBeInTheDocument();
     expect(screen.getByText("Saldo restante")).toBeInTheDocument();
+    expect(screen.getByText("Parcelas futuras")).toBeInTheDocument();
+    expect(screen.getByText("Proxima parcela")).toBeInTheDocument();
+    expect(screen.getByText("Progresso da quitacao")).toBeInTheDocument();
+    expect(screen.getByText(/Parcela 3 em/i)).toBeInTheDocument();
   });
 
   it("shows import feedback after confirming an import", async () => {
@@ -170,6 +228,7 @@ describe("Transactions page", () => {
 
     useTransactions.mockReturnValue({
       transactions: transactionsFixture,
+      installmentPlans: installmentPlansFixture,
       addTransaction: vi.fn(),
       importTransactions: vi.fn().mockResolvedValue({ importedCount: 1 }),
       removeTransaction: vi.fn(),
@@ -192,6 +251,7 @@ describe("Transactions page", () => {
 
     useTransactions.mockReturnValue({
       transactions: transactionsFixture,
+      installmentPlans: installmentPlansFixture,
       addTransaction: vi.fn(),
       importTransactions: vi.fn().mockResolvedValue({ importedCount: 1 }),
       removeTransaction: vi.fn(),
@@ -204,7 +264,7 @@ describe("Transactions page", () => {
     render(<Transactions />);
 
     fireEvent.click(screen.getByRole("button", { name: "Editar compra" }));
-    fireEvent.change(screen.getByLabelText("Descrição"), {
+    fireEvent.change(screen.getByLabelText(/descri/i), {
       target: { value: "Notebook" },
     });
     fireEvent.change(screen.getByLabelText("Tags", { selector: "input" }), {
@@ -214,7 +274,7 @@ describe("Transactions page", () => {
 
     expect(updateInstallmentGroup).toHaveBeenCalledWith("installment-plan-1", {
       description: "Notebook",
-      category: "Salario",
+      category: "Tecnologia",
       tagNames: ["trabalho", "tecnologia"],
     });
   });

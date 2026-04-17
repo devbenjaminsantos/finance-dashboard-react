@@ -43,6 +43,23 @@ namespace FinanceDashboard.Api.Controllers
             return Ok(transactions.Select(ToResponse).ToList());
         }
 
+        [HttpGet("installment-plans")]
+        public async Task<ActionResult<IReadOnlyList<InstallmentPlanResponse>>> GetInstallmentPlans()
+        {
+            var userId = _currentUserService.GetRequiredUserId();
+            var today = DateTime.UtcNow.Date;
+
+            var plans = await _context.InstallmentPlans
+                .Include(plan => plan.Transactions)
+                .ThenInclude(transaction => transaction.TagLinks)
+                .ThenInclude(link => link.TransactionTag)
+                .Where(plan => plan.UserId == userId)
+                .OrderByDescending(plan => plan.StartDate)
+                .ToListAsync();
+
+            return Ok(plans.Select(plan => ToInstallmentPlanResponse(plan, today)).ToList());
+        }
+
         [HttpGet("{id:int}")]
         public async Task<ActionResult<TransactionResponse>> GetById(int id)
         {
@@ -72,6 +89,25 @@ namespace FinanceDashboard.Api.Controllers
                 return ValidationProblem(ModelState);
             }
 
+            InstallmentPlan? installmentPlan = null;
+
+            if (creationPlan[0].InstallmentGroupId is not null)
+            {
+                installmentPlan = new InstallmentPlan
+                {
+                    PublicId = creationPlan[0].InstallmentGroupId!,
+                    Description = dto.Description.Trim(),
+                    Category = dto.Category.Trim(),
+                    AmountPerInstallmentCents = dto.AmountCents,
+                    InstallmentCount = dto.InstallmentCount,
+                    StartDate = dto.Date.Date,
+                    CreatedAtUtc = DateTime.UtcNow,
+                    UserId = userId
+                };
+
+                _context.InstallmentPlans.Add(installmentPlan);
+            }
+
             var transactions = creationPlan
                 .Select(item => BuildTransactionEntity(
                     dto,
@@ -81,6 +117,7 @@ namespace FinanceDashboard.Api.Controllers
                     item.InstallmentIndex,
                     item.InstallmentCount,
                     item.InstallmentGroupId,
+                    installmentPlan,
                     source: "manual",
                     importedAtUtc: null))
                 .ToList();
@@ -149,6 +186,7 @@ namespace FinanceDashboard.Api.Controllers
                     installmentIndex: null,
                     installmentCount: null,
                     installmentGroupId: null,
+                    installmentPlan: null,
                     source: source,
                     importedAtUtc: importedAtUtc));
             }
@@ -240,10 +278,20 @@ namespace FinanceDashboard.Api.Controllers
                 return BadRequest();
             }
 
+            var installmentPlan = await _context.InstallmentPlans
+                .FirstOrDefaultAsync(existing =>
+                    existing.UserId == userId &&
+                    existing.PublicId == normalizedGroupId);
+
+            if (installmentPlan is null)
+            {
+                return NotFound();
+            }
+
             var transactions = await _context.Transactions
                 .Where(existing =>
                     existing.UserId == userId &&
-                    existing.InstallmentGroupId == normalizedGroupId)
+                    existing.InstallmentPlanId == installmentPlan.Id)
                 .ToListAsync();
 
             if (transactions.Count == 0)
@@ -256,6 +304,7 @@ namespace FinanceDashboard.Api.Controllers
                 .First();
 
             _context.Transactions.RemoveRange(transactions);
+            _context.InstallmentPlans.Remove(installmentPlan);
             await _context.SaveChangesAsync();
 
             await _auditLogService.WriteAsync(
@@ -281,16 +330,29 @@ namespace FinanceDashboard.Api.Controllers
                 return BadRequest();
             }
 
+            var installmentPlan = await _context.InstallmentPlans
+                .FirstOrDefaultAsync(existing =>
+                    existing.UserId == userId &&
+                    existing.PublicId == normalizedGroupId);
+
+            if (installmentPlan is null)
+            {
+                return NotFound();
+            }
+
             var transactions = await _context.Transactions
                 .Where(existing =>
                     existing.UserId == userId &&
-                    existing.InstallmentGroupId == normalizedGroupId)
+                    existing.InstallmentPlanId == installmentPlan.Id)
                 .ToListAsync();
 
             if (transactions.Count == 0)
             {
                 return NotFound();
             }
+
+            installmentPlan.Description = dto.Description.Trim();
+            installmentPlan.Category = dto.Category.Trim();
 
             foreach (var transaction in transactions)
             {
@@ -415,6 +477,7 @@ namespace FinanceDashboard.Api.Controllers
             int? installmentIndex,
             int? installmentCount,
             string? installmentGroupId,
+            InstallmentPlan? installmentPlan,
             string source,
             DateTime? importedAtUtc)
         {
@@ -436,6 +499,7 @@ namespace FinanceDashboard.Api.Controllers
                 InstallmentIndex = installmentIndex,
                 InstallmentCount = installmentCount,
                 InstallmentGroupId = installmentGroupId,
+                InstallmentPlan = installmentPlan,
                 UserId = userId
             };
         }
@@ -543,7 +607,56 @@ namespace FinanceDashboard.Api.Controllers
                 RecurrenceGroupId = transaction.RecurrenceGroupId,
                 InstallmentIndex = transaction.InstallmentIndex,
                 InstallmentCount = transaction.InstallmentCount,
-                InstallmentGroupId = transaction.InstallmentGroupId
+                InstallmentGroupId = transaction.InstallmentGroupId,
+                InstallmentPlanId = transaction.InstallmentPlanId
+            };
+        }
+
+        private static InstallmentPlanResponse ToInstallmentPlanResponse(
+            InstallmentPlan plan,
+            DateTime today)
+        {
+            var orderedTransactions = plan.Transactions
+                .OrderBy(transaction => transaction.InstallmentIndex ?? int.MaxValue)
+                .ThenBy(transaction => transaction.Date)
+                .ToList();
+
+            var postedTransactions = orderedTransactions
+                .Where(transaction => transaction.Date.Date <= today)
+                .ToList();
+
+            var nextTransaction = orderedTransactions
+                .Where(transaction => transaction.Date.Date > today)
+                .OrderBy(transaction => transaction.Date)
+                .ThenBy(transaction => transaction.InstallmentIndex ?? int.MaxValue)
+                .FirstOrDefault();
+
+            var tagNames = orderedTransactions
+                .SelectMany(transaction => transaction.TagLinks)
+                .Select(link => link.TransactionTag.Name)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(name => name)
+                .ToList();
+
+            var postedInstallments = postedTransactions.Count;
+            var remainingInstallments = Math.Max(plan.InstallmentCount - postedInstallments, 0);
+
+            return new InstallmentPlanResponse
+            {
+                Id = plan.PublicId,
+                Description = plan.Description,
+                Category = plan.Category,
+                AmountPerInstallmentCents = plan.AmountPerInstallmentCents,
+                InstallmentCount = plan.InstallmentCount,
+                PostedInstallments = postedInstallments,
+                RemainingInstallments = remainingInstallments,
+                UpcomingInstallments = orderedTransactions.Count - postedInstallments,
+                TotalAmountCents = plan.InstallmentCount * plan.AmountPerInstallmentCents,
+                PaidAmountCents = postedInstallments * plan.AmountPerInstallmentCents,
+                RemainingAmountCents = remainingInstallments * plan.AmountPerInstallmentCents,
+                NextInstallmentDate = nextTransaction?.Date.Date,
+                NextInstallmentIndex = nextTransaction?.InstallmentIndex,
+                TagNames = tagNames
             };
         }
 

@@ -19,5 +19,6 @@ namespace FinanceDashboard.Api.DTOs
         public int? InstallmentIndex { get; set; }
         public int? InstallmentCount { get; set; }
         public string? InstallmentGroupId { get; set; }
+        public int? InstallmentPlanId { get; set; }
     }
 }

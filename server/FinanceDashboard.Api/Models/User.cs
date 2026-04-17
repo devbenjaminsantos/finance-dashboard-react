@@ -13,6 +13,7 @@ namespace FinanceDashboard.Api.Models
         public DateTime? LastFailedLoginAtUtc { get; set; }
 
         public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
+        public ICollection<InstallmentPlan> InstallmentPlans { get; set; } = new List<InstallmentPlan>();
         public ICollection<TransactionTag> TransactionTags { get; set; } = new List<TransactionTag>();
         public ICollection<FinancialAccount> FinancialAccounts { get; set; } = new List<FinancialAccount>();
         public ICollection<BudgetGoal> BudgetGoals { get; set; } = new List<BudgetGoal>();

@@ -108,6 +108,67 @@ public class TransactionsControllerTests
     }
 
     [Fact]
+    public async Task Create_CreatesInstallmentPlan_WhenExpenseIsSplitIntoInstallments()
+    {
+        using var context = CreateContext();
+        var controller = CreateController(context, userId: 7);
+
+        var dto = new TransactionCreateRequest
+        {
+            Description = "Notebook",
+            Category = "Tecnologia",
+            AmountCents = 250000,
+            Date = new DateTime(2026, 4, 5),
+            Type = "expense",
+            InstallmentCount = 3
+        };
+
+        var result = await controller.Create(dto);
+
+        var created = Assert.IsType<CreatedAtActionResult>(result.Result);
+        var payload = Assert.IsType<TransactionResponse>(created.Value);
+        var plan = await context.InstallmentPlans.SingleAsync();
+        var transactions = await context.Transactions
+            .OrderBy(transaction => transaction.InstallmentIndex)
+            .ToListAsync();
+
+        Assert.Equal("Notebook", plan.Description);
+        Assert.Equal("Tecnologia", plan.Category);
+        Assert.Equal(250000, plan.AmountPerInstallmentCents);
+        Assert.Equal(3, plan.InstallmentCount);
+        Assert.Equal(3, transactions.Count);
+        Assert.All(transactions, transaction => Assert.Equal(plan.Id, transaction.InstallmentPlanId));
+        Assert.All(transactions, transaction => Assert.Equal(plan.PublicId, transaction.InstallmentGroupId));
+        Assert.Equal(plan.Id, payload.InstallmentPlanId);
+        Assert.Equal(plan.PublicId, payload.InstallmentGroupId);
+    }
+
+    [Fact]
+    public async Task GetInstallmentPlans_ReturnsStructuredSummaryForAuthenticatedUser()
+    {
+        using var context = CreateContext();
+        SeedInstallmentPlan(context, userId: 4);
+        SeedInstallmentPlan(context, userId: 9, publicId: "other-plan");
+
+        var controller = CreateController(context, userId: 4);
+
+        var result = await controller.GetInstallmentPlans();
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        var payload = Assert.IsAssignableFrom<IReadOnlyList<InstallmentPlanResponse>>(ok.Value);
+        var plan = Assert.Single(payload);
+
+        Assert.Equal("notebook-plan", plan.Id);
+        Assert.Equal("Notebook", plan.Description);
+        Assert.Equal("Tecnologia", plan.Category);
+        Assert.Equal(3, plan.InstallmentCount);
+        Assert.Equal(3, plan.PostedInstallments);
+        Assert.Equal(0, plan.RemainingInstallments);
+        Assert.Equal(600000, plan.TotalAmountCents);
+        Assert.Contains("trabalho", plan.TagNames);
+    }
+
+    [Fact]
     public async Task Import_PersistsTransactionsForAuthenticatedUser()
     {
         using var context = CreateContext();
@@ -315,6 +376,88 @@ public class TransactionsControllerTests
                 Type = "expense",
                 Source = "manual"
             });
+
+        context.SaveChanges();
+    }
+
+    private static void SeedInstallmentPlan(AppDbContext context, int userId, string publicId = "notebook-plan")
+    {
+        var plan = new InstallmentPlan
+        {
+            UserId = userId,
+            PublicId = publicId,
+            Description = "Notebook",
+            Category = "Tecnologia",
+            AmountPerInstallmentCents = 200000,
+            InstallmentCount = 3,
+            StartDate = new DateTime(2026, 2, 5),
+            CreatedAtUtc = new DateTime(2026, 2, 1, 0, 0, 0, DateTimeKind.Utc)
+        };
+
+        var tag = new TransactionTag
+        {
+            UserId = userId,
+            Name = "trabalho"
+        };
+
+        context.InstallmentPlans.Add(plan);
+        context.TransactionTags.Add(tag);
+        context.SaveChanges();
+
+        var transactions = new[]
+        {
+            new Transaction
+            {
+                UserId = userId,
+                Description = "Notebook",
+                Category = "Tecnologia",
+                AmountCents = 200000,
+                Date = new DateTime(2026, 2, 5),
+                Type = "expense",
+                Source = "manual",
+                InstallmentIndex = 1,
+                InstallmentCount = 3,
+                InstallmentGroupId = publicId,
+                InstallmentPlanId = plan.Id
+            },
+            new Transaction
+            {
+                UserId = userId,
+                Description = "Notebook",
+                Category = "Tecnologia",
+                AmountCents = 200000,
+                Date = new DateTime(2026, 3, 5),
+                Type = "expense",
+                Source = "manual",
+                InstallmentIndex = 2,
+                InstallmentCount = 3,
+                InstallmentGroupId = publicId,
+                InstallmentPlanId = plan.Id
+            },
+            new Transaction
+            {
+                UserId = userId,
+                Description = "Notebook",
+                Category = "Tecnologia",
+                AmountCents = 200000,
+                Date = new DateTime(2026, 4, 5),
+                Type = "expense",
+                Source = "manual",
+                InstallmentIndex = 3,
+                InstallmentCount = 3,
+                InstallmentGroupId = publicId,
+                InstallmentPlanId = plan.Id
+            }
+        };
+
+        context.Transactions.AddRange(transactions);
+        context.SaveChanges();
+
+        context.TransactionTagLinks.Add(new TransactionTagLink
+        {
+            TransactionId = transactions[0].Id,
+            TransactionTagId = tag.Id
+        });
 
         context.SaveChanges();
     }

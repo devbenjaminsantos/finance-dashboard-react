@@ -3,6 +3,7 @@ import {
   createTransaction,
   deleteInstallmentGroup,
   deleteTransaction,
+  getInstallmentPlans,
   getTransactions,
   importTransactions,
   updateInstallmentGroup,
@@ -13,11 +14,13 @@ import { TransactionsContext } from "./TransactionsContext";
 
 export function TransactionsProvider({ children }) {
   const [transactions, setTransactions] = useState([]);
+  const [installmentPlans, setInstallmentPlans] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadAll = useCallback(async () => {
     if (!hasValidSession()) {
       setTransactions([]);
+      setInstallmentPlans([]);
       setIsLoading(false);
       return;
     }
@@ -25,11 +28,17 @@ export function TransactionsProvider({ children }) {
     setIsLoading(true);
 
     try {
-      const data = await getTransactions();
-      setTransactions(data);
+      const [transactionData, installmentPlanData] = await Promise.all([
+        getTransactions(),
+        getInstallmentPlans(),
+      ]);
+
+      setTransactions(transactionData);
+      setInstallmentPlans(installmentPlanData);
     } catch (error) {
-      console.error("Erro ao carregar transações:", error);
+      console.error("Erro ao carregar transacoes:", error);
       setTransactions([]);
+      setInstallmentPlans([]);
     } finally {
       setIsLoading(false);
     }
@@ -51,33 +60,46 @@ export function TransactionsProvider({ children }) {
     };
   }, [loadAll]);
 
-  const addTransaction = useCallback(async (data) => {
-    await createTransaction(data);
-    await loadAll();
-  }, [loadAll]);
+  const addTransaction = useCallback(
+    async (data) => {
+      await createTransaction(data);
+      await loadAll();
+    },
+    [loadAll]
+  );
 
-  const importTransactionsBatch = useCallback(async (payload) => {
-    const result = await importTransactions(payload);
-    await loadAll();
-    return result;
-  }, [loadAll]);
+  const importTransactionsBatch = useCallback(
+    async (payload) => {
+      const result = await importTransactions(payload);
+      await loadAll();
+      return result;
+    },
+    [loadAll]
+  );
 
-  const removeTransaction = useCallback(async (id) => {
-    await deleteTransaction(id);
-    setTransactions((current) => current.filter((transaction) => transaction.id !== id));
-  }, []);
+  const removeTransaction = useCallback(
+    async (id) => {
+      await deleteTransaction(id);
+      await loadAll();
+    },
+    [loadAll]
+  );
 
   const removeInstallmentGroup = useCallback(async (installmentGroupId) => {
     await deleteInstallmentGroup(installmentGroupId);
     setTransactions((current) =>
       current.filter((transaction) => transaction.installmentGroupId !== installmentGroupId)
     );
+    setInstallmentPlans((current) => current.filter((plan) => plan.id !== installmentGroupId));
   }, []);
 
-  const updateInstallmentGroupItem = useCallback(async (installmentGroupId, data) => {
-    await updateInstallmentGroup(installmentGroupId, data);
-    await loadAll();
-  }, [loadAll]);
+  const updateInstallmentGroupItem = useCallback(
+    async (installmentGroupId, data) => {
+      await updateInstallmentGroup(installmentGroupId, data);
+      await loadAll();
+    },
+    [loadAll]
+  );
 
   const updateTransactionItem = useCallback(async (id, data) => {
     const updated = await updateTransaction(id, data);
@@ -110,6 +132,7 @@ export function TransactionsProvider({ children }) {
   const value = useMemo(
     () => ({
       transactions,
+      installmentPlans,
       isLoading,
       loadAll,
       addTransaction,
@@ -122,6 +145,7 @@ export function TransactionsProvider({ children }) {
     }),
     [
       transactions,
+      installmentPlans,
       isLoading,
       loadAll,
       addTransaction,

@@ -17,6 +17,8 @@ namespace FinanceDashboard.Api.Models
         public int? InstallmentIndex { get; set; }
         public int? InstallmentCount { get; set; }
         public string? InstallmentGroupId { get; set; }
+        public int? InstallmentPlanId { get; set; }
+        public InstallmentPlan? InstallmentPlan { get; set; }
         public int? FinancialAccountId { get; set; }
         public FinancialAccount? FinancialAccount { get; set; }
         public ICollection<TransactionTagLink> TagLinks { get; set; } = new List<TransactionTagLink>();

@@ -13,10 +13,58 @@ import { useI18n } from "../i18n/LanguageProvider";
 
 const FILTERS_KEY = "fd_tx_filters_v1";
 
+function applyTransactionFilters(list, { q, tagFilter, typeFilter, categoryFilter, month, sortBy }) {
+  let next = [...list];
+
+  if (q.trim()) {
+    const search = q.trim().toLowerCase();
+    next = next.filter(
+      (transaction) =>
+        (transaction.description || "").toLowerCase().includes(search) ||
+        (transaction.tagNames || []).some((tagName) => tagName.toLowerCase().includes(search))
+    );
+  }
+
+  if (tagFilter !== "all") {
+    next = next.filter((transaction) => (transaction.tagNames || []).includes(tagFilter));
+  }
+
+  if (typeFilter !== "all") {
+    next = next.filter((transaction) => transaction.type === typeFilter);
+  }
+
+  if (categoryFilter !== "all") {
+    next = next.filter((transaction) => transaction.category === categoryFilter);
+  }
+
+  if (month) {
+    next = next.filter((transaction) => (transaction.date || "").startsWith(month));
+  }
+
+  switch (sortBy) {
+    case "date_asc":
+      next.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+      break;
+    case "amount_desc":
+      next.sort((a, b) => (Number(b.amountCents) || 0) - (Number(a.amountCents) || 0));
+      break;
+    case "amount_asc":
+      next.sort((a, b) => (Number(a.amountCents) || 0) - (Number(b.amountCents) || 0));
+      break;
+    case "date_desc":
+    default:
+      next.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+      break;
+  }
+
+  return next;
+}
+
 export default function Transactions() {
   const { t, formatCurrencyFromCents, formatDate } = useI18n();
   const {
     transactions,
+    installmentPlans,
     addTransaction,
     importTransactions,
     removeTransaction,
@@ -103,91 +151,72 @@ export default function Transactions() {
     }
   }, [tagFilter, tags]);
 
-  const filtered = useMemo(() => {
-    let list = [...transactions];
+  const filtered = useMemo(
+    () =>
+      applyTransactionFilters(transactions, {
+        q,
+        tagFilter,
+        typeFilter,
+        categoryFilter,
+        month,
+        sortBy,
+      }),
+    [transactions, q, tagFilter, typeFilter, categoryFilter, month, sortBy]
+  );
+
+  const installmentGroups = useMemo(() => {
+    if (typeFilter === "income") {
+      return [];
+    }
+
+    let list = [...installmentPlans];
 
     if (q.trim()) {
       const search = q.trim().toLowerCase();
-      list = list.filter((transaction) =>
-        (transaction.description || "").toLowerCase().includes(search) ||
-        (transaction.tagNames || []).some((tagName) => tagName.toLowerCase().includes(search))
+      list = list.filter(
+        (plan) =>
+          (plan.description || "").toLowerCase().includes(search) ||
+          (plan.tagNames || []).some((tagName) => tagName.toLowerCase().includes(search))
       );
     }
 
     if (tagFilter !== "all") {
-      list = list.filter((transaction) => (transaction.tagNames || []).includes(tagFilter));
-    }
-
-    if (typeFilter !== "all") {
-      list = list.filter((transaction) => transaction.type === typeFilter);
+      list = list.filter((plan) => (plan.tagNames || []).includes(tagFilter));
     }
 
     if (categoryFilter !== "all") {
-      list = list.filter((transaction) => transaction.category === categoryFilter);
+      list = list.filter((plan) => plan.category === categoryFilter);
     }
 
-    if (month) {
-      list = list.filter((transaction) => (transaction.date || "").startsWith(month));
-    }
+    return list.sort((a, b) => (a.description || "").localeCompare(b.description || ""));
+  }, [installmentPlans, q, tagFilter, typeFilter, categoryFilter]);
 
-    switch (sortBy) {
-      case "date_asc":
-        list.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
-        break;
-      case "amount_desc":
-        list.sort((a, b) => (Number(b.amountCents) || 0) - (Number(a.amountCents) || 0));
-        break;
-      case "amount_asc":
-        list.sort((a, b) => (Number(a.amountCents) || 0) - (Number(b.amountCents) || 0));
-        break;
-      case "date_desc":
-      default:
-        list.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-        break;
-    }
+  const installmentOverview = useMemo(() => {
+    return installmentGroups.reduce(
+      (accumulator, group) => {
+        const nextInstallmentAmount =
+          group.nextInstallmentDate && group.nextInstallmentIndex
+            ? Number(group.amountPerInstallmentCents) || 0
+            : 0;
 
-    return list;
-  }, [transactions, q, tagFilter, typeFilter, categoryFilter, month, sortBy]);
-
-  const installmentGroups = useMemo(() => {
-    const groups = new Map();
-
-    for (const transaction of filtered) {
-      if (!transaction.installmentGroupId || Number(transaction.installmentCount) <= 1) {
-        continue;
+        return {
+          openPlans: accumulator.openPlans + 1,
+          remainingAmountCents:
+            accumulator.remainingAmountCents + (Number(group.remainingAmountCents) || 0),
+          upcomingInstallments:
+            accumulator.upcomingInstallments + (Number(group.upcomingInstallments) || 0),
+          nextInstallmentsAmountCents:
+            accumulator.nextInstallmentsAmountCents + nextInstallmentAmount,
+        };
+      },
+      {
+        openPlans: 0,
+        remainingAmountCents: 0,
+        upcomingInstallments: 0,
+        nextInstallmentsAmountCents: 0,
       }
-
-      const groupKey = transaction.installmentGroupId;
-      const current = groups.get(groupKey) ?? {
-        id: groupKey,
-        description: transaction.description || t("transactions.installmentPlanFallback"),
-        category: transaction.category || t("transactions.noCategory"),
-        tagNames: transaction.tagNames || [],
-        installmentCount: Number(transaction.installmentCount) || 0,
-        latestInstallmentIndex: 0,
-        amountPerInstallmentCents: Number(transaction.amountCents) || 0,
-      };
-
-      current.latestInstallmentIndex = Math.max(
-        current.latestInstallmentIndex,
-        Number(transaction.installmentIndex) || 0
-      );
-
-      groups.set(groupKey, current);
-    }
-
-    return Array.from(groups.values())
-      .map((group) => ({
-        ...group,
-        totalAmountCents: group.installmentCount * group.amountPerInstallmentCents,
-        paidAmountCents: group.latestInstallmentIndex * group.amountPerInstallmentCents,
-        remainingInstallments: Math.max(group.installmentCount - group.latestInstallmentIndex, 0),
-        remainingAmountCents:
-          Math.max(group.installmentCount - group.latestInstallmentIndex, 0) *
-          group.amountPerInstallmentCents,
-      }))
-      .sort((a, b) => a.description.localeCompare(b.description));
-  }, [filtered, t]);
+    );
+  }, [installmentGroups]);
 
   function openCreate() {
     if (isMutating) {
@@ -460,6 +489,50 @@ export default function Transactions() {
             </p>
           </div>
 
+          <div className="row g-3 mb-4">
+            <div className="col-12 col-lg-4">
+              <div className="finova-card-soft p-3 h-100">
+                <div className="finova-subtitle small mb-1">
+                  {t("transactions.installmentOpenDebtLabel")}
+                </div>
+                <div className="finova-title h5 mb-1">
+                  {formatCurrencyFromCents(installmentOverview.remainingAmountCents)}
+                </div>
+                <div className="finova-subtitle small mb-0">
+                  {t("transactions.installmentOpenDebtHelp")}
+                </div>
+              </div>
+            </div>
+
+            <div className="col-12 col-lg-4">
+              <div className="finova-card-soft p-3 h-100">
+                <div className="finova-subtitle small mb-1">
+                  {t("transactions.installmentOpenPlansLabel")}
+                </div>
+                <div className="finova-title h5 mb-1">{installmentOverview.openPlans}</div>
+                <div className="finova-subtitle small mb-0">
+                  {t("transactions.installmentOpenPlansHelp")}
+                </div>
+              </div>
+            </div>
+
+            <div className="col-12 col-lg-4">
+              <div className="finova-card-soft p-3 h-100">
+                <div className="finova-subtitle small mb-1">
+                  {t("transactions.installmentNextBillsLabel")}
+                </div>
+                <div className="finova-title h5 mb-1">
+                  {formatCurrencyFromCents(installmentOverview.nextInstallmentsAmountCents)}
+                </div>
+                <div className="finova-subtitle small mb-0">
+                  {t("transactions.installmentNextBillsHelp", {
+                    count: installmentOverview.upcomingInstallments,
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="row g-3">
             {installmentGroups.map((group) => (
               <div key={group.id} className="col-12 col-xl-6">
@@ -468,12 +541,51 @@ export default function Transactions() {
                     <div className="finova-title h6 mb-0">{group.description}</div>
                     <span className="finova-badge-warning">
                       {t("transactions.installmentBadge", {
-                        index: `${group.latestInstallmentIndex}/${group.installmentCount}`,
+                        index: `${group.postedInstallments}/${group.installmentCount}`,
                       })}
                     </span>
                   </div>
 
                   <div className="finova-subtitle small mb-3">{group.category}</div>
+
+                  <div className="mb-3">
+                    <div className="d-flex justify-content-between align-items-center gap-3 small mb-2">
+                      <span className="finova-subtitle">
+                        {t("transactions.installmentProgress")}
+                      </span>
+                      <span className="fw-semibold">
+                        {Math.round(
+                          ((Number(group.paidAmountCents) || 0) /
+                            Math.max(Number(group.totalAmountCents) || 1, 1)) *
+                            100
+                        )}
+                        %
+                      </span>
+                    </div>
+                    <div
+                      className="w-100"
+                      style={{
+                        height: "10px",
+                        borderRadius: "999px",
+                        background: "var(--border-subtle, rgba(148, 163, 184, 0.18))",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: `${Math.round(
+                            ((Number(group.paidAmountCents) || 0) /
+                              Math.max(Number(group.totalAmountCents) || 1, 1)) *
+                              100
+                          )}%`,
+                          height: "100%",
+                          borderRadius: "999px",
+                          background:
+                            "linear-gradient(90deg, var(--brand), var(--brand-strong, #0f766e))",
+                        }}
+                      />
+                    </div>
+                  </div>
 
                   <div className="row g-3">
                     <div className="col-6">
@@ -511,6 +623,31 @@ export default function Transactions() {
                         {t("transactions.installmentRemainingCountValue", {
                           count: group.remainingInstallments,
                         })}
+                      </div>
+                    </div>
+
+                    <div className="col-6">
+                      <div className="finova-subtitle small mb-1">
+                        {t("transactions.installmentUpcomingCount")}
+                      </div>
+                      <div className="fw-semibold">
+                        {t("transactions.installmentRemainingCountValue", {
+                          count: group.upcomingInstallments,
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="col-6">
+                      <div className="finova-subtitle small mb-1">
+                        {t("transactions.installmentNextDue")}
+                      </div>
+                      <div className="fw-semibold">
+                        {group.nextInstallmentDate
+                          ? t("transactions.installmentNextDueValue", {
+                              index: group.nextInstallmentIndex,
+                              date: formatDate(group.nextInstallmentDate),
+                            })
+                          : t("transactions.installmentFullyPosted")}
                       </div>
                     </div>
                   </div>

@@ -4,6 +4,10 @@ export function getTransactions() {
   return apiRequest("/transactions");
 }
 
+export function getInstallmentPlans() {
+  return apiRequest("/transactions/installment-plans");
+}
+
 export function createTransaction(transaction) {
   return apiRequest("/transactions", {
     method: "POST",

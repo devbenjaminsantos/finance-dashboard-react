@@ -70,6 +70,9 @@ const transactionsFixture = [
   },
   {
     id: 2,
+    installmentIndex: 3,
+    installmentCount: 10,
+    installmentGroupId: "installment-plan-1",
     description: "Salario",
     category: "Salario",
     tagNames: ["trabalho"],
@@ -90,7 +93,9 @@ describe("Transactions page", () => {
       addTransaction: vi.fn(),
       importTransactions: vi.fn().mockResolvedValue({ importedCount: 1 }),
       removeTransaction: vi.fn(),
+      removeInstallmentGroup: vi.fn(),
       updateTransaction: vi.fn(),
+      updateInstallmentGroup: vi.fn(),
       isLoading: false,
     });
   });
@@ -134,12 +139,18 @@ describe("Transactions page", () => {
     expect(rows[1][3]).toBe("trabalho");
   });
 
-  it("shows the transaction origin badges and tags", () => {
+  it("shows the transaction origin badges, tags and installment progress", () => {
     render(<Transactions />);
 
     expect(screen.getByText("Manual")).toBeInTheDocument();
     expect(screen.getByText("Importada via CSV")).toBeInTheDocument();
     expect(screen.getAllByText("#casa").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Parcela 3/10").length).toBeGreaterThan(0);
+    expect(screen.getByText(/8 parcela\(s\) restantes/i)).toBeInTheDocument();
+    expect(screen.getByText("Compras parceladas")).toBeInTheDocument();
+    expect(screen.getByText("Valor total")).toBeInTheDocument();
+    expect(screen.getByText("Ja lancado")).toBeInTheDocument();
+    expect(screen.getByText("Saldo restante")).toBeInTheDocument();
   });
 
   it("shows import feedback after confirming an import", async () => {
@@ -151,5 +162,60 @@ describe("Transactions page", () => {
     expect(
       await screen.findByText("1 transacao importada com sucesso via CSV.")
     ).toBeInTheDocument();
+  });
+
+  it("removes an installment purchase from the grouped card", () => {
+    const removeInstallmentGroup = vi.fn().mockResolvedValue(undefined);
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+
+    useTransactions.mockReturnValue({
+      transactions: transactionsFixture,
+      addTransaction: vi.fn(),
+      importTransactions: vi.fn().mockResolvedValue({ importedCount: 1 }),
+      removeTransaction: vi.fn(),
+      removeInstallmentGroup,
+      updateTransaction: vi.fn(),
+      updateInstallmentGroup: vi.fn(),
+      isLoading: false,
+    });
+
+    render(<Transactions />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Remover compra" }));
+
+    expect(confirmSpy).toHaveBeenCalled();
+    expect(removeInstallmentGroup).toHaveBeenCalledWith("installment-plan-1");
+  });
+
+  it("edits an installment purchase from the grouped card", async () => {
+    const updateInstallmentGroup = vi.fn().mockResolvedValue(undefined);
+
+    useTransactions.mockReturnValue({
+      transactions: transactionsFixture,
+      addTransaction: vi.fn(),
+      importTransactions: vi.fn().mockResolvedValue({ importedCount: 1 }),
+      removeTransaction: vi.fn(),
+      removeInstallmentGroup: vi.fn(),
+      updateTransaction: vi.fn(),
+      updateInstallmentGroup,
+      isLoading: false,
+    });
+
+    render(<Transactions />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Editar compra" }));
+    fireEvent.change(screen.getByLabelText("Descrição"), {
+      target: { value: "Notebook" },
+    });
+    fireEvent.change(screen.getByLabelText("Tags", { selector: "input" }), {
+      target: { value: "trabalho, tecnologia" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Salvar compra" }));
+
+    expect(updateInstallmentGroup).toHaveBeenCalledWith("installment-plan-1", {
+      description: "Notebook",
+      category: "Salario",
+      tagNames: ["trabalho", "tecnologia"],
+    });
   });
 });

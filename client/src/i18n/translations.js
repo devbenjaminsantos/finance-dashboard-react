@@ -165,6 +165,8 @@ export const translations = {
       importNoNew:
         "A revisao foi concluida, mas nenhuma transacao nova foi importada via {{format}}.",
       removeTransactionConfirm: "Remover esta transacao?",
+      removeInstallmentGroupConfirm:
+        "Remover toda esta compra parcelada e todas as parcelas ja lancadas?",
       insightsTitle: "Insights",
       insightsSubtitle:
         "Veja padroes, sinais de atencao e proximos passos sugeridos com base nas suas movimentacoes.",
@@ -207,6 +209,19 @@ export const translations = {
       importedOfx: "Importada via OFX",
       synced: "Sincronizada",
       recurringMonthly: "Recorrente mensal",
+      installmentPlansTitle: "Compras parceladas",
+      installmentPlansSubtitle:
+        "Veja cada compra parcelada como um bloco unico, com total, valor ja lancado e saldo restante.",
+      installmentPlanFallback: "Compra parcelada",
+      installmentBadge: "Parcela {{index}}",
+      installmentTotal: "Valor total",
+      installmentPaid: "Ja lancado",
+      installmentRemainingLabel: "Saldo restante",
+      installmentRemainingCount: "Parcelas restantes",
+      installmentRemainingCountValue: "{{count}} parcela(s)",
+      editInstallmentPlan: "Editar compra",
+      removeInstallmentPlan: "Remover compra",
+      installmentRemaining: "{{count}} parcela(s) restantes, somando {{amount}}.",
       importedAt: "Entrou no sistema em {{date}}",
       newInImport: "Nova nesta importacao",
       noCategory: "Sem categoria",
@@ -377,6 +392,8 @@ export const translations = {
       importNoNew:
         "Review completed, but no new transactions were imported via {{format}}.",
       removeTransactionConfirm: "Remove this transaction?",
+      removeInstallmentGroupConfirm:
+        "Remove this entire installment purchase and all posted installments?",
       insightsTitle: "Insights",
       insightsSubtitle:
         "See patterns, warning signs, and suggested next steps based on your activity.",
@@ -419,6 +436,19 @@ export const translations = {
       importedOfx: "Imported via OFX",
       synced: "Synced",
       recurringMonthly: "Monthly recurring",
+      installmentPlansTitle: "Installment purchases",
+      installmentPlansSubtitle:
+        "See each installment purchase as a single block with total, already posted amount and remaining balance.",
+      installmentPlanFallback: "Installment purchase",
+      installmentBadge: "Installment {{index}}",
+      installmentTotal: "Total amount",
+      installmentPaid: "Already posted",
+      installmentRemainingLabel: "Remaining balance",
+      installmentRemainingCount: "Remaining installments",
+      installmentRemainingCountValue: "{{count}} installment(s)",
+      editInstallmentPlan: "Edit purchase",
+      removeInstallmentPlan: "Remove purchase",
+      installmentRemaining: "{{count}} installment(s) remaining, totaling {{amount}}.",
       importedAt: "Added to the system on {{date}}",
       newInImport: "New in this import",
       noCategory: "Uncategorized",

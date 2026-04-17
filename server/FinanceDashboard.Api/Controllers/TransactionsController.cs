@@ -229,6 +229,96 @@ namespace FinanceDashboard.Api.Controllers
             return NoContent();
         }
 
+        [HttpDelete("installment-groups/{installmentGroupId}")]
+        public async Task<IActionResult> DeleteInstallmentGroup(string installmentGroupId)
+        {
+            var userId = _currentUserService.GetRequiredUserId();
+            var normalizedGroupId = installmentGroupId?.Trim();
+
+            if (string.IsNullOrWhiteSpace(normalizedGroupId))
+            {
+                return BadRequest();
+            }
+
+            var transactions = await _context.Transactions
+                .Where(existing =>
+                    existing.UserId == userId &&
+                    existing.InstallmentGroupId == normalizedGroupId)
+                .ToListAsync();
+
+            if (transactions.Count == 0)
+            {
+                return NotFound();
+            }
+
+            var firstTransaction = transactions
+                .OrderBy(existing => existing.InstallmentIndex ?? int.MaxValue)
+                .First();
+
+            _context.Transactions.RemoveRange(transactions);
+            await _context.SaveChangesAsync();
+
+            await _auditLogService.WriteAsync(
+                action: "transaction.installment-group.deleted",
+                entityType: "Transaction",
+                entityId: normalizedGroupId,
+                userId: userId,
+                summary: $"Compra parcelada removida: {firstTransaction.Description} ({transactions.Count} parcelas).");
+
+            return NoContent();
+        }
+
+        [HttpPut("installment-groups/{installmentGroupId}")]
+        public async Task<IActionResult> UpdateInstallmentGroup(
+            string installmentGroupId,
+            InstallmentGroupUpdateRequest dto)
+        {
+            var userId = _currentUserService.GetRequiredUserId();
+            var normalizedGroupId = installmentGroupId?.Trim();
+
+            if (string.IsNullOrWhiteSpace(normalizedGroupId))
+            {
+                return BadRequest();
+            }
+
+            var transactions = await _context.Transactions
+                .Where(existing =>
+                    existing.UserId == userId &&
+                    existing.InstallmentGroupId == normalizedGroupId)
+                .ToListAsync();
+
+            if (transactions.Count == 0)
+            {
+                return NotFound();
+            }
+
+            foreach (var transaction in transactions)
+            {
+                transaction.Description = dto.Description.Trim();
+                transaction.Category = dto.Category.Trim();
+            }
+
+            foreach (var transaction in transactions)
+            {
+                await ReplaceTagsAsync(transaction, dto.TagNames, userId);
+            }
+
+            await _context.SaveChangesAsync();
+
+            await _auditLogService.WriteAsync(
+                action: "transaction.installment-group.updated",
+                entityType: "Transaction",
+                entityId: normalizedGroupId,
+                userId: userId,
+                summary: $"Compra parcelada atualizada: {dto.Description.Trim()} ({transactions.Count} parcelas).");
+
+            return Ok(new
+            {
+                installmentGroupId = normalizedGroupId,
+                updatedCount = transactions.Count
+            });
+        }
+
         private static bool TryBuildCreationPlan(
             TransactionRequest dto,
             out List<TransactionCreationItem> creationPlan,

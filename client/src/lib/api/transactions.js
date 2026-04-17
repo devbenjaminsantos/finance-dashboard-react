@@ -30,3 +30,16 @@ export function deleteTransaction(id) {
     method: "DELETE",
   });
 }
+
+export function deleteInstallmentGroup(installmentGroupId) {
+  return apiRequest(`/transactions/installment-groups/${installmentGroupId}`, {
+    method: "DELETE",
+  });
+}
+
+export function updateInstallmentGroup(installmentGroupId, payload) {
+  return apiRequest(`/transactions/installment-groups/${installmentGroupId}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}

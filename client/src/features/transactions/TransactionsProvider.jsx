@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   createTransaction,
+  deleteInstallmentGroup,
   deleteTransaction,
   getTransactions,
   importTransactions,
+  updateInstallmentGroup,
   updateTransaction,
 } from "../../lib/api/transactions";
 import { hasValidSession } from "../../lib/api/auth";
@@ -65,6 +67,18 @@ export function TransactionsProvider({ children }) {
     setTransactions((current) => current.filter((transaction) => transaction.id !== id));
   }, []);
 
+  const removeInstallmentGroup = useCallback(async (installmentGroupId) => {
+    await deleteInstallmentGroup(installmentGroupId);
+    setTransactions((current) =>
+      current.filter((transaction) => transaction.installmentGroupId !== installmentGroupId)
+    );
+  }, []);
+
+  const updateInstallmentGroupItem = useCallback(async (installmentGroupId, data) => {
+    await updateInstallmentGroup(installmentGroupId, data);
+    await loadAll();
+  }, [loadAll]);
+
   const updateTransactionItem = useCallback(async (id, data) => {
     const updated = await updateTransaction(id, data);
     setTransactions((current) =>
@@ -101,7 +115,9 @@ export function TransactionsProvider({ children }) {
       addTransaction,
       importTransactions: importTransactionsBatch,
       removeTransaction,
+      removeInstallmentGroup,
       updateTransaction: updateTransactionItem,
+      updateInstallmentGroup: updateInstallmentGroupItem,
       summary,
     }),
     [
@@ -111,7 +127,9 @@ export function TransactionsProvider({ children }) {
       addTransaction,
       importTransactionsBatch,
       removeTransaction,
+      removeInstallmentGroup,
       updateTransactionItem,
+      updateInstallmentGroupItem,
       summary,
     ]
   );

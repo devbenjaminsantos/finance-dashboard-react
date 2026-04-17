@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import InstallmentGroupModal from "../features/transactions/components/InstallmentGroupModal";
 import TransactionImportModal from "../features/transactions/components/TransactionImportModal";
 import TransactionModal from "../features/transactions/components/TransactionModal";
 import TransactionsFilters from "../features/transactions/components/TransactionsFilters";
@@ -19,7 +20,9 @@ export default function Transactions() {
     addTransaction,
     importTransactions,
     removeTransaction,
+    removeInstallmentGroup,
     updateTransaction,
+    updateInstallmentGroup,
     isLoading,
   } = useTransactions();
 
@@ -46,6 +49,7 @@ export default function Transactions() {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [mode, setMode] = useState("create");
   const [selected, setSelected] = useState(null);
+  const [selectedInstallmentGroup, setSelectedInstallmentGroup] = useState(null);
   const [isMutating, setIsMutating] = useState(false);
   const [importFeedback, setImportFeedback] = useState("");
   const [highlightImportedSince, setHighlightImportedSince] = useState("");
@@ -145,6 +149,46 @@ export default function Transactions() {
     return list;
   }, [transactions, q, tagFilter, typeFilter, categoryFilter, month, sortBy]);
 
+  const installmentGroups = useMemo(() => {
+    const groups = new Map();
+
+    for (const transaction of filtered) {
+      if (!transaction.installmentGroupId || Number(transaction.installmentCount) <= 1) {
+        continue;
+      }
+
+      const groupKey = transaction.installmentGroupId;
+      const current = groups.get(groupKey) ?? {
+        id: groupKey,
+        description: transaction.description || t("transactions.installmentPlanFallback"),
+        category: transaction.category || t("transactions.noCategory"),
+        tagNames: transaction.tagNames || [],
+        installmentCount: Number(transaction.installmentCount) || 0,
+        latestInstallmentIndex: 0,
+        amountPerInstallmentCents: Number(transaction.amountCents) || 0,
+      };
+
+      current.latestInstallmentIndex = Math.max(
+        current.latestInstallmentIndex,
+        Number(transaction.installmentIndex) || 0
+      );
+
+      groups.set(groupKey, current);
+    }
+
+    return Array.from(groups.values())
+      .map((group) => ({
+        ...group,
+        totalAmountCents: group.installmentCount * group.amountPerInstallmentCents,
+        paidAmountCents: group.latestInstallmentIndex * group.amountPerInstallmentCents,
+        remainingInstallments: Math.max(group.installmentCount - group.latestInstallmentIndex, 0),
+        remainingAmountCents:
+          Math.max(group.installmentCount - group.latestInstallmentIndex, 0) *
+          group.amountPerInstallmentCents,
+      }))
+      .sort((a, b) => a.description.localeCompare(b.description));
+  }, [filtered, t]);
+
   function openCreate() {
     if (isMutating) {
       return;
@@ -180,6 +224,18 @@ export default function Transactions() {
 
   function closeImport() {
     setIsImportOpen(false);
+  }
+
+  function openInstallmentGroupEdit(group) {
+    if (isMutating) {
+      return;
+    }
+
+    setSelectedInstallmentGroup(group);
+  }
+
+  function closeInstallmentGroupEdit() {
+    setSelectedInstallmentGroup(null);
   }
 
   async function handleSubmit(data) {
@@ -229,6 +285,34 @@ export default function Transactions() {
 
     try {
       await removeTransaction(id);
+    } finally {
+      setIsMutating(false);
+    }
+  }
+
+  async function handleSubmitInstallmentGroup(data) {
+    if (!selectedInstallmentGroup?.id) {
+      return;
+    }
+
+    setIsMutating(true);
+
+    try {
+      await updateInstallmentGroup(selectedInstallmentGroup.id, data);
+    } finally {
+      setIsMutating(false);
+    }
+  }
+
+  async function handleRemoveInstallmentGroup(installmentGroupId) {
+    if (!window.confirm(t("pages.removeInstallmentGroupConfirm"))) {
+      return;
+    }
+
+    setIsMutating(true);
+
+    try {
+      await removeInstallmentGroup(installmentGroupId);
     } finally {
       setIsMutating(false);
     }
@@ -335,6 +419,13 @@ export default function Transactions() {
         initial={selected}
       />
 
+      <InstallmentGroupModal
+        isOpen={Boolean(selectedInstallmentGroup)}
+        onClose={closeInstallmentGroupEdit}
+        onSubmit={handleSubmitInstallmentGroup}
+        initial={selectedInstallmentGroup}
+      />
+
       <TransactionImportModal
         isOpen={isImportOpen}
         onClose={closeImport}
@@ -359,6 +450,96 @@ export default function Transactions() {
         tags={tags}
         onReset={resetFilters}
       />
+
+      {installmentGroups.length > 0 ? (
+        <div className="finova-card p-4 mb-4">
+          <div className="mb-3">
+            <h2 className="finova-title h5 mb-1">{t("transactions.installmentPlansTitle")}</h2>
+            <p className="finova-subtitle small mb-0">
+              {t("transactions.installmentPlansSubtitle")}
+            </p>
+          </div>
+
+          <div className="row g-3">
+            {installmentGroups.map((group) => (
+              <div key={group.id} className="col-12 col-xl-6">
+                <div className="finova-card-soft p-3 h-100">
+                  <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
+                    <div className="finova-title h6 mb-0">{group.description}</div>
+                    <span className="finova-badge-warning">
+                      {t("transactions.installmentBadge", {
+                        index: `${group.latestInstallmentIndex}/${group.installmentCount}`,
+                      })}
+                    </span>
+                  </div>
+
+                  <div className="finova-subtitle small mb-3">{group.category}</div>
+
+                  <div className="row g-3">
+                    <div className="col-6">
+                      <div className="finova-subtitle small mb-1">
+                        {t("transactions.installmentTotal")}
+                      </div>
+                      <div className="fw-semibold">
+                        {formatCurrencyFromCents(group.totalAmountCents)}
+                      </div>
+                    </div>
+
+                    <div className="col-6">
+                      <div className="finova-subtitle small mb-1">
+                        {t("transactions.installmentPaid")}
+                      </div>
+                      <div className="fw-semibold">
+                        {formatCurrencyFromCents(group.paidAmountCents)}
+                      </div>
+                    </div>
+
+                    <div className="col-6">
+                      <div className="finova-subtitle small mb-1">
+                        {t("transactions.installmentRemainingLabel")}
+                      </div>
+                      <div className="fw-semibold">
+                        {formatCurrencyFromCents(group.remainingAmountCents)}
+                      </div>
+                    </div>
+
+                    <div className="col-6">
+                      <div className="finova-subtitle small mb-1">
+                        {t("transactions.installmentRemainingCount")}
+                      </div>
+                      <div className="fw-semibold">
+                        {t("transactions.installmentRemainingCountValue", {
+                          count: group.remainingInstallments,
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="finova-actions-row finova-actions-row-end pt-3">
+                    <button
+                      type="button"
+                      className="btn finova-btn-light btn-sm"
+                      onClick={() => openInstallmentGroupEdit(group)}
+                      disabled={isMutating}
+                    >
+                      {t("transactions.editInstallmentPlan")}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-danger"
+                      onClick={() => handleRemoveInstallmentGroup(group.id)}
+                      disabled={isMutating}
+                    >
+                      {t("transactions.removeInstallmentPlan")}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       <div>
         {importFeedback ? (

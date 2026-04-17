@@ -673,9 +673,10 @@ Para reduzir retrabalho, a V6 pode seguir esta ordem:
 
 ### V6
 
-- [ ] Contas e carteiras separadas por tipo
-- [ ] Tags livres nas transacoes
+- [x] Contas e carteiras separadas por tipo
+- [x] Tags livres nas transacoes
 - [ ] Dividas e parcelamentos com saldo por parcela
+- [ ] Parcelamento basico com geracao de parcelas mensais e identificacao por grupo
 - [ ] Recorrencias automaticas reais com geracao mensal
 - [ ] Planejamento futuro com previsao baseada em historico
 - [ ] Alerta por e-mail ao atingir percentual da meta

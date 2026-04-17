@@ -14,6 +14,24 @@ function getTransactionOriginMeta(transaction, t) {
   }
 }
 
+function getInstallmentMeta(transaction) {
+  const installmentCount = Number(transaction.installmentCount) || 0;
+  const installmentIndex = Number(transaction.installmentIndex) || 0;
+
+  if (installmentCount <= 1 || installmentIndex <= 0) {
+    return null;
+  }
+
+  const remainingInstallments = Math.max(installmentCount - installmentIndex + 1, 0);
+  const remainingAmountCents = remainingInstallments * (Number(transaction.amountCents) || 0);
+
+  return {
+    label: `${installmentIndex}/${installmentCount}`,
+    remainingInstallments,
+    remainingAmountCents,
+  };
+}
+
 export default function TransactionsTable({
   transactions,
   totalTransactionsCount,
@@ -106,6 +124,7 @@ export default function TransactionsTable({
                   new Date(transaction.importedAtUtc).getTime() >=
                     new Date(highlightImportedSince).getTime() - 10000;
                 const originMeta = getTransactionOriginMeta(transaction, t);
+                const installmentMeta = getInstallmentMeta(transaction);
 
                 return (
                   <tr
@@ -123,9 +142,11 @@ export default function TransactionsTable({
                             {t("transactions.recurringMonthly")}
                           </span>
                         ) : null}
-                        {transaction.installmentCount > 1 ? (
+                        {installmentMeta ? (
                           <span className="finova-badge-warning">
-                            {`Parcela ${transaction.installmentIndex}/${transaction.installmentCount}`}
+                            {t("transactions.installmentBadge", {
+                              index: installmentMeta.label,
+                            })}
                           </span>
                         ) : null}
                         {(transaction.tagNames || []).map((tagName) => (
@@ -138,6 +159,14 @@ export default function TransactionsTable({
                         <div className="small text-muted mt-2">
                           {t("transactions.importedAt", {
                             date: formatDateTime(transaction.importedAtUtc),
+                          })}
+                        </div>
+                      ) : null}
+                      {installmentMeta ? (
+                        <div className="small text-muted mt-2">
+                          {t("transactions.installmentRemaining", {
+                            count: installmentMeta.remainingInstallments,
+                            amount: formatCurrencyFromCents(installmentMeta.remainingAmountCents),
                           })}
                         </div>
                       ) : null}

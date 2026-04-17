@@ -8,26 +8,11 @@ namespace FinanceDashboard.Api.Services.Email
     public class AzureCommunicationServicesEmailSender : IEmailSender
     {
         private readonly AzureCommunicationServicesEmailOptions _options;
-        private readonly EmailClient _emailClient;
 
         public AzureCommunicationServicesEmailSender(
             IOptions<AzureCommunicationServicesEmailOptions> options)
         {
             _options = options.Value;
-
-            if (string.IsNullOrWhiteSpace(_options.ConnectionString))
-            {
-                throw new InvalidOperationException(
-                    "Azure Communication Services Email não configurado. Defina AzureCommunicationServices:Email:ConnectionString.");
-            }
-
-            if (string.IsNullOrWhiteSpace(_options.SenderAddress))
-            {
-                throw new InvalidOperationException(
-                    "Azure Communication Services Email não configurado. Defina AzureCommunicationServices:Email:SenderAddress.");
-            }
-
-            _emailClient = new EmailClient(_options.ConnectionString);
         }
 
         public Task SendPasswordResetEmailAsync(string toEmail, string name, string resetUrl)
@@ -35,16 +20,16 @@ namespace FinanceDashboard.Api.Services.Email
             return SendAsync(
                 toEmail,
                 name,
-                "Redefinição de senha - Finova",
+                "Redefinicao de senha - Finova",
                 $"""
-                Olá, {name}.
+                Ola, {name}.
 
-                Recebemos uma solicitação para redefinir sua senha no Finova.
+                Recebemos uma solicitacao para redefinir sua senha no Finova.
 
                 Acesse o link abaixo para criar uma nova senha:
                 {resetUrl}
 
-                Se você não solicitou essa alteração, ignore este e-mail.
+                Se voce nao solicitou essa alteracao, ignore este e-mail.
                 """);
         }
 
@@ -53,16 +38,16 @@ namespace FinanceDashboard.Api.Services.Email
             return SendAsync(
                 toEmail,
                 name,
-                "Confirmação de e-mail - Finova",
+                "Confirmacao de e-mail - Finova",
                 $"""
-                Olá, {name}.
+                Ola, {name}.
 
                 Confirme seu e-mail para ativar sua conta no Finova.
 
                 Acesse o link abaixo para concluir a confirmacao:
                 {verificationUrl}
 
-                Se você não criou esta conta, ignore este e-mail.
+                Se voce nao criou esta conta, ignore este e-mail.
                 """);
         }
 
@@ -80,19 +65,32 @@ namespace FinanceDashboard.Api.Services.Email
                 name,
                 $"Alerta de meta mensal - {goalLabel}",
                 $"""
-                Olá, {name}.
+                Ola, {name}.
 
                 Sua meta "{goalLabel}" em {monthLabel} atingiu {progressPercent}% do limite definido.
 
-                Valor gasto atá agora: {spentAmount:C}
+                Valor gasto ate agora: {spentAmount:C}
                 Limite planejado: {targetAmount:C}
 
-                Acesse o Finova para revisar suas movimentações e ajustar o plano do mês, se necessário.
+                Acesse o Finova para revisar suas movimentacoes e ajustar o plano do mes, se necessario.
                 """);
         }
 
         private async Task SendAsync(string toEmail, string name, string subject, string plainText)
         {
+            if (string.IsNullOrWhiteSpace(_options.ConnectionString))
+            {
+                throw new InvalidOperationException(
+                    "Azure Communication Services Email nao configurado. Defina AzureCommunicationServices:Email:ConnectionString.");
+            }
+
+            if (string.IsNullOrWhiteSpace(_options.SenderAddress))
+            {
+                throw new InvalidOperationException(
+                    "Azure Communication Services Email nao configurado. Defina AzureCommunicationServices:Email:SenderAddress.");
+            }
+
+            var emailClient = new EmailClient(_options.ConnectionString);
             var emailContent = new EmailContent(subject)
             {
                 PlainText = plainText
@@ -106,7 +104,7 @@ namespace FinanceDashboard.Api.Services.Email
 
             var message = new EmailMessage(_options.SenderAddress, recipients, emailContent);
 
-            await _emailClient.SendAsync(WaitUntil.Completed, message);
+            await emailClient.SendAsync(WaitUntil.Completed, message);
         }
     }
 }

@@ -7,13 +7,27 @@ import { useI18n } from "../i18n/LanguageProvider";
 import {
   COMPARISON_RANGE_OPTIONS,
   getCategoryLeaders,
+  getForecastSnapshot,
   getRelativeMonthsISO,
   summarizeTransactions,
 } from "../features/dashboard/dashboardAnalytics";
 import { useTransactions } from "../features/transactions/useTransactions";
 
+function formatMonthLabel(month, locale) {
+  const [year, monthNumber] = String(month || "").split("-").map(Number);
+
+  if (!year || !monthNumber) {
+    return month;
+  }
+
+  return new Intl.DateTimeFormat(locale, {
+    month: "short",
+    year: "numeric",
+  }).format(new Date(year, monthNumber - 1, 1));
+}
+
 export default function Comparisons() {
-  const { t } = useI18n();
+  const { locale, t, formatCurrencyFromCents } = useI18n();
   const { isLoading, transactions } = useTransactions();
   const [comparisonRange, setComparisonRange] = useState(3);
 
@@ -45,6 +59,22 @@ export default function Comparisons() {
       categoryLeaders: getCategoryLeaders(currentTransactions, previousTransactions),
     };
   }, [transactions, comparisonRange, selectedComparisonRangeLabel]);
+
+  const forecast = useMemo(
+    () =>
+      getForecastSnapshot(transactions, {
+        historyMonths: Math.max(3, comparisonRange),
+        horizon: 3,
+      }),
+    [transactions, comparisonRange]
+  );
+
+  const confidenceBadgeClass =
+    forecast.confidence.tone === "income"
+      ? "finova-badge-income"
+      : forecast.confidence.tone === "primary"
+        ? "finova-badge-primary"
+        : "finova-badge-neutral";
 
   return (
     <section className="finova-section-space">
@@ -153,6 +183,105 @@ export default function Comparisons() {
                 value={comparison.categoryLeaders.biggestDrop.value}
                 tone="down"
               />
+            </div>
+
+            <div className="mt-4 pt-4 border-top">
+              <div className="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-3">
+                <div>
+                  <h2 className="finova-title h5 mb-1">{t("pages.comparisonsForecastTitle")}</h2>
+                  <p className="finova-subtitle mb-0">
+                    {t("pages.comparisonsForecastSubtitle", {
+                      months: forecast.historyMonths || Math.max(3, comparisonRange),
+                    })}
+                  </p>
+                </div>
+                <div className="d-flex align-items-start">
+                  <span className={confidenceBadgeClass}>
+                    {t("pages.comparisonsForecastConfidence")} {forecast.confidence.label}
+                  </span>
+                </div>
+              </div>
+
+              {forecast.hasEnoughData ? (
+                <>
+                  <div className="row g-3 mb-3">
+                    {forecast.forecast.map((item) => (
+                      <div className="col-12 col-lg-4" key={item.month}>
+                        <div className="finova-card-soft h-100 p-4">
+                          <div className="finova-subtitle small mb-1">
+                            {t("pages.comparisonsForecastMonth")}
+                          </div>
+                          <div className="finova-title h5 mb-3">
+                            {formatMonthLabel(item.month, locale)}
+                          </div>
+
+                          <div className="d-grid gap-2 small">
+                            <div className="d-flex justify-content-between gap-3">
+                              <span className="finova-subtitle">
+                                {t("pages.comparisonsForecastIncome")}
+                              </span>
+                              <span className="fw-semibold">
+                                {formatCurrencyFromCents(item.income)}
+                              </span>
+                            </div>
+                            <div className="d-flex justify-content-between gap-3">
+                              <span className="finova-subtitle">
+                                {t("pages.comparisonsForecastExpense")}
+                              </span>
+                              <span className="fw-semibold">
+                                {formatCurrencyFromCents(item.expense)}
+                              </span>
+                            </div>
+                            <div className="d-flex justify-content-between gap-3">
+                              <span className="finova-subtitle">
+                                {t("pages.comparisonsForecastBalance")}
+                              </span>
+                              <span className="fw-semibold">
+                                {formatCurrencyFromCents(item.balance)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="finova-card-soft p-3">
+                    <div className="row g-3">
+                      <div className="col-12 col-lg-4">
+                        <div className="finova-subtitle small mb-1">
+                          {t("pages.comparisonsForecastAverageIncome")}
+                        </div>
+                        <div className="finova-title h6 mb-0">
+                          {formatCurrencyFromCents(forecast.averageIncome)}
+                        </div>
+                      </div>
+                      <div className="col-12 col-lg-4">
+                        <div className="finova-subtitle small mb-1">
+                          {t("pages.comparisonsForecastAverageExpense")}
+                        </div>
+                        <div className="finova-title h6 mb-0">
+                          {formatCurrencyFromCents(forecast.averageExpense)}
+                        </div>
+                      </div>
+                      <div className="col-12 col-lg-4">
+                        <div className="finova-subtitle small mb-1">
+                          {t("pages.comparisonsForecastAverageBalance")}
+                        </div>
+                        <div className="finova-title h6 mb-0">
+                          {formatCurrencyFromCents(forecast.averageBalance)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="finova-card-soft p-4">
+                  <p className="finova-subtitle mb-0">
+                    {t("pages.comparisonsForecastEmpty")}
+                  </p>
+                </div>
+              )}
             </div>
           </>
         )}

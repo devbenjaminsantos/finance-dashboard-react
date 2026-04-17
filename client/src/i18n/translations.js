@@ -175,6 +175,19 @@ export const translations = {
       comparisonsSubtitle:
         "Compare janelas equivalentes para identificar mudancas de ritmo, pressao no saldo e categorias que mais alteraram o resultado.",
       comparisonsRange: "Janela de comparacao",
+      comparisonsForecastTitle: "Previsao dos proximos meses",
+      comparisonsForecastSubtitle:
+        "Estimativa baseada na media ponderada dos ultimos {{months}} meses, com ajuste suave de tendencia.",
+      comparisonsForecastConfidence: "Confianca",
+      comparisonsForecastMonth: "Mes projetado",
+      comparisonsForecastIncome: "Receitas previstas",
+      comparisonsForecastExpense: "Despesas previstas",
+      comparisonsForecastBalance: "Saldo previsto",
+      comparisonsForecastAverageIncome: "Media base de receitas",
+      comparisonsForecastAverageExpense: "Media base de despesas",
+      comparisonsForecastAverageBalance: "Media base de saldo",
+      comparisonsForecastEmpty:
+        "Adicione pelo menos tres meses com movimentacoes para ativar a previsao baseada em historico.",
       goalsTitle: "Metas",
       goalsSubtitle:
         "Organize seu orcamento mensal com metas gerais e por categoria em uma area propria, mais focada e facil de revisar.",
@@ -402,6 +415,19 @@ export const translations = {
       comparisonsSubtitle:
         "Compare equivalent ranges to spot pace changes, pressure on balance, and categories that changed results the most.",
       comparisonsRange: "Comparison window",
+      comparisonsForecastTitle: "Upcoming months forecast",
+      comparisonsForecastSubtitle:
+        "Estimate based on the weighted average of the last {{months}} months, with a light trend adjustment.",
+      comparisonsForecastConfidence: "Confidence",
+      comparisonsForecastMonth: "Projected month",
+      comparisonsForecastIncome: "Projected income",
+      comparisonsForecastExpense: "Projected expenses",
+      comparisonsForecastBalance: "Projected balance",
+      comparisonsForecastAverageIncome: "Base income average",
+      comparisonsForecastAverageExpense: "Base expense average",
+      comparisonsForecastAverageBalance: "Base balance average",
+      comparisonsForecastEmpty:
+        "Add at least three months with activity to enable the history-based forecast.",
       goalsTitle: "Goals",
       goalsSubtitle:
         "Organize your monthly budget with general and per-category goals in a dedicated area.",

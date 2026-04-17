@@ -45,6 +45,45 @@ export function getRelativeMonthsISO(offset, count) {
   return months.reverse();
 }
 
+export function shiftMonthISO(month, offset) {
+  const [year, monthNumber] = String(month || "").split("-").map(Number);
+
+  if (!year || !monthNumber) {
+    return "";
+  }
+
+  const date = new Date(year, monthNumber - 1, 1);
+  date.setMonth(date.getMonth() + offset);
+
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+export function getLatestTransactionMonthISO(transactions) {
+  return transactions.reduce((latest, transaction) => {
+    const month = (transaction.date || "").slice(0, 7);
+
+    if (!month) {
+      return latest;
+    }
+
+    if (!latest || month > latest) {
+      return month;
+    }
+
+    return latest;
+  }, "");
+}
+
+export function getTrailingMonthsFromAnchor(anchorMonth, count) {
+  const months = [];
+
+  for (let index = count - 1; index >= 0; index -= 1) {
+    months.push(shiftMonthISO(anchorMonth, -index));
+  }
+
+  return months;
+}
+
 export function getMonthsForPeriod(period) {
   switch (period) {
     case "current-month":
@@ -78,6 +117,19 @@ export function summarizeTransactions(transactions) {
     expense,
     balance: income - expense,
   };
+}
+
+export function buildMonthlySeries(transactions, months) {
+  return months.map((month) => {
+    const monthTransactions = transactions.filter(
+      (transaction) => (transaction.date || "").slice(0, 7) === month
+    );
+
+    return {
+      month,
+      ...summarizeTransactions(monthTransactions),
+    };
+  });
 }
 
 export function buildExpenseTotalsByCategory(transactions) {
@@ -324,4 +376,156 @@ export function getPrescriptiveInsights(transactions) {
   }
 
   return recommendations.slice(0, 3);
+}
+
+function getWeightedAverage(values) {
+  let weightedTotal = 0;
+  let totalWeight = 0;
+
+  values.forEach((value, index) => {
+    const weight = index + 1;
+    weightedTotal += value * weight;
+    totalWeight += weight;
+  });
+
+  return totalWeight > 0 ? weightedTotal / totalWeight : 0;
+}
+
+function getTrendStep(values) {
+  if (values.length < 2) {
+    return 0;
+  }
+
+  return (values[values.length - 1] - values[0]) / (values.length - 1);
+}
+
+function getAverageAbsoluteChange(values) {
+  if (values.length < 2) {
+    return 0;
+  }
+
+  let total = 0;
+
+  for (let index = 1; index < values.length; index += 1) {
+    total += Math.abs(values[index] - values[index - 1]);
+  }
+
+  return total / (values.length - 1);
+}
+
+export function getForecastSnapshot(
+  transactions,
+  { historyMonths = 6, horizon = 3 } = {}
+) {
+  const latestMonth = getLatestTransactionMonthISO(transactions);
+
+  if (!latestMonth) {
+    return {
+      hasEnoughData: false,
+      history: [],
+      forecast: [],
+      confidence: {
+        label: "Baixa",
+        tone: "neutral",
+      },
+    };
+  }
+
+  const availableMonths = Array.from(
+    new Set(
+      transactions
+        .map((transaction) => (transaction.date || "").slice(0, 7))
+        .filter(Boolean)
+    )
+  ).sort();
+
+  const historyWindow = Math.max(3, Math.min(historyMonths, availableMonths.length));
+
+  if (availableMonths.length < 3) {
+    return {
+      hasEnoughData: false,
+      history: [],
+      forecast: [],
+      confidence: {
+        label: "Baixa",
+        tone: "neutral",
+      },
+    };
+  }
+
+  const historyMonthsList = getTrailingMonthsFromAnchor(latestMonth, historyWindow);
+  const historySeries = buildMonthlySeries(transactions, historyMonthsList);
+
+  if (historySeries.length < 3) {
+    return {
+      hasEnoughData: false,
+      history: historySeries,
+      forecast: [],
+      confidence: {
+        label: "Baixa",
+        tone: "neutral",
+      },
+    };
+  }
+
+  const incomeValues = historySeries.map((item) => item.income);
+  const expenseValues = historySeries.map((item) => item.expense);
+
+  const baseIncome = getWeightedAverage(incomeValues);
+  const baseExpense = getWeightedAverage(expenseValues);
+  const incomeTrendStep = getTrendStep(incomeValues);
+  const expenseTrendStep = getTrendStep(expenseValues);
+
+  const forecast = Array.from({ length: horizon }, (_, index) => {
+    const monthOffset = index + 1;
+    const income = Math.max(0, Math.round(baseIncome + incomeTrendStep * monthOffset * 0.5));
+    const expense = Math.max(0, Math.round(baseExpense + expenseTrendStep * monthOffset * 0.5));
+
+    return {
+      month: shiftMonthISO(latestMonth, monthOffset),
+      income,
+      expense,
+      balance: income - expense,
+    };
+  });
+
+  const incomeVolatilityBase = Math.max(getWeightedAverage(incomeValues), 1);
+  const expenseVolatilityBase = Math.max(getWeightedAverage(expenseValues), 1);
+  const incomeVolatility = getAverageAbsoluteChange(incomeValues) / incomeVolatilityBase;
+  const expenseVolatility = getAverageAbsoluteChange(expenseValues) / expenseVolatilityBase;
+  const volatility = Math.max(incomeVolatility, expenseVolatility);
+
+  let confidence = {
+    label: "Alta",
+    tone: "income",
+  };
+
+  if (historySeries.length < 5 || volatility > 0.45) {
+    confidence = {
+      label: "Media",
+      tone: "primary",
+    };
+  }
+
+  if (historySeries.length < 4 || volatility > 0.75) {
+    confidence = {
+      label: "Baixa",
+      tone: "neutral",
+    };
+  }
+
+  const averageIncome = Math.round(getWeightedAverage(incomeValues));
+  const averageExpense = Math.round(getWeightedAverage(expenseValues));
+  const averageBalance = averageIncome - averageExpense;
+
+  return {
+    hasEnoughData: true,
+    historyMonths: historySeries.length,
+    history: historySeries,
+    forecast,
+    confidence,
+    averageIncome,
+    averageExpense,
+    averageBalance,
+  };
 }

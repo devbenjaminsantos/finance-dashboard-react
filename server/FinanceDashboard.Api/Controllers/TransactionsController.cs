@@ -3,6 +3,7 @@ using FinanceDashboard.Api.DTOs;
 using FinanceDashboard.Api.Models;
 using FinanceDashboard.Api.Services.Audit;
 using FinanceDashboard.Api.Services.CurrentUser;
+using FinanceDashboard.Api.Services.Recurring;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,21 +18,25 @@ namespace FinanceDashboard.Api.Controllers
         private readonly AppDbContext _context;
         private readonly AuditLogService _auditLogService;
         private readonly CurrentUserService _currentUserService;
+        private readonly RecurringTransactionGenerationService _recurringTransactionGenerationService;
 
         public TransactionsController(
             AppDbContext context,
             CurrentUserService currentUserService,
-            AuditLogService auditLogService)
+            AuditLogService auditLogService,
+            RecurringTransactionGenerationService recurringTransactionGenerationService)
         {
             _context = context;
             _currentUserService = currentUserService;
             _auditLogService = auditLogService;
+            _recurringTransactionGenerationService = recurringTransactionGenerationService;
         }
 
         [HttpGet]
         public async Task<ActionResult<IReadOnlyList<TransactionResponse>>> GetAll()
         {
             var userId = _currentUserService.GetRequiredUserId();
+            await _recurringTransactionGenerationService.EnsureTransactionsGeneratedUpToTodayAsync(userId);
 
             var transactions = await _context.Transactions
                 .Include(transaction => transaction.TagLinks)
@@ -48,6 +53,7 @@ namespace FinanceDashboard.Api.Controllers
         {
             var userId = _currentUserService.GetRequiredUserId();
             var today = DateTime.UtcNow.Date;
+            await _recurringTransactionGenerationService.EnsureTransactionsGeneratedUpToTodayAsync(userId);
 
             var plans = await _context.InstallmentPlans
                 .Include(plan => plan.Transactions)
@@ -64,6 +70,7 @@ namespace FinanceDashboard.Api.Controllers
         public async Task<ActionResult<TransactionResponse>> GetById(int id)
         {
             var userId = _currentUserService.GetRequiredUserId();
+            await _recurringTransactionGenerationService.EnsureTransactionsGeneratedUpToTodayAsync(userId);
 
             var transaction = await _context.Transactions
                 .Include(existing => existing.TagLinks)
@@ -78,6 +85,22 @@ namespace FinanceDashboard.Api.Controllers
             return Ok(ToResponse(transaction));
         }
 
+        [HttpGet("recurring-rules")]
+        public async Task<ActionResult<IReadOnlyList<RecurringRuleResponse>>> GetRecurringRules()
+        {
+            var userId = _currentUserService.GetRequiredUserId();
+            await _recurringTransactionGenerationService.EnsureTransactionsGeneratedUpToTodayAsync(userId);
+
+            var rules = await _context.RecurringRules
+                .Where(rule => rule.UserId == userId)
+                .OrderByDescending(rule => rule.IsActive)
+                .ThenBy(rule => rule.NextOccurrenceDate)
+                .ThenBy(rule => rule.Description)
+                .ToListAsync();
+
+            return Ok(rules.Select(ToRecurringRuleResponse).ToList());
+        }
+
         [HttpPost]
         public async Task<ActionResult<TransactionResponse>> Create(TransactionCreateRequest dto)
         {
@@ -90,6 +113,7 @@ namespace FinanceDashboard.Api.Controllers
             }
 
             InstallmentPlan? installmentPlan = null;
+            RecurringRule? recurringRule = null;
 
             if (creationPlan[0].InstallmentGroupId is not null)
             {
@@ -108,12 +132,37 @@ namespace FinanceDashboard.Api.Controllers
                 _context.InstallmentPlans.Add(installmentPlan);
             }
 
+            if (dto.IsRecurring)
+            {
+                recurringRule = new RecurringRule
+                {
+                    PublicId = creationPlan[0].RecurrenceGroupId!,
+                    Description = dto.Description.Trim(),
+                    Category = dto.Category.Trim(),
+                    AmountCents = dto.AmountCents,
+                    Type = dto.Type.Trim().ToLowerInvariant(),
+                    StartDate = dto.Date.Date,
+                    EndDate = dto.RecurrenceEndDate!.Value.Date,
+                    LastGeneratedDate = dto.Date.Date,
+                    NextOccurrenceDate = dto.Date.Date.AddMonths(1) <= dto.RecurrenceEndDate.Value.Date
+                        ? dto.Date.Date.AddMonths(1)
+                        : null,
+                    IsActive = dto.Date.Date.AddMonths(1) <= dto.RecurrenceEndDate.Value.Date,
+                    TagsCsv = RecurringTransactionGenerationService.SerializeTags(dto.TagNames),
+                    CreatedAtUtc = DateTime.UtcNow,
+                    UserId = userId
+                };
+
+                _context.RecurringRules.Add(recurringRule);
+            }
+
             var transactions = creationPlan
                 .Select(item => BuildTransactionEntity(
                     dto,
                     userId,
                     item.Date,
                     item.RecurrenceGroupId,
+                    recurringRule,
                     item.InstallmentIndex,
                     item.InstallmentCount,
                     item.InstallmentGroupId,
@@ -130,7 +179,7 @@ namespace FinanceDashboard.Api.Controllers
             var summary = dto.InstallmentCount > 1
                 ? $"Compra parcelada criada: {firstTransaction.Description} ({dto.InstallmentCount} parcelas mensais)."
                 : dto.IsRecurring
-                ? $"Serie recorrente criada: {firstTransaction.Description} ({transactions.Count} lancamentos mensais)."
+                ? $"Regra recorrente criada: {firstTransaction.Description} (proxima geracao mensal automatica)."
                 : $"Transacao criada: {firstTransaction.Description} ({firstTransaction.Type}).";
 
             await _auditLogService.WriteAsync(
@@ -183,6 +232,7 @@ namespace FinanceDashboard.Api.Controllers
                     userId,
                     item.Date.Date,
                     recurrenceGroupId: null,
+                    recurringRule: null,
                     installmentIndex: null,
                     installmentCount: null,
                     installmentGroupId: null,
@@ -446,25 +496,13 @@ namespace FinanceDashboard.Api.Controllers
                 return false;
             }
 
-            var currentDate = startDate;
             var recurrenceGroupId = Guid.NewGuid().ToString("N");
 
-            while (currentDate <= endDate)
+            creationPlan.Add(new TransactionCreationItem
             {
-                creationPlan.Add(new TransactionCreationItem
-                {
-                    Date = currentDate,
-                    RecurrenceGroupId = recurrenceGroupId
-                });
-
-                if (creationPlan.Count > 60)
-                {
-                    validationError = "Limite de 60 lancamentos recorrentes por serie.";
-                    return false;
-                }
-
-                currentDate = currentDate.AddMonths(1);
-            }
+                Date = startDate,
+                RecurrenceGroupId = recurrenceGroupId
+            });
 
             return true;
         }
@@ -474,6 +512,7 @@ namespace FinanceDashboard.Api.Controllers
             int userId,
             DateTime date,
             string? recurrenceGroupId,
+            RecurringRule? recurringRule,
             int? installmentIndex,
             int? installmentCount,
             string? installmentGroupId,
@@ -496,6 +535,7 @@ namespace FinanceDashboard.Api.Controllers
                 IsRecurring = dto.IsRecurring,
                 RecurrenceEndDate = dto.IsRecurring ? dto.RecurrenceEndDate?.Date : null,
                 RecurrenceGroupId = recurrenceGroupId,
+                RecurringRule = recurringRule,
                 InstallmentIndex = installmentIndex,
                 InstallmentCount = installmentCount,
                 InstallmentGroupId = installmentGroupId,
@@ -605,10 +645,29 @@ namespace FinanceDashboard.Api.Controllers
                 IsRecurring = transaction.IsRecurring,
                 RecurrenceEndDate = transaction.RecurrenceEndDate,
                 RecurrenceGroupId = transaction.RecurrenceGroupId,
+                RecurringRuleId = transaction.RecurringRuleId,
                 InstallmentIndex = transaction.InstallmentIndex,
                 InstallmentCount = transaction.InstallmentCount,
                 InstallmentGroupId = transaction.InstallmentGroupId,
                 InstallmentPlanId = transaction.InstallmentPlanId
+            };
+        }
+
+        private static RecurringRuleResponse ToRecurringRuleResponse(RecurringRule rule)
+        {
+            return new RecurringRuleResponse
+            {
+                Id = rule.PublicId,
+                Description = rule.Description,
+                Category = rule.Category,
+                AmountCents = rule.AmountCents,
+                Type = rule.Type,
+                StartDate = rule.StartDate,
+                EndDate = rule.EndDate,
+                NextOccurrenceDate = rule.NextOccurrenceDate,
+                LastGeneratedDate = rule.LastGeneratedDate,
+                IsActive = rule.IsActive,
+                TagNames = RecurringTransactionGenerationService.ParseTags(rule.TagsCsv)
             };
         }
 

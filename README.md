@@ -677,7 +677,7 @@ Para reduzir retrabalho, a V6 pode seguir esta ordem:
 - [x] Tags livres nas transacoes
 - [x] Dividas e parcelamentos com saldo por parcela
 - [x] Parcelamento basico com geracao de parcelas mensais, identificacao por grupo e edicao/remocao em lote
-- [ ] Recorrencias automaticas reais com geracao mensal
+- [x] Recorrencias automaticas reais com geracao mensal
 - [x] Planejamento futuro com previsao baseada em historico
 - [ ] Alerta por e-mail ao atingir percentual da meta
 - [ ] Relatorio mensal automatico no primeiro dia do mes

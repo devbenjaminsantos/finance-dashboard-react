@@ -64,7 +64,8 @@ export default function Transactions() {
   const { t, formatCurrencyFromCents, formatDate } = useI18n();
   const {
     transactions,
-    installmentPlans,
+    installmentPlans = [],
+    recurringRules = [],
     addTransaction,
     importTransactions,
     removeTransaction,
@@ -217,6 +218,56 @@ export default function Transactions() {
       }
     );
   }, [installmentGroups]);
+
+  const visibleRecurringRules = useMemo(() => {
+    let list = [...recurringRules];
+
+    if (q.trim()) {
+      const search = q.trim().toLowerCase();
+      list = list.filter(
+        (rule) =>
+          (rule.description || "").toLowerCase().includes(search) ||
+          (rule.tagNames || []).some((tagName) => tagName.toLowerCase().includes(search))
+      );
+    }
+
+    if (tagFilter !== "all") {
+      list = list.filter((rule) => (rule.tagNames || []).includes(tagFilter));
+    }
+
+    if (typeFilter !== "all") {
+      list = list.filter((rule) => rule.type === typeFilter);
+    }
+
+    if (categoryFilter !== "all") {
+      list = list.filter((rule) => rule.category === categoryFilter);
+    }
+
+    return list.sort((left, right) => {
+      if (left.isActive !== right.isActive) {
+        return left.isActive ? -1 : 1;
+      }
+
+      return (left.nextOccurrenceDate || "9999-12-31").localeCompare(
+        right.nextOccurrenceDate || "9999-12-31"
+      );
+    });
+  }, [recurringRules, q, tagFilter, typeFilter, categoryFilter]);
+
+  const recurringOverview = useMemo(() => {
+    return visibleRecurringRules.reduce(
+      (accumulator, rule) => ({
+        activeRules: accumulator.activeRules + (rule.isActive ? 1 : 0),
+        nextMonthAmountCents:
+          accumulator.nextMonthAmountCents +
+          (rule.isActive && rule.nextOccurrenceDate ? Number(rule.amountCents) || 0 : 0),
+      }),
+      {
+        activeRules: 0,
+        nextMonthAmountCents: 0,
+      }
+    );
+  }, [visibleRecurringRules]);
 
   function openCreate() {
     if (isMutating) {
@@ -479,6 +530,106 @@ export default function Transactions() {
         tags={tags}
         onReset={resetFilters}
       />
+
+      {visibleRecurringRules.length > 0 ? (
+        <div className="finova-card p-4 mb-4">
+          <div className="mb-3">
+            <h2 className="finova-title h5 mb-1">{t("transactions.recurringRulesTitle")}</h2>
+            <p className="finova-subtitle small mb-0">
+              {t("transactions.recurringRulesSubtitle")}
+            </p>
+          </div>
+
+          <div className="row g-3 mb-4">
+            <div className="col-12 col-lg-6">
+              <div className="finova-card-soft p-3 h-100">
+                <div className="finova-subtitle small mb-1">
+                  {t("transactions.recurringRulesActiveLabel")}
+                </div>
+                <div className="finova-title h5 mb-1">{recurringOverview.activeRules}</div>
+                <div className="finova-subtitle small mb-0">
+                  {t("transactions.recurringRulesActiveHelp")}
+                </div>
+              </div>
+            </div>
+
+            <div className="col-12 col-lg-6">
+              <div className="finova-card-soft p-3 h-100">
+                <div className="finova-subtitle small mb-1">
+                  {t("transactions.recurringRulesNextAmountLabel")}
+                </div>
+                <div className="finova-title h5 mb-1">
+                  {formatCurrencyFromCents(recurringOverview.nextMonthAmountCents)}
+                </div>
+                <div className="finova-subtitle small mb-0">
+                  {t("transactions.recurringRulesNextAmountHelp")}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="row g-3">
+            {visibleRecurringRules.map((rule) => (
+              <div key={rule.id} className="col-12 col-xl-6">
+                <div className="finova-card-soft p-3 h-100">
+                  <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
+                    <div className="finova-title h6 mb-0">{rule.description}</div>
+                    <span
+                      className={rule.isActive ? "finova-badge-income" : "finova-badge-neutral"}
+                    >
+                      {rule.isActive
+                        ? t("transactions.recurringRuleActive")
+                        : t("transactions.recurringRuleFinished")}
+                    </span>
+                  </div>
+
+                  <div className="finova-subtitle small mb-3">{rule.category}</div>
+
+                  <div className="row g-3">
+                    <div className="col-6">
+                      <div className="finova-subtitle small mb-1">
+                        {t("transactions.recurringRuleAmount")}
+                      </div>
+                      <div className="fw-semibold">
+                        {formatCurrencyFromCents(rule.amountCents)}
+                      </div>
+                    </div>
+
+                    <div className="col-6">
+                      <div className="finova-subtitle small mb-1">
+                        {t("transactions.recurringRuleType")}
+                      </div>
+                      <div className="fw-semibold">
+                        {rule.type === "income"
+                          ? t("transactions.income")
+                          : t("transactions.expense")}
+                      </div>
+                    </div>
+
+                    <div className="col-6">
+                      <div className="finova-subtitle small mb-1">
+                        {t("transactions.recurringRuleNext")}
+                      </div>
+                      <div className="fw-semibold">
+                        {rule.nextOccurrenceDate
+                          ? formatDate(rule.nextOccurrenceDate)
+                          : t("transactions.recurringRuleNoNext")}
+                      </div>
+                    </div>
+
+                    <div className="col-6">
+                      <div className="finova-subtitle small mb-1">
+                        {t("transactions.recurringRuleEnd")}
+                      </div>
+                      <div className="fw-semibold">{formatDate(rule.endDate)}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       {installmentGroups.length > 0 ? (
         <div className="finova-card p-4 mb-4">

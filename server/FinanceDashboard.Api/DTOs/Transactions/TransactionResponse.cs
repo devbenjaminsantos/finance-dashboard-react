@@ -16,6 +16,7 @@ namespace FinanceDashboard.Api.DTOs
         public bool IsRecurring { get; set; }
         public DateTime? RecurrenceEndDate { get; set; }
         public string? RecurrenceGroupId { get; set; }
+        public int? RecurringRuleId { get; set; }
         public int? InstallmentIndex { get; set; }
         public int? InstallmentCount { get; set; }
         public string? InstallmentGroupId { get; set; }

@@ -134,6 +134,22 @@ const installmentPlansFixture = [
   },
 ];
 
+const recurringRulesFixture = [
+  {
+    id: "recurring-rule-1",
+    description: "Condominio",
+    category: "Moradia",
+    amountCents: 180000,
+    type: "expense",
+    startDate: "2026-04-07T00:00:00",
+    endDate: "2026-12-07T00:00:00",
+    nextOccurrenceDate: "2026-05-07T00:00:00",
+    lastGeneratedDate: "2026-04-07T00:00:00",
+    isActive: true,
+    tagNames: ["casa"],
+  },
+];
+
 describe("Transactions page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -141,6 +157,7 @@ describe("Transactions page", () => {
     useTransactions.mockReturnValue({
       transactions: transactionsFixture,
       installmentPlans: installmentPlansFixture,
+      recurringRules: recurringRulesFixture,
       addTransaction: vi.fn(),
       importTransactions: vi.fn().mockResolvedValue({ importedCount: 1 }),
       removeTransaction: vi.fn(),
@@ -196,6 +213,11 @@ describe("Transactions page", () => {
     expect(screen.getByText("Manual")).toBeInTheDocument();
     expect(screen.getAllByText("Importada via CSV").length).toBeGreaterThan(0);
     expect(screen.getAllByText("#casa").length).toBeGreaterThan(0);
+    expect(screen.getByText("Regras recorrentes")).toBeInTheDocument();
+    expect(screen.getByText("Regras ativas")).toBeInTheDocument();
+    expect(screen.getByText("Proximo ciclo previsto")).toBeInTheDocument();
+    expect(screen.getByText("Condominio")).toBeInTheDocument();
+    expect(screen.getByText("Proxima geracao")).toBeInTheDocument();
     expect(screen.getAllByText("Parcela 2/3").length).toBeGreaterThan(0);
     expect(screen.getByText(/1 parcela\(s\) restantes/i)).toBeInTheDocument();
     expect(screen.getByText("Compras parceladas")).toBeInTheDocument();
@@ -229,6 +251,7 @@ describe("Transactions page", () => {
     useTransactions.mockReturnValue({
       transactions: transactionsFixture,
       installmentPlans: installmentPlansFixture,
+      recurringRules: recurringRulesFixture,
       addTransaction: vi.fn(),
       importTransactions: vi.fn().mockResolvedValue({ importedCount: 1 }),
       removeTransaction: vi.fn(),
@@ -252,6 +275,7 @@ describe("Transactions page", () => {
     useTransactions.mockReturnValue({
       transactions: transactionsFixture,
       installmentPlans: installmentPlansFixture,
+      recurringRules: recurringRulesFixture,
       addTransaction: vi.fn(),
       importTransactions: vi.fn().mockResolvedValue({ importedCount: 1 }),
       removeTransaction: vi.fn(),

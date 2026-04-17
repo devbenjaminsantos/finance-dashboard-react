@@ -5,6 +5,7 @@ using FinanceDashboard.Api.DTOs;
 using FinanceDashboard.Api.Models;
 using FinanceDashboard.Api.Services.Audit;
 using FinanceDashboard.Api.Services.CurrentUser;
+using FinanceDashboard.Api.Services.Recurring;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -67,7 +68,7 @@ public class TransactionsControllerTests
     }
 
     [Fact]
-    public async Task Create_GeneratesRecurringMonthlySeries_WhenRequested()
+    public async Task Create_CreatesRecurringRuleAndFirstOccurrence_WhenRequested()
     {
         using var context = CreateContext();
         var controller = CreateController(context, userId: 7);
@@ -87,24 +88,129 @@ public class TransactionsControllerTests
 
         var created = Assert.IsType<CreatedAtActionResult>(result.Result);
         var payload = Assert.IsType<TransactionResponse>(created.Value);
-        var entities = await context.Transactions
-            .OrderBy(transaction => transaction.Date)
-            .ToListAsync();
+        var entity = await context.Transactions.SingleAsync();
+        var rule = await context.RecurringRules.SingleAsync();
 
-        Assert.Equal(4, entities.Count);
-        Assert.All(entities, entity => Assert.True(entity.IsRecurring));
-        Assert.All(entities, entity => Assert.Equal(7, entity.UserId));
-        Assert.All(entities, entity => Assert.Equal("manual", entity.Source));
-        Assert.Equal(new DateTime(2026, 4, 7), entities[0].Date);
-        Assert.Equal(new DateTime(2026, 5, 7), entities[1].Date);
-        Assert.Equal(new DateTime(2026, 6, 7), entities[2].Date);
-        Assert.Equal(new DateTime(2026, 7, 7), entities[3].Date);
-        Assert.Equal(entities[0].RecurrenceGroupId, entities[1].RecurrenceGroupId);
-        Assert.Equal(dto.RecurrenceEndDate, entities[3].RecurrenceEndDate);
+        Assert.True(entity.IsRecurring);
+        Assert.Equal(7, entity.UserId);
+        Assert.Equal("manual", entity.Source);
+        Assert.Equal(new DateTime(2026, 4, 7), entity.Date);
+        Assert.Equal(dto.RecurrenceEndDate, entity.RecurrenceEndDate);
+        Assert.NotNull(entity.RecurringRuleId);
+        Assert.Equal(rule.Id, entity.RecurringRuleId);
+        Assert.Equal(rule.PublicId, entity.RecurrenceGroupId);
+        Assert.Equal("Condominio", rule.Description);
+        Assert.Equal("Moradia", rule.Category);
+        Assert.Equal(180000, rule.AmountCents);
+        Assert.Equal("expense", rule.Type);
+        Assert.True(rule.IsActive);
+        Assert.Equal(new DateTime(2026, 5, 7), rule.NextOccurrenceDate);
         Assert.True(payload.IsRecurring);
         Assert.NotNull(payload.RecurrenceGroupId);
+        Assert.Equal(rule.Id, payload.RecurringRuleId);
         Assert.Equal("manual", payload.Source);
-        Assert.Contains(context.AuditLogs, log => log.Action == "transaction.created" && log.Summary.Contains("Serie recorrente criada"));
+        Assert.Contains(context.AuditLogs, log => log.Action == "transaction.created" && log.Summary.Contains("Regra recorrente criada"));
+    }
+
+    [Fact]
+    public async Task GetAll_GeneratesDueRecurringTransactionsBeforeReturning()
+    {
+        using var context = CreateContext();
+
+        var rule = new RecurringRule
+        {
+            UserId = 7,
+            PublicId = "recurring-condominio",
+            Description = "Condominio",
+            Category = "Moradia",
+            AmountCents = 180000,
+            Type = "expense",
+            StartDate = DateTime.UtcNow.Date.AddMonths(-2),
+            EndDate = DateTime.UtcNow.Date.AddMonths(1),
+            LastGeneratedDate = DateTime.UtcNow.Date.AddMonths(-2),
+            NextOccurrenceDate = DateTime.UtcNow.Date.AddMonths(-1),
+            IsActive = true,
+            TagsCsv = "casa",
+            CreatedAtUtc = DateTime.UtcNow,
+        };
+
+        context.RecurringRules.Add(rule);
+        context.Transactions.Add(new Transaction
+        {
+            UserId = 7,
+            Description = rule.Description,
+            Category = rule.Category,
+            AmountCents = rule.AmountCents,
+            Date = rule.StartDate,
+            Type = rule.Type,
+            Source = "manual",
+            IsRecurring = true,
+            RecurrenceEndDate = rule.EndDate,
+            RecurrenceGroupId = rule.PublicId,
+            RecurringRule = rule,
+        });
+        context.SaveChanges();
+
+        var controller = CreateController(context, userId: 7);
+
+        var result = await controller.GetAll();
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        var payload = Assert.IsAssignableFrom<IReadOnlyList<TransactionResponse>>(ok.Value);
+
+        Assert.True(payload.Count >= 2);
+        Assert.Contains(payload, transaction => transaction.Date.Date == DateTime.UtcNow.Date.AddMonths(-1));
+        Assert.Contains(payload, transaction => transaction.Date.Date == DateTime.UtcNow.Date);
+    }
+
+    [Fact]
+    public async Task GetRecurringRules_ReturnsRulesForAuthenticatedUser()
+    {
+        using var context = CreateContext();
+
+        context.RecurringRules.AddRange(
+            new RecurringRule
+            {
+                UserId = 7,
+                PublicId = "rule-1",
+                Description = "Salario",
+                Category = "Salario",
+                AmountCents = 500000,
+                Type = "income",
+                StartDate = new DateTime(2026, 4, 5),
+                EndDate = new DateTime(2026, 12, 5),
+                LastGeneratedDate = new DateTime(2026, 4, 5),
+                NextOccurrenceDate = new DateTime(2026, 5, 5),
+                IsActive = true,
+                TagsCsv = "trabalho"
+            },
+            new RecurringRule
+            {
+                UserId = 9,
+                PublicId = "rule-2",
+                Description = "Outro",
+                Category = "Outros",
+                AmountCents = 1000,
+                Type = "expense",
+                StartDate = new DateTime(2026, 4, 1),
+                EndDate = new DateTime(2026, 6, 1),
+                IsActive = true,
+                TagsCsv = ""
+            });
+        context.SaveChanges();
+
+        var controller = CreateController(context, userId: 7);
+
+        var result = await controller.GetRecurringRules();
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        var payload = Assert.IsAssignableFrom<IReadOnlyList<RecurringRuleResponse>>(ok.Value);
+        var ruleResponse = Assert.Single(payload);
+
+        Assert.Equal("rule-1", ruleResponse.Id);
+        Assert.Equal("Salario", ruleResponse.Description);
+        Assert.Equal("income", ruleResponse.Type);
+        Assert.Contains("trabalho", ruleResponse.TagNames);
     }
 
     [Fact]
@@ -333,7 +439,8 @@ public class TransactionsControllerTests
         var controller = new TransactionsController(
             context,
             new CurrentUserService(accessor),
-            new AuditLogService(context, accessor));
+            new AuditLogService(context, accessor),
+            new RecurringTransactionGenerationService(context));
 
         controller.ControllerContext = new ControllerContext
         {

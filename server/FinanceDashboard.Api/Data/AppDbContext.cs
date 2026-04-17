@@ -13,6 +13,7 @@ namespace FinanceDashboard.Api.Data
         public DbSet<User> Users { get; set; }
         public DbSet<FinancialAccount> FinancialAccounts { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
+        public DbSet<RecurringRule> RecurringRules { get; set; }
         public DbSet<InstallmentPlan> InstallmentPlans { get; set; }
         public DbSet<TransactionTag> TransactionTags { get; set; }
         public DbSet<TransactionTagLink> TransactionTagLinks { get; set; }
@@ -58,6 +59,9 @@ namespace FinanceDashboard.Api.Data
                 entity.Property(transaction => transaction.RecurrenceGroupId)
                     .HasMaxLength(40);
 
+                entity.Property(transaction => transaction.RecurringRuleId)
+                    .HasColumnType("int");
+
                 entity.Property(transaction => transaction.InstallmentGroupId)
                     .HasMaxLength(40);
 
@@ -79,6 +83,11 @@ namespace FinanceDashboard.Api.Data
                 entity.HasOne(transaction => transaction.FinancialAccount)
                     .WithMany(account => account.Transactions)
                     .HasForeignKey(transaction => transaction.FinancialAccountId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(transaction => transaction.RecurringRule)
+                    .WithMany(rule => rule.Transactions)
+                    .HasForeignKey(transaction => transaction.RecurringRuleId)
                     .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasOne(transaction => transaction.InstallmentPlan)
@@ -109,6 +118,41 @@ namespace FinanceDashboard.Api.Data
                 entity.HasOne(plan => plan.User)
                     .WithMany(user => user.InstallmentPlans)
                     .HasForeignKey(plan => plan.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<RecurringRule>(entity =>
+            {
+                entity.Property(rule => rule.PublicId)
+                    .HasMaxLength(40);
+
+                entity.Property(rule => rule.Description)
+                    .HasMaxLength(120);
+
+                entity.Property(rule => rule.Category)
+                    .HasMaxLength(60);
+
+                entity.Property(rule => rule.Type)
+                    .HasMaxLength(20);
+
+                entity.Property(rule => rule.TagsCsv)
+                    .HasMaxLength(500);
+
+                entity.ToTable(table =>
+                {
+                    table.HasCheckConstraint(
+                        "CK_RecurringRules_Type",
+                        "[Type] IN ('income', 'expense')");
+                });
+
+                entity.HasIndex(rule => new { rule.UserId, rule.PublicId })
+                    .IsUnique();
+
+                entity.HasIndex(rule => new { rule.UserId, rule.IsActive, rule.NextOccurrenceDate });
+
+                entity.HasOne(rule => rule.User)
+                    .WithMany(user => user.RecurringRules)
+                    .HasForeignKey(rule => rule.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
 

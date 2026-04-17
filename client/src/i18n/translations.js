@@ -222,6 +222,21 @@ export const translations = {
       importedOfx: "Importada via OFX",
       synced: "Sincronizada",
       recurringMonthly: "Recorrente mensal",
+      recurringRulesTitle: "Regras recorrentes",
+      recurringRulesSubtitle:
+        "Acompanhe os lancamentos mensais automatizados e quando a proxima ocorrencia sera gerada.",
+      recurringRulesActiveLabel: "Regras ativas",
+      recurringRulesActiveHelp: "Quantidade de recorrencias ainda gerando novos lancamentos.",
+      recurringRulesNextAmountLabel: "Proximo ciclo previsto",
+      recurringRulesNextAmountHelp:
+        "Soma estimada das proximas ocorrencias das regras visiveis nesta tela.",
+      recurringRuleActive: "Ativa",
+      recurringRuleFinished: "Concluida",
+      recurringRuleAmount: "Valor mensal",
+      recurringRuleType: "Tipo",
+      recurringRuleNext: "Proxima geracao",
+      recurringRuleNoNext: "Sem novas geracoes",
+      recurringRuleEnd: "Encerramento",
       installmentPlansTitle: "Compras parceladas",
       installmentPlansSubtitle:
         "Veja cada compra parcelada como um bloco unico, com total, valor ja lancado e saldo restante.",
@@ -473,6 +488,21 @@ export const translations = {
       importedOfx: "Imported via OFX",
       synced: "Synced",
       recurringMonthly: "Monthly recurring",
+      recurringRulesTitle: "Recurring rules",
+      recurringRulesSubtitle:
+        "Track automated monthly entries and when the next occurrence will be generated.",
+      recurringRulesActiveLabel: "Active rules",
+      recurringRulesActiveHelp: "How many recurring rules are still generating new entries.",
+      recurringRulesNextAmountLabel: "Next expected cycle",
+      recurringRulesNextAmountHelp:
+        "Estimated sum of the next occurrences from the rules visible on this screen.",
+      recurringRuleActive: "Active",
+      recurringRuleFinished: "Completed",
+      recurringRuleAmount: "Monthly amount",
+      recurringRuleType: "Type",
+      recurringRuleNext: "Next generation",
+      recurringRuleNoNext: "No new generations",
+      recurringRuleEnd: "End date",
       installmentPlansTitle: "Installment purchases",
       installmentPlansSubtitle:
         "See each installment purchase as a single block with total, already posted amount and remaining balance.",

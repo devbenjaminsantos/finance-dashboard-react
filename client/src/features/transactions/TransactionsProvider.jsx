@@ -4,6 +4,7 @@ import {
   deleteInstallmentGroup,
   deleteTransaction,
   getInstallmentPlans,
+  getRecurringRules,
   getTransactions,
   importTransactions,
   updateInstallmentGroup,
@@ -15,12 +16,14 @@ import { TransactionsContext } from "./TransactionsContext";
 export function TransactionsProvider({ children }) {
   const [transactions, setTransactions] = useState([]);
   const [installmentPlans, setInstallmentPlans] = useState([]);
+  const [recurringRules, setRecurringRules] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadAll = useCallback(async () => {
     if (!hasValidSession()) {
       setTransactions([]);
       setInstallmentPlans([]);
+      setRecurringRules([]);
       setIsLoading(false);
       return;
     }
@@ -28,17 +31,20 @@ export function TransactionsProvider({ children }) {
     setIsLoading(true);
 
     try {
-      const [transactionData, installmentPlanData] = await Promise.all([
+      const [transactionData, installmentPlanData, recurringRuleData] = await Promise.all([
         getTransactions(),
         getInstallmentPlans(),
+        getRecurringRules(),
       ]);
 
       setTransactions(transactionData);
       setInstallmentPlans(installmentPlanData);
+      setRecurringRules(recurringRuleData);
     } catch (error) {
       console.error("Erro ao carregar transacoes:", error);
       setTransactions([]);
       setInstallmentPlans([]);
+      setRecurringRules([]);
     } finally {
       setIsLoading(false);
     }
@@ -133,6 +139,7 @@ export function TransactionsProvider({ children }) {
     () => ({
       transactions,
       installmentPlans,
+      recurringRules,
       isLoading,
       loadAll,
       addTransaction,
@@ -146,6 +153,7 @@ export function TransactionsProvider({ children }) {
     [
       transactions,
       installmentPlans,
+      recurringRules,
       isLoading,
       loadAll,
       addTransaction,

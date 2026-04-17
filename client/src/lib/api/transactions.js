@@ -8,6 +8,10 @@ export function getInstallmentPlans() {
   return apiRequest("/transactions/installment-plans");
 }
 
+export function getRecurringRules() {
+  return apiRequest("/transactions/recurring-rules");
+}
+
 export function createTransaction(transaction) {
   return apiRequest("/transactions", {
     method: "POST",

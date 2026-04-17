@@ -14,6 +14,8 @@ namespace FinanceDashboard.Api.Models
         public bool IsRecurring { get; set; }
         public DateTime? RecurrenceEndDate { get; set; }
         public string? RecurrenceGroupId { get; set; }
+        public int? RecurringRuleId { get; set; }
+        public RecurringRule? RecurringRule { get; set; }
         public int? InstallmentIndex { get; set; }
         public int? InstallmentCount { get; set; }
         public string? InstallmentGroupId { get; set; }

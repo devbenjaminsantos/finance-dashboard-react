@@ -13,5 +13,7 @@ namespace FinanceDashboard.Api.DTOs
         public string Email { get; set; } = string.Empty;
         public bool IsDemo { get; set; }
         public bool? OnboardingOptIn { get; set; }
+        public bool EmailGoalAlertsEnabled { get; set; }
+        public int GoalAlertThresholdPercent { get; set; }
     }
 }

@@ -25,7 +25,7 @@ namespace FinanceDashboard.Api.Services.Email
                 Acesse o link abaixo para criar uma nova senha:
                 {resetUrl}
 
-                Se voce não solicitou essa alteração, ignore este e-mail.
+                Se você não solicitou essa alteração, ignore este e-mail.
                 """);
         }
 
@@ -42,7 +42,31 @@ namespace FinanceDashboard.Api.Services.Email
                 Acesse o link abaixo para concluir a confirmação:
                 {verificationUrl}
 
-                Se voce não criou esta conta, ignore este e-mail.
+                Se você não criou esta conta, ignore este e-mail.
+                """);
+        }
+
+        public Task SendBudgetGoalAlertEmailAsync(
+            string toEmail,
+            string name,
+            string monthLabel,
+            string goalLabel,
+            int progressPercent,
+            decimal spentAmount,
+            decimal targetAmount)
+        {
+            return SendAsync(
+                toEmail,
+                $"Alerta de meta mensal - {goalLabel}",
+                $"""
+                Olá, {name}.
+
+                Sua meta "{goalLabel}" em {monthLabel} atingiu {progressPercent}% do limite definido.
+
+                Valor gasto atá agora: {spentAmount:C}
+                Limite planejado: {targetAmount:C}
+
+                Acesse o Finova para revisar suas movimentações e ajustar o plano do mês, se necessário.
                 """);
         }
 

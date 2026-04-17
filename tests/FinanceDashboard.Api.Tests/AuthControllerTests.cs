@@ -492,6 +492,18 @@ public class AuthControllerTests
             LastVerificationUrl = verificationUrl;
             return Task.CompletedTask;
         }
+
+        public Task SendBudgetGoalAlertEmailAsync(
+            string toEmail,
+            string name,
+            string monthLabel,
+            string goalLabel,
+            int progressPercent,
+            decimal spentAmount,
+            decimal targetAmount)
+        {
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class FakeWebHostEnvironment : IWebHostEnvironment

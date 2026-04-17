@@ -9,6 +9,8 @@ export default function Profile() {
   const [form, setForm] = useState({
     name: "",
     email: "",
+    emailGoalAlertsEnabled: false,
+    goalAlertThresholdPercent: 80,
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
@@ -29,6 +31,8 @@ export default function Profile() {
           ...current,
           name: user.name ?? "",
           email: user.email ?? "",
+          emailGoalAlertsEnabled: user.emailGoalAlertsEnabled ?? false,
+          goalAlertThresholdPercent: user.goalAlertThresholdPercent ?? 80,
         }));
       } catch (err) {
         setError(err.message || t("profile.loadError"));
@@ -86,6 +90,8 @@ export default function Profile() {
     try {
       const user = await updateProfileRequest({
         name: form.name,
+        emailGoalAlertsEnabled: form.emailGoalAlertsEnabled,
+        goalAlertThresholdPercent: Number(form.goalAlertThresholdPercent),
         currentPassword: form.currentPassword,
         newPassword: form.newPassword,
       });
@@ -94,6 +100,9 @@ export default function Profile() {
         ...current,
         name: user.name ?? current.name,
         email: user.email ?? current.email,
+        emailGoalAlertsEnabled: user.emailGoalAlertsEnabled ?? current.emailGoalAlertsEnabled,
+        goalAlertThresholdPercent:
+          user.goalAlertThresholdPercent ?? current.goalAlertThresholdPercent,
         currentPassword: "",
         newPassword: "",
         confirmPassword: "",
@@ -146,6 +155,65 @@ export default function Profile() {
                 disabled
                 readOnly
               />
+            </div>
+
+            <div className="col-12">
+              <div className="finova-card border-0 bg-body-tertiary p-3 p-md-4">
+                <div className="d-flex flex-column flex-md-row align-items-md-start justify-content-between gap-3">
+                  <div>
+                    <h2 className="finova-title h5 mb-1">{t("profile.emailAlertsTitle")}</h2>
+                    <p className="finova-subtitle small mb-0">
+                      {t("profile.emailAlertsSubtitle")}
+                    </p>
+                  </div>
+
+                  <div className="form-check form-switch m-0">
+                    <input
+                      id="emailGoalAlertsEnabled"
+                      type="checkbox"
+                      className="form-check-input"
+                      checked={form.emailGoalAlertsEnabled}
+                      onChange={(e) => updateField("emailGoalAlertsEnabled", e.target.checked)}
+                      disabled={isSubmitting}
+                    />
+                    <label
+                      className="form-check-label text-dark fw-medium"
+                      htmlFor="emailGoalAlertsEnabled"
+                    >
+                      {form.emailGoalAlertsEnabled
+                        ? t("profile.emailAlertsEnabled")
+                        : t("profile.emailAlertsDisabled")}
+                    </label>
+                  </div>
+                </div>
+
+                <div className="row g-3 mt-1">
+                  <div className="col-12 col-md-6">
+                    <label
+                      className="form-label text-dark fw-medium"
+                      htmlFor="goalAlertThresholdPercent"
+                    >
+                      {t("profile.emailAlertsThresholdLabel")}
+                    </label>
+                    <select
+                      id="goalAlertThresholdPercent"
+                      className="form-select finova-input"
+                      value={String(form.goalAlertThresholdPercent)}
+                      onChange={(e) =>
+                        updateField("goalAlertThresholdPercent", Number(e.target.value))
+                      }
+                      disabled={isSubmitting || !form.emailGoalAlertsEnabled}
+                    >
+                      {[50, 60, 70, 80, 90, 100].map((value) => (
+                        <option key={value} value={value}>
+                          {t("profile.emailAlertsThresholdOption", { percent: value })}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="form-text">{t("profile.emailAlertsThresholdHelp")}</div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="col-12">

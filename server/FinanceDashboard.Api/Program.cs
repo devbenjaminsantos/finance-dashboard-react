@@ -29,6 +29,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.Configure<PluggyOptions>(
     builder.Configuration.GetSection(PluggyOptions.SectionName));
+builder.Services.Configure<EmailOptions>(
+    builder.Configuration.GetSection(EmailOptions.SectionName));
+builder.Services.Configure<AzureCommunicationServicesEmailOptions>(
+    builder.Configuration.GetSection(AzureCommunicationServicesEmailOptions.SectionName));
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient<IPluggyClient, PluggyClient>((serviceProvider, client) =>
 {
@@ -49,7 +53,18 @@ builder.Services.AddScoped<RecurringTransactionGenerationService>();
 builder.Services.AddScoped<IBankSyncProvider, PluggyBankSyncProvider>();
 builder.Services.AddScoped<IBankSyncProvider, PlaceholderBankSyncProvider>();
 builder.Services.AddScoped<CurrentUserService>();
-builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
+builder.Services.AddScoped<SmtpEmailSender>();
+builder.Services.AddScoped<AzureCommunicationServicesEmailSender>();
+builder.Services.AddScoped<IEmailSender>(serviceProvider =>
+{
+    var options = serviceProvider
+        .GetRequiredService<Microsoft.Extensions.Options.IOptions<EmailOptions>>()
+        .Value;
+
+    return string.Equals(options.Provider, "AzureCommunicationServices", StringComparison.OrdinalIgnoreCase)
+        ? serviceProvider.GetRequiredService<AzureCommunicationServicesEmailSender>()
+        : serviceProvider.GetRequiredService<SmtpEmailSender>();
+});
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddHttpContextAccessor();
 

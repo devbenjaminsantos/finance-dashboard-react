@@ -8,6 +8,11 @@ namespace FinanceDashboard.Api.DTOs
         [MaxLength(100)]
         public string Name { get; set; } = string.Empty;
 
+        public bool EmailGoalAlertsEnabled { get; set; }
+
+        [Range(50, 100)]
+        public int GoalAlertThresholdPercent { get; set; } = 80;
+
         public string CurrentPassword { get; set; } = string.Empty;
 
         public string NewPassword { get; set; } = string.Empty;

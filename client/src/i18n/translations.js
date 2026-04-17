@@ -124,6 +124,15 @@ export const translations = {
       title: "Perfil",
       subtitle: "Atualize seus dados pessoais e altere sua senha quando precisar.",
       loading: "Carregando perfil...",
+      emailAlertsTitle: "Alertas por e-mail",
+      emailAlertsSubtitle:
+        "Escolha se voce quer receber um aviso quando estiver se aproximando do limite da sua meta mensal.",
+      emailAlertsEnabled: "Receber alertas",
+      emailAlertsDisabled: "Nao receber alertas",
+      emailAlertsThresholdLabel: "Quando enviar o aviso",
+      emailAlertsThresholdHelp:
+        "Esse percentual define em que ponto da meta mensal o sistema deve avisar voce por e-mail.",
+      emailAlertsThresholdOption: "Ao atingir {{percent}}% da meta",
       changePasswordTitle: "Alterar senha",
       changePasswordSubtitle:
         "Preencha os campos abaixo apenas se quiser trocar sua senha atual.",
@@ -390,6 +399,15 @@ export const translations = {
       title: "Profile",
       subtitle: "Update your personal details and change your password whenever needed.",
       loading: "Loading profile...",
+      emailAlertsTitle: "Email alerts",
+      emailAlertsSubtitle:
+        "Choose whether you want a warning email when you are getting close to your monthly goal limit.",
+      emailAlertsEnabled: "Receive alerts",
+      emailAlertsDisabled: "Do not receive alerts",
+      emailAlertsThresholdLabel: "When to send the alert",
+      emailAlertsThresholdHelp:
+        "This percentage defines when the system should email you about your monthly goal.",
+      emailAlertsThresholdOption: "When reaching {{percent}}% of the goal",
       changePasswordTitle: "Change password",
       changePasswordSubtitle:
         "Fill the fields below only if you want to replace your current password.",

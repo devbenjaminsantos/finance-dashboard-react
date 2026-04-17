@@ -7,6 +7,8 @@ namespace FinanceDashboard.Api.Models
         public string Email { get; set; } = string.Empty;
         public bool EmailConfirmed { get; set; }
         public bool? OnboardingOptIn { get; set; }
+        public bool EmailGoalAlertsEnabled { get; set; }
+        public int GoalAlertThresholdPercent { get; set; } = 80;
         public string PasswordHash { get; set; } = string.Empty;
         public int FailedLoginAttempts { get; set; }
         public DateTime? LockoutEndsAtUtc { get; set; }

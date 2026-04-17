@@ -51,7 +51,7 @@ namespace FinanceDashboard.Api.Controllers
             {
                 return NotFound(new ProblemDetails
                 {
-                    Title = "Usuário não encontrado.",
+                    Title = "Usuario nao encontrado.",
                     Status = StatusCodes.Status404NotFound
                 });
             }
@@ -71,7 +71,7 @@ namespace FinanceDashboard.Api.Controllers
             {
                 return NotFound(new ProblemDetails
                 {
-                    Title = "Usuário não encontrado.",
+                    Title = "Usuario nao encontrado.",
                     Status = StatusCodes.Status404NotFound
                 });
             }
@@ -82,7 +82,16 @@ namespace FinanceDashboard.Api.Controllers
             {
                 return BadRequest(new ProblemDetails
                 {
-                    Title = "Informe um nome válido.",
+                    Title = "Informe um nome valido.",
+                    Status = StatusCodes.Status400BadRequest
+                });
+            }
+
+            if (dto.GoalAlertThresholdPercent is < 50 or > 100)
+            {
+                return BadRequest(new ProblemDetails
+                {
+                    Title = "Escolha um percentual entre 50% e 100%.",
                     Status = StatusCodes.Status400BadRequest
                 });
             }
@@ -135,6 +144,8 @@ namespace FinanceDashboard.Api.Controllers
             }
 
             user.Name = name;
+            user.EmailGoalAlertsEnabled = dto.EmailGoalAlertsEnabled;
+            user.GoalAlertThresholdPercent = dto.GoalAlertThresholdPercent;
 
             await _context.SaveChangesAsync();
             await _auditLogService.WriteAsync(
@@ -143,8 +154,10 @@ namespace FinanceDashboard.Api.Controllers
                 entityId: user.Id.ToString(),
                 userId: user.Id,
                 summary: changedPassword
-                    ? "Perfil atualizado com alteração de senha."
-                    : "Perfil atualizado.");
+                    ? "Perfil atualizado com alteracao de senha."
+                    : dto.EmailGoalAlertsEnabled
+                        ? $"Perfil atualizado. Alertas de meta por e-mail configurados para {dto.GoalAlertThresholdPercent}%."
+                        : "Perfil atualizado.");
 
             return Ok(ToAuthUserResponse(user));
         }
@@ -159,7 +172,7 @@ namespace FinanceDashboard.Api.Controllers
             {
                 return BadRequest(new ProblemDetails
                 {
-                    Title = "Informe uma escolha válida para o guia inicial.",
+                    Title = "Informe uma escolha valida para o guia inicial.",
                     Status = StatusCodes.Status400BadRequest
                 });
             }
@@ -171,7 +184,7 @@ namespace FinanceDashboard.Api.Controllers
             {
                 return NotFound(new ProblemDetails
                 {
-                    Title = "Usuário não encontrado.",
+                    Title = "Usuario nao encontrado.",
                     Status = StatusCodes.Status404NotFound
                 });
             }
@@ -185,8 +198,8 @@ namespace FinanceDashboard.Api.Controllers
                 entityId: user.Id.ToString(),
                 userId: user.Id,
                 summary: dto.OnboardingOptIn.Value
-                    ? "Usuário optou por receber o guia inicial."
-                    : "Usuário optou por ocultar o guia inicial.");
+                    ? "Usuario optou por receber o guia inicial."
+                    : "Usuario optou por ocultar o guia inicial.");
 
             return Ok(ToAuthUserResponse(user));
         }
@@ -199,7 +212,9 @@ namespace FinanceDashboard.Api.Controllers
                 Name = user.Name,
                 Email = user.Email,
                 IsDemo = IsDemoUser(user),
-                OnboardingOptIn = user.OnboardingOptIn
+                OnboardingOptIn = user.OnboardingOptIn,
+                EmailGoalAlertsEnabled = user.EmailGoalAlertsEnabled,
+                GoalAlertThresholdPercent = user.GoalAlertThresholdPercent
             };
         }
 

@@ -170,8 +170,14 @@ Variaveis esperadas:
 - `Jwt__Audience`
 - `Cors__AllowedOrigins__0`
 - `Client__BaseUrl`
+- `Email__Provider`
+- `AzureCommunicationServices__Email__ConnectionString`
+- `AzureCommunicationServices__Email__SenderAddress`
+- `AzureCommunicationServices__Email__SenderName`
 - `Pluggy__ClientId`
 - `Pluggy__ClientSecret`
+
+Se preferir, use o arquivo de exemplo `server/FinanceDashboard.Api/appsettings.Development.local.example.json` como base para montar seu `appsettings.Development.local.json`.
 
 Exemplo de execucao:
 
@@ -273,6 +279,10 @@ No App Service, as configuracoes principais sao:
 - `Jwt__Audience`
 - `Cors__AllowedOrigins__0`
 - `Client__BaseUrl`
+- `Email__Provider`
+- `AzureCommunicationServices__Email__ConnectionString`
+- `AzureCommunicationServices__Email__SenderAddress`
+- `AzureCommunicationServices__Email__SenderName`
 - `Smtp__Host`
 - `Smtp__Port`
 - `Smtp__Username`
@@ -348,6 +358,7 @@ Antes de avancar para a V6, vale tratar a etapa como uma evolucao estrutural do 
   - mascara
   - sincronizacao e vinculacao com agregador
 - existe envio de e-mail via `IEmailSender` e `SmtpEmailSender`
+- o envio agora pode usar `SmtpEmailSender` ou `AzureCommunicationServicesEmailSender`, conforme `Email:Provider`
 - existe historico de acoes sensiveis com `AuditLog`
 - existe base de filtros, importacao, exportacao e conciliacao de transacoes no frontend
 - existe i18n inicial, o que ajuda bastante em recursos compartilhaveis e notificacoes futuras
@@ -370,7 +381,8 @@ Antes de avancar para a V6, vale tratar a etapa como uma evolucao estrutural do 
 - `IEmailSender` hoje cobre apenas:
   - redefinicao de senha
   - confirmacao de e-mail
-  - para alertas e relatorios mensais, a interface precisa crescer
+  - alerta de meta mensal
+- para relatorios mensais e orquestracao automatica, ainda falta infraestrutura de agendamento
 - ainda nao existe infraestrutura dedicada para jobs agendados
   - a V6 vai precisar de processamento recorrente, idempotente e auditavel
 

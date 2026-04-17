@@ -19,6 +19,8 @@ describe("Profile page", () => {
       email: "keller@finova.app",
       emailGoalAlertsEnabled: true,
       goalAlertThresholdPercent: 90,
+      monthlyReportEmailsEnabled: true,
+      monthlyReportDay: 5,
     });
   });
 
@@ -28,6 +30,8 @@ describe("Profile page", () => {
     expect(await screen.findByText("Alertas por e-mail")).toBeInTheDocument();
     expect(screen.getByLabelText("Receber alertas")).toBeChecked();
     expect(screen.getByLabelText("Quando enviar o aviso")).toHaveValue("90");
+    expect(screen.getByLabelText("Receber resumo mensal")).toBeChecked();
+    expect(screen.getByLabelText("Dia do envio")).toHaveValue("5");
   });
 
   it("submits updated email alert preferences", async () => {
@@ -37,6 +41,8 @@ describe("Profile page", () => {
       email: "keller@finova.app",
       emailGoalAlertsEnabled: false,
       goalAlertThresholdPercent: 60,
+      monthlyReportEmailsEnabled: true,
+      monthlyReportDay: 10,
     });
 
     render(<Profile />);
@@ -46,6 +52,9 @@ describe("Profile page", () => {
     fireEvent.change(screen.getByLabelText("Quando enviar o aviso"), {
       target: { value: "60" },
     });
+    fireEvent.change(screen.getByLabelText("Dia do envio"), {
+      target: { value: "10" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Salvar perfil" }));
 
     await waitFor(() => {
@@ -54,6 +63,8 @@ describe("Profile page", () => {
           name: "Keller",
           emailGoalAlertsEnabled: false,
           goalAlertThresholdPercent: 60,
+          monthlyReportEmailsEnabled: true,
+          monthlyReportDay: 10,
         })
       );
     });

@@ -489,7 +489,9 @@ namespace FinanceDashboard.Api.Controllers
                 IsDemo = IsDemoUser(user),
                 OnboardingOptIn = user.OnboardingOptIn,
                 EmailGoalAlertsEnabled = user.EmailGoalAlertsEnabled,
-                GoalAlertThresholdPercent = user.GoalAlertThresholdPercent
+                GoalAlertThresholdPercent = user.GoalAlertThresholdPercent,
+                MonthlyReportEmailsEnabled = user.MonthlyReportEmailsEnabled,
+                MonthlyReportDay = user.MonthlyReportDay
             };
         }
 

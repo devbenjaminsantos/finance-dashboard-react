@@ -11,6 +11,8 @@ export default function Profile() {
     email: "",
     emailGoalAlertsEnabled: false,
     goalAlertThresholdPercent: 80,
+    monthlyReportEmailsEnabled: false,
+    monthlyReportDay: 1,
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
@@ -33,6 +35,8 @@ export default function Profile() {
           email: user.email ?? "",
           emailGoalAlertsEnabled: user.emailGoalAlertsEnabled ?? false,
           goalAlertThresholdPercent: user.goalAlertThresholdPercent ?? 80,
+          monthlyReportEmailsEnabled: user.monthlyReportEmailsEnabled ?? false,
+          monthlyReportDay: user.monthlyReportDay ?? 1,
         }));
       } catch (err) {
         setError(err.message || t("profile.loadError"));
@@ -92,6 +96,8 @@ export default function Profile() {
         name: form.name,
         emailGoalAlertsEnabled: form.emailGoalAlertsEnabled,
         goalAlertThresholdPercent: Number(form.goalAlertThresholdPercent),
+        monthlyReportEmailsEnabled: form.monthlyReportEmailsEnabled,
+        monthlyReportDay: Number(form.monthlyReportDay),
         currentPassword: form.currentPassword,
         newPassword: form.newPassword,
       });
@@ -103,6 +109,9 @@ export default function Profile() {
         emailGoalAlertsEnabled: user.emailGoalAlertsEnabled ?? current.emailGoalAlertsEnabled,
         goalAlertThresholdPercent:
           user.goalAlertThresholdPercent ?? current.goalAlertThresholdPercent,
+        monthlyReportEmailsEnabled:
+          user.monthlyReportEmailsEnabled ?? current.monthlyReportEmailsEnabled,
+        monthlyReportDay: user.monthlyReportDay ?? current.monthlyReportDay,
         currentPassword: "",
         newPassword: "",
         confirmPassword: "",
@@ -211,6 +220,71 @@ export default function Profile() {
                       ))}
                     </select>
                     <div className="form-text">{t("profile.emailAlertsThresholdHelp")}</div>
+                  </div>
+
+                  <div className="col-12">
+                    <div className="border-top pt-3">
+                      <div className="d-flex flex-column flex-md-row align-items-md-start justify-content-between gap-3">
+                        <div>
+                          <h3 className="finova-title h6 mb-1">
+                            {t("profile.monthlyReportTitle")}
+                          </h3>
+                          <p className="finova-subtitle small mb-0">
+                            {t("profile.monthlyReportSubtitle")}
+                          </p>
+                        </div>
+
+                        <div className="form-check form-switch m-0">
+                          <input
+                            id="monthlyReportEmailsEnabled"
+                            type="checkbox"
+                            className="form-check-input"
+                            checked={form.monthlyReportEmailsEnabled}
+                            onChange={(e) =>
+                              updateField("monthlyReportEmailsEnabled", e.target.checked)
+                            }
+                            disabled={isSubmitting}
+                          />
+                          <label
+                            className="form-check-label text-dark fw-medium"
+                            htmlFor="monthlyReportEmailsEnabled"
+                          >
+                            {form.monthlyReportEmailsEnabled
+                              ? t("profile.monthlyReportEnabled")
+                              : t("profile.monthlyReportDisabled")}
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="row g-3 mt-1">
+                        <div className="col-12 col-md-6">
+                          <label
+                            className="form-label text-dark fw-medium"
+                            htmlFor="monthlyReportDay"
+                          >
+                            {t("profile.monthlyReportDayLabel")}
+                          </label>
+                          <select
+                            id="monthlyReportDay"
+                            className="form-select finova-input"
+                            value={String(form.monthlyReportDay)}
+                            onChange={(e) =>
+                              updateField("monthlyReportDay", Number(e.target.value))
+                            }
+                            disabled={isSubmitting || !form.monthlyReportEmailsEnabled}
+                          >
+                            {Array.from({ length: 28 }, (_, index) => index + 1).map((value) => (
+                              <option key={value} value={value}>
+                                {t("profile.monthlyReportDayOption", { day: value })}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="form-text">
+                            {t("profile.monthlyReportDayHelp")}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

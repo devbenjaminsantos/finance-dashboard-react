@@ -91,6 +91,8 @@ O Finova permite:
 - expansao das metas por categoria com navegacao mensal e sugestoes automaticas
 - alerta visual de gasto
 - gastos recorrentes mensais
+- alertas de meta por e-mail
+- resumo mensal automatico por e-mail
 
 ### Relatorios e rastreabilidade
 
@@ -174,6 +176,8 @@ Variaveis esperadas:
 - `AzureCommunicationServices__Email__ConnectionString`
 - `AzureCommunicationServices__Email__SenderAddress`
 - `AzureCommunicationServices__Email__SenderName`
+- `Notifications__Enabled`
+- `Notifications__ProcessingIntervalMinutes`
 - `Pluggy__ClientId`
 - `Pluggy__ClientSecret`
 
@@ -283,6 +287,8 @@ No App Service, as configuracoes principais sao:
 - `AzureCommunicationServices__Email__ConnectionString`
 - `AzureCommunicationServices__Email__SenderAddress`
 - `AzureCommunicationServices__Email__SenderName`
+- `Notifications__Enabled`
+- `Notifications__ProcessingIntervalMinutes`
 - `Smtp__Host`
 - `Smtp__Port`
 - `Smtp__Username`

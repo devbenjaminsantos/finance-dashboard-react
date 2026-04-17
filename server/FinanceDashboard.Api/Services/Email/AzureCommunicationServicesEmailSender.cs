@@ -1,6 +1,7 @@
 using Azure;
 using Azure.Communication.Email;
 using FinanceDashboard.Api.Configuration;
+using FinanceDashboard.Api.Services.Notifications;
 using Microsoft.Extensions.Options;
 
 namespace FinanceDashboard.Api.Services.Email
@@ -73,6 +74,50 @@ namespace FinanceDashboard.Api.Services.Email
                 Limite planejado: {targetAmount:C}
 
                 Acesse o Finova para revisar suas movimentacoes e ajustar o plano do mes, se necessario.
+                """);
+        }
+
+        public Task SendMonthlySummaryEmailAsync(
+            string toEmail,
+            string name,
+            string monthLabel,
+            decimal incomeAmount,
+            decimal expenseAmount,
+            decimal balanceAmount,
+            string? topExpenseCategory,
+            decimal? topExpenseAmount,
+            IReadOnlyList<MonthlyGoalSummary> goalSummaries)
+        {
+            var goalLines = goalSummaries.Count == 0
+                ? "Nenhuma meta cadastrada para este mes."
+                : string.Join(
+                    Environment.NewLine,
+                    goalSummaries.Select(summary =>
+                        $"- {summary.GoalLabel}: gasto {summary.SpentAmount:C} de {summary.TargetAmount:C}"));
+
+            var topCategoryLine = string.IsNullOrWhiteSpace(topExpenseCategory) || topExpenseAmount is null
+                ? "Categoria com maior gasto: nao identificada."
+                : $"Categoria com maior gasto: {topExpenseCategory} ({topExpenseAmount.Value:C}).";
+
+            return SendAsync(
+                toEmail,
+                name,
+                $"Resumo mensal - {monthLabel}",
+                $"""
+                Ola, {name}.
+
+                Aqui esta o seu resumo financeiro de {monthLabel}.
+
+                Receitas: {incomeAmount:C}
+                Despesas: {expenseAmount:C}
+                Saldo: {balanceAmount:C}
+
+                {topCategoryLine}
+
+                Metas do periodo:
+                {goalLines}
+
+                Acesse o Finova para revisar os detalhes e planejar o proximo mes.
                 """);
         }
 

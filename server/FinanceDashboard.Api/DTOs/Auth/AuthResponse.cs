@@ -15,5 +15,7 @@ namespace FinanceDashboard.Api.DTOs
         public bool? OnboardingOptIn { get; set; }
         public bool EmailGoalAlertsEnabled { get; set; }
         public int GoalAlertThresholdPercent { get; set; }
+        public bool MonthlyReportEmailsEnabled { get; set; }
+        public int MonthlyReportDay { get; set; }
     }
 }

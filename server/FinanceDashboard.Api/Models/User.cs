@@ -9,6 +9,8 @@ namespace FinanceDashboard.Api.Models
         public bool? OnboardingOptIn { get; set; }
         public bool EmailGoalAlertsEnabled { get; set; }
         public int GoalAlertThresholdPercent { get; set; } = 80;
+        public bool MonthlyReportEmailsEnabled { get; set; }
+        public int MonthlyReportDay { get; set; } = 1;
         public string PasswordHash { get; set; } = string.Empty;
         public int FailedLoginAttempts { get; set; }
         public DateTime? LockoutEndsAtUtc { get; set; }
@@ -20,6 +22,7 @@ namespace FinanceDashboard.Api.Models
         public ICollection<TransactionTag> TransactionTags { get; set; } = new List<TransactionTag>();
         public ICollection<FinancialAccount> FinancialAccounts { get; set; } = new List<FinancialAccount>();
         public ICollection<BudgetGoal> BudgetGoals { get; set; } = new List<BudgetGoal>();
+        public ICollection<NotificationDelivery> NotificationDeliveries { get; set; } = new List<NotificationDelivery>();
         public ICollection<EmailVerificationToken> EmailVerificationTokens { get; set; } = new List<EmailVerificationToken>();
         public ICollection<PasswordResetToken> PasswordResetTokens { get; set; } = new List<PasswordResetToken>();
         public ICollection<AuditLog> AuditLogs { get; set; } = new List<AuditLog>();

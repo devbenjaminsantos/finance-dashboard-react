@@ -96,6 +96,15 @@ namespace FinanceDashboard.Api.Controllers
                 });
             }
 
+            if (dto.MonthlyReportDay is < 1 or > 28)
+            {
+                return BadRequest(new ProblemDetails
+                {
+                    Title = "Escolha um dia entre 1 e 28 para o resumo mensal.",
+                    Status = StatusCodes.Status400BadRequest
+                });
+            }
+
             var wantsToChangePassword =
                 !string.IsNullOrWhiteSpace(dto.CurrentPassword) ||
                 !string.IsNullOrWhiteSpace(dto.NewPassword);
@@ -146,6 +155,8 @@ namespace FinanceDashboard.Api.Controllers
             user.Name = name;
             user.EmailGoalAlertsEnabled = dto.EmailGoalAlertsEnabled;
             user.GoalAlertThresholdPercent = dto.GoalAlertThresholdPercent;
+            user.MonthlyReportEmailsEnabled = dto.MonthlyReportEmailsEnabled;
+            user.MonthlyReportDay = dto.MonthlyReportDay;
 
             await _context.SaveChangesAsync();
             await _auditLogService.WriteAsync(
@@ -155,9 +166,7 @@ namespace FinanceDashboard.Api.Controllers
                 userId: user.Id,
                 summary: changedPassword
                     ? "Perfil atualizado com alteracao de senha."
-                    : dto.EmailGoalAlertsEnabled
-                        ? $"Perfil atualizado. Alertas de meta por e-mail configurados para {dto.GoalAlertThresholdPercent}%."
-                        : "Perfil atualizado.");
+                    : BuildProfileSummary(dto));
 
             return Ok(ToAuthUserResponse(user));
         }
@@ -214,8 +223,23 @@ namespace FinanceDashboard.Api.Controllers
                 IsDemo = IsDemoUser(user),
                 OnboardingOptIn = user.OnboardingOptIn,
                 EmailGoalAlertsEnabled = user.EmailGoalAlertsEnabled,
-                GoalAlertThresholdPercent = user.GoalAlertThresholdPercent
+                GoalAlertThresholdPercent = user.GoalAlertThresholdPercent,
+                MonthlyReportEmailsEnabled = user.MonthlyReportEmailsEnabled,
+                MonthlyReportDay = user.MonthlyReportDay
             };
+        }
+
+        private static string BuildProfileSummary(ProfileUpdateRequest dto)
+        {
+            var alertSummary = dto.EmailGoalAlertsEnabled
+                ? $"Alertas de meta por e-mail configurados para {dto.GoalAlertThresholdPercent}%."
+                : "Alertas de meta por e-mail desativados.";
+
+            var monthlyReportSummary = dto.MonthlyReportEmailsEnabled
+                ? $"Resumo mensal programado para o dia {dto.MonthlyReportDay}."
+                : "Resumo mensal por e-mail desativado.";
+
+            return $"Perfil atualizado. {alertSummary} {monthlyReportSummary}";
         }
 
         private bool IsDemoUser(User user)

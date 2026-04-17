@@ -33,6 +33,8 @@ builder.Services.Configure<EmailOptions>(
     builder.Configuration.GetSection(EmailOptions.SectionName));
 builder.Services.Configure<AzureCommunicationServicesEmailOptions>(
     builder.Configuration.GetSection(AzureCommunicationServicesEmailOptions.SectionName));
+builder.Services.Configure<NotificationOptions>(
+    builder.Configuration.GetSection(NotificationOptions.SectionName));
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient<IPluggyClient, PluggyClient>((serviceProvider, client) =>
 {
@@ -50,6 +52,7 @@ builder.Services.AddScoped<PasswordResetTokenService>();
 builder.Services.AddScoped<AuditLogService>();
 builder.Services.AddScoped<BankSyncService>();
 builder.Services.AddScoped<RecurringTransactionGenerationService>();
+builder.Services.AddScoped<FinanceDashboard.Api.Services.Notifications.FinancialEmailAutomationService>();
 builder.Services.AddScoped<IBankSyncProvider, PluggyBankSyncProvider>();
 builder.Services.AddScoped<IBankSyncProvider, PlaceholderBankSyncProvider>();
 builder.Services.AddScoped<CurrentUserService>();
@@ -67,6 +70,7 @@ builder.Services.AddScoped<IEmailSender>(serviceProvider =>
 });
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddHostedService<FinanceDashboard.Api.Services.Notifications.FinancialEmailAutomationHostedService>();
 
 var jwtKey = GetRequiredJwtKey(builder.Configuration);
 var allowedOrigins = GetAllowedCorsOrigins(builder.Configuration);

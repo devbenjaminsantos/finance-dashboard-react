@@ -18,6 +18,7 @@ namespace FinanceDashboard.Api.Data
         public DbSet<TransactionTag> TransactionTags { get; set; }
         public DbSet<TransactionTagLink> TransactionTagLinks { get; set; }
         public DbSet<BudgetGoal> BudgetGoals { get; set; }
+        public DbSet<NotificationDelivery> NotificationDeliveries { get; set; }
         public DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; }
         public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
@@ -37,6 +38,13 @@ namespace FinanceDashboard.Api.Data
 
                 entity.HasIndex(user => user.Email)
                     .IsUnique();
+
+                entity.ToTable(table =>
+                {
+                    table.HasCheckConstraint(
+                        "CK_Users_MonthlyReportDay",
+                        "[MonthlyReportDay] >= 1 AND [MonthlyReportDay] <= 28");
+                });
             });
 
             modelBuilder.Entity<Transaction>(entity =>
@@ -307,6 +315,32 @@ namespace FinanceDashboard.Api.Data
                     .WithMany(user => user.AuditLogs)
                     .HasForeignKey(log => log.UserId)
                     .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<NotificationDelivery>(entity =>
+            {
+                entity.Property(delivery => delivery.NotificationType)
+                    .HasMaxLength(40);
+
+                entity.Property(delivery => delivery.ReferenceKey)
+                    .HasMaxLength(120);
+
+                entity.Property(delivery => delivery.Subject)
+                    .HasMaxLength(200);
+
+                entity.HasIndex(delivery => new
+                {
+                    delivery.UserId,
+                    delivery.NotificationType,
+                    delivery.ReferenceKey
+                }).IsUnique();
+
+                entity.HasIndex(delivery => new { delivery.NotificationType, delivery.SentAtUtc });
+
+                entity.HasOne(delivery => delivery.User)
+                    .WithMany(user => user.NotificationDeliveries)
+                    .HasForeignKey(delivery => delivery.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             base.OnModelCreating(modelBuilder);

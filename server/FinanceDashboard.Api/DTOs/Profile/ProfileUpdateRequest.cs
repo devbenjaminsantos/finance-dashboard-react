@@ -13,6 +13,11 @@ namespace FinanceDashboard.Api.DTOs
         [Range(50, 100)]
         public int GoalAlertThresholdPercent { get; set; } = 80;
 
+        public bool MonthlyReportEmailsEnabled { get; set; }
+
+        [Range(1, 28)]
+        public int MonthlyReportDay { get; set; } = 1;
+
         public string CurrentPassword { get; set; } = string.Empty;
 
         public string NewPassword { get; set; } = string.Empty;

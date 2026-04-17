@@ -133,6 +133,15 @@ export const translations = {
       emailAlertsThresholdHelp:
         "Esse percentual define em que ponto da meta mensal o sistema deve avisar voce por e-mail.",
       emailAlertsThresholdOption: "Ao atingir {{percent}}% da meta",
+      monthlyReportTitle: "Resumo mensal",
+      monthlyReportSubtitle:
+        "Receba automaticamente um resumo do mes anterior com receitas, despesas, saldo e metas.",
+      monthlyReportEnabled: "Receber resumo mensal",
+      monthlyReportDisabled: "Nao receber resumo mensal",
+      monthlyReportDayLabel: "Dia do envio",
+      monthlyReportDayHelp:
+        "O resumo mensal sera disparado nesse dia, sempre olhando para o mes anterior.",
+      monthlyReportDayOption: "Dia {{day}}",
       changePasswordTitle: "Alterar senha",
       changePasswordSubtitle:
         "Preencha os campos abaixo apenas se quiser trocar sua senha atual.",
@@ -408,6 +417,15 @@ export const translations = {
       emailAlertsThresholdHelp:
         "This percentage defines when the system should email you about your monthly goal.",
       emailAlertsThresholdOption: "When reaching {{percent}}% of the goal",
+      monthlyReportTitle: "Monthly summary",
+      monthlyReportSubtitle:
+        "Receive an automatic summary of the previous month with income, expenses, balance, and goals.",
+      monthlyReportEnabled: "Receive monthly summary",
+      monthlyReportDisabled: "Do not receive monthly summary",
+      monthlyReportDayLabel: "Delivery day",
+      monthlyReportDayHelp:
+        "The monthly summary will be sent on this day and will always cover the previous month.",
+      monthlyReportDayOption: "Day {{day}}",
       changePasswordTitle: "Change password",
       changePasswordSubtitle:
         "Fill the fields below only if you want to replace your current password.",

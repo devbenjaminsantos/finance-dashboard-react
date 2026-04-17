@@ -504,6 +504,20 @@ public class AuthControllerTests
         {
             return Task.CompletedTask;
         }
+
+        public Task SendMonthlySummaryEmailAsync(
+            string toEmail,
+            string name,
+            string monthLabel,
+            decimal incomeAmount,
+            decimal expenseAmount,
+            decimal balanceAmount,
+            string? topExpenseCategory,
+            decimal? topExpenseAmount,
+            IReadOnlyList<FinanceDashboard.Api.Services.Notifications.MonthlyGoalSummary> goalSummaries)
+        {
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class FakeWebHostEnvironment : IWebHostEnvironment

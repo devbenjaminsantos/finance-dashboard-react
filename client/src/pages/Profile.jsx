@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
 import PasswordToggleButton from "../components/PasswordToggleButton";
 import { useI18n } from "../i18n/LanguageProvider";
-import { getProfile, updateProfileRequest } from "../lib/api/auth";
+import {
+  getNotificationDeliveries,
+  getProfile,
+  updateProfileRequest,
+} from "../lib/api/auth";
 import { isPasswordStrong } from "../lib/auth/passwordPolicy";
 
 export default function Profile() {
-  const { t } = useI18n();
+  const { t, formatDateTime } = useI18n();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -22,13 +26,17 @@ export default function Profile() {
   const [isCurrentPasswordVisible, setIsCurrentPasswordVisible] = useState(false);
   const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
+  const [notificationDeliveries, setNotificationDeliveries] = useState([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   useEffect(() => {
     async function loadProfile() {
       try {
-        const user = await getProfile();
+        const [user, deliveries] = await Promise.all([
+          getProfile(),
+          getNotificationDeliveries(),
+        ]);
         setForm((current) => ({
           ...current,
           name: user.name ?? "",
@@ -38,6 +46,7 @@ export default function Profile() {
           monthlyReportEmailsEnabled: user.monthlyReportEmailsEnabled ?? false,
           monthlyReportDay: user.monthlyReportDay ?? 1,
         }));
+        setNotificationDeliveries(Array.isArray(deliveries) ? deliveries : []);
       } catch (err) {
         setError(err.message || t("profile.loadError"));
       } finally {
@@ -381,6 +390,51 @@ export default function Profile() {
           </form>
         )}
       </div>
+
+      {!isLoading ? (
+        <div className="finova-card p-4 p-md-5" style={{ maxWidth: 760 }}>
+          <div className="d-flex flex-column gap-1 mb-3">
+            <h2 className="finova-title h5 mb-0">{t("profile.notificationHistoryTitle")}</h2>
+            <p className="finova-subtitle small mb-0">
+              {t("profile.notificationHistorySubtitle")}
+            </p>
+          </div>
+
+          {notificationDeliveries.length === 0 ? (
+            <p className="finova-subtitle mb-0">{t("profile.notificationHistoryEmpty")}</p>
+          ) : (
+            <div className="d-grid gap-3">
+              {notificationDeliveries.map((delivery) => (
+                <div key={delivery.id} className="finova-card-soft p-3">
+                  <div className="d-flex flex-column flex-md-row justify-content-between gap-2 mb-2">
+                    <div className="d-flex align-items-center gap-2 flex-wrap">
+                      <span className="finova-badge-neutral">
+                        {formatNotificationType(delivery.notificationType, t)}
+                      </span>
+                    </div>
+                    <span className="finova-subtitle small">
+                      {formatDateTime(delivery.sentAtUtc)}
+                    </span>
+                  </div>
+                  <div className="fw-medium">{delivery.subject}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : null}
     </section>
   );
+}
+
+function formatNotificationType(notificationType, t) {
+  if (notificationType === "goal_alert") {
+    return t("profile.notificationTypeGoalAlert");
+  }
+
+  if (notificationType === "monthly_report") {
+    return t("profile.notificationTypeMonthlyReport");
+  }
+
+  return notificationType;
 }

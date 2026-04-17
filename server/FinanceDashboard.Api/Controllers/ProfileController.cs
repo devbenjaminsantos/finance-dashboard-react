@@ -59,6 +59,29 @@ namespace FinanceDashboard.Api.Controllers
             return Ok(ToAuthUserResponse(user));
         }
 
+        [HttpGet("notification-deliveries")]
+        public async Task<ActionResult<IReadOnlyList<NotificationDeliveryResponse>>> GetNotificationDeliveries()
+        {
+            var userId = _currentUserService.GetRequiredUserId();
+
+            var deliveries = await _context.NotificationDeliveries
+                .AsNoTracking()
+                .Where(delivery => delivery.UserId == userId)
+                .OrderByDescending(delivery => delivery.SentAtUtc)
+                .Take(10)
+                .Select(delivery => new NotificationDeliveryResponse
+                {
+                    Id = delivery.Id,
+                    NotificationType = delivery.NotificationType,
+                    Subject = delivery.Subject,
+                    ReferenceKey = delivery.ReferenceKey,
+                    SentAtUtc = delivery.SentAtUtc
+                })
+                .ToListAsync();
+
+            return Ok(deliveries);
+        }
+
         [HttpPut]
         public async Task<ActionResult<AuthUserResponse>> Update(ProfileUpdateRequest dto)
         {

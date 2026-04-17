@@ -229,6 +229,10 @@ export function getProfile() {
   return apiRequest("/profile");
 }
 
+export function getNotificationDeliveries() {
+  return apiRequest("/profile/notification-deliveries");
+}
+
 export async function updateProfileRequest(payload) {
   const user = await apiRequest("/profile", {
     method: "PUT",

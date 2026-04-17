@@ -4,10 +4,15 @@ import Profile from "./Profile";
 
 vi.mock("../lib/api/auth", () => ({
   getProfile: vi.fn(),
+  getNotificationDeliveries: vi.fn(),
   updateProfileRequest: vi.fn(),
 }));
 
-import { getProfile, updateProfileRequest } from "../lib/api/auth";
+import {
+  getNotificationDeliveries,
+  getProfile,
+  updateProfileRequest,
+} from "../lib/api/auth";
 
 describe("Profile page", () => {
   beforeEach(() => {
@@ -22,6 +27,14 @@ describe("Profile page", () => {
       monthlyReportEmailsEnabled: true,
       monthlyReportDay: 5,
     });
+    getNotificationDeliveries.mockResolvedValue([
+      {
+        id: 1,
+        notificationType: "goal_alert",
+        subject: "Alerta de meta mensal - orcamento geral",
+        sentAtUtc: "2026-04-17T12:00:00Z",
+      },
+    ]);
   });
 
   it("loads email alert preferences from the profile", async () => {
@@ -32,6 +45,8 @@ describe("Profile page", () => {
     expect(screen.getByLabelText("Quando enviar o aviso")).toHaveValue("90");
     expect(screen.getByLabelText("Receber resumo mensal")).toBeChecked();
     expect(screen.getByLabelText("Dia do envio")).toHaveValue("5");
+    expect(screen.getByText("Historico de notificacoes")).toBeInTheDocument();
+    expect(screen.getByText("Alerta de meta mensal - orcamento geral")).toBeInTheDocument();
   });
 
   it("submits updated email alert preferences", async () => {

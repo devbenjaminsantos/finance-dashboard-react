@@ -142,6 +142,12 @@ export const translations = {
       monthlyReportDayHelp:
         "O resumo mensal sera disparado nesse dia, sempre olhando para o mes anterior.",
       monthlyReportDayOption: "Dia {{day}}",
+      notificationHistoryTitle: "Historico de notificacoes",
+      notificationHistorySubtitle:
+        "Acompanhe os ultimos alertas e resumos enviados para o seu e-mail.",
+      notificationHistoryEmpty: "Nenhum envio registrado por enquanto.",
+      notificationTypeGoalAlert: "Alerta de meta",
+      notificationTypeMonthlyReport: "Resumo mensal",
       changePasswordTitle: "Alterar senha",
       changePasswordSubtitle:
         "Preencha os campos abaixo apenas se quiser trocar sua senha atual.",
@@ -426,6 +432,12 @@ export const translations = {
       monthlyReportDayHelp:
         "The monthly summary will be sent on this day and will always cover the previous month.",
       monthlyReportDayOption: "Day {{day}}",
+      notificationHistoryTitle: "Notification history",
+      notificationHistorySubtitle:
+        "Track the latest alerts and summaries sent to your email.",
+      notificationHistoryEmpty: "No deliveries recorded yet.",
+      notificationTypeGoalAlert: "Goal alert",
+      notificationTypeMonthlyReport: "Monthly summary",
       changePasswordTitle: "Change password",
       changePasswordSubtitle:
         "Fill the fields below only if you want to replace your current password.",

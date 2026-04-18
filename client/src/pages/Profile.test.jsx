@@ -8,11 +8,20 @@ vi.mock("../lib/api/auth", () => ({
   updateProfileRequest: vi.fn(),
 }));
 
+vi.mock("../lib/api/publicDashboard", () => ({
+  getPublicDashboardSettings: vi.fn(),
+  updatePublicDashboardSettings: vi.fn(),
+}));
+
 import {
   getNotificationDeliveries,
   getProfile,
   updateProfileRequest,
 } from "../lib/api/auth";
+import {
+  getPublicDashboardSettings,
+  updatePublicDashboardSettings,
+} from "../lib/api/publicDashboard";
 
 describe("Profile page", () => {
   beforeEach(() => {
@@ -35,6 +44,10 @@ describe("Profile page", () => {
         sentAtUtc: "2026-04-17T12:00:00Z",
       },
     ]);
+    getPublicDashboardSettings.mockResolvedValue({
+      enabled: true,
+      publicUrl: "https://finova.app/compartilhado/teste",
+    });
   });
 
   it("loads email alert preferences from the profile", async () => {
@@ -47,6 +60,8 @@ describe("Profile page", () => {
     expect(screen.getByLabelText("Dia do envio")).toHaveValue("5");
     expect(screen.getByText("Historico de notificacoes")).toBeInTheDocument();
     expect(screen.getByText("Alerta de meta mensal - orcamento geral")).toBeInTheDocument();
+    expect(screen.getByText("Dashboard publico")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("https://finova.app/compartilhado/teste")).toBeInTheDocument();
   });
 
   it("submits updated email alert preferences", async () => {
@@ -82,6 +97,22 @@ describe("Profile page", () => {
           monthlyReportDay: 10,
         })
       );
+    });
+  });
+
+  it("toggles public dashboard sharing", async () => {
+    updatePublicDashboardSettings.mockResolvedValue({
+      enabled: false,
+      publicUrl: null,
+    });
+
+    render(<Profile />);
+    await screen.findByText("Dashboard publico");
+
+    fireEvent.click(screen.getByLabelText("Dashboard publico ativo"));
+
+    await waitFor(() => {
+      expect(updatePublicDashboardSettings).toHaveBeenCalledWith(false);
     });
   });
 });

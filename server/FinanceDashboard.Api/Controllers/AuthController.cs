@@ -491,7 +491,8 @@ namespace FinanceDashboard.Api.Controllers
                 EmailGoalAlertsEnabled = user.EmailGoalAlertsEnabled,
                 GoalAlertThresholdPercent = user.GoalAlertThresholdPercent,
                 MonthlyReportEmailsEnabled = user.MonthlyReportEmailsEnabled,
-                MonthlyReportDay = user.MonthlyReportDay
+                MonthlyReportDay = user.MonthlyReportDay,
+                PublicDashboardEnabled = user.PublicDashboardEnabled
             };
         }
 

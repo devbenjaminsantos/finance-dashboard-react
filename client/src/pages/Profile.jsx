@@ -6,6 +6,10 @@ import {
   getProfile,
   updateProfileRequest,
 } from "../lib/api/auth";
+import {
+  getPublicDashboardSettings,
+  updatePublicDashboardSettings,
+} from "../lib/api/publicDashboard";
 import { isPasswordStrong } from "../lib/auth/passwordPolicy";
 
 export default function Profile() {
@@ -26,16 +30,23 @@ export default function Profile() {
   const [isCurrentPasswordVisible, setIsCurrentPasswordVisible] = useState(false);
   const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
+  const [isUpdatingPublicDashboard, setIsUpdatingPublicDashboard] = useState(false);
   const [notificationDeliveries, setNotificationDeliveries] = useState([]);
+  const [publicDashboard, setPublicDashboard] = useState({
+    enabled: false,
+    publicUrl: "",
+  });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [publicDashboardMessage, setPublicDashboardMessage] = useState("");
 
   useEffect(() => {
     async function loadProfile() {
       try {
-        const [user, deliveries] = await Promise.all([
+        const [user, deliveries, publicDashboardSettings] = await Promise.all([
           getProfile(),
           getNotificationDeliveries(),
+          getPublicDashboardSettings(),
         ]);
         setForm((current) => ({
           ...current,
@@ -47,6 +58,10 @@ export default function Profile() {
           monthlyReportDay: user.monthlyReportDay ?? 1,
         }));
         setNotificationDeliveries(Array.isArray(deliveries) ? deliveries : []);
+        setPublicDashboard({
+          enabled: publicDashboardSettings?.enabled ?? false,
+          publicUrl: publicDashboardSettings?.publicUrl ?? "",
+        });
       } catch (err) {
         setError(err.message || t("profile.loadError"));
       } finally {
@@ -61,6 +76,7 @@ export default function Profile() {
     setForm((current) => ({ ...current, [field]: value }));
     setError("");
     setSuccess("");
+    setPublicDashboardMessage("");
   }
 
   async function handleSubmit(event) {
@@ -130,6 +146,41 @@ export default function Profile() {
       setError(err.message || t("profile.updateError"));
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleTogglePublicDashboard(enabled) {
+    setIsUpdatingPublicDashboard(true);
+    setError("");
+    setSuccess("");
+    setPublicDashboardMessage("");
+
+    try {
+      const settings = await updatePublicDashboardSettings(enabled);
+      setPublicDashboard({
+        enabled: settings?.enabled ?? false,
+        publicUrl: settings?.publicUrl ?? "",
+      });
+      setPublicDashboardMessage(
+        enabled ? t("profile.publicDashboardEnabledSuccess") : t("profile.publicDashboardDisabledSuccess")
+      );
+    } catch (err) {
+      setError(err.message || t("profile.publicDashboardUpdateError"));
+    } finally {
+      setIsUpdatingPublicDashboard(false);
+    }
+  }
+
+  async function handleCopyPublicDashboardLink() {
+    if (!publicDashboard.publicUrl) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(publicDashboard.publicUrl);
+      setPublicDashboardMessage(t("profile.publicDashboardCopied"));
+    } catch {
+      setPublicDashboardMessage(t("profile.publicDashboardCopyError"));
     }
   }
 
@@ -390,6 +441,82 @@ export default function Profile() {
           </form>
         )}
       </div>
+
+      {!isLoading ? (
+        <div className="finova-card p-4 p-md-5" style={{ maxWidth: 760 }}>
+          <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-start gap-3 mb-3">
+            <div>
+              <h2 className="finova-title h5 mb-1">{t("profile.publicDashboardTitle")}</h2>
+              <p className="finova-subtitle small mb-0">
+                {t("profile.publicDashboardSubtitle")}
+              </p>
+            </div>
+
+            <div className="form-check form-switch m-0">
+              <input
+                id="publicDashboardEnabled"
+                type="checkbox"
+                className="form-check-input"
+                checked={publicDashboard.enabled}
+                onChange={(event) => handleTogglePublicDashboard(event.target.checked)}
+                disabled={isUpdatingPublicDashboard}
+              />
+              <label
+                className="form-check-label text-dark fw-medium"
+                htmlFor="publicDashboardEnabled"
+              >
+                {publicDashboard.enabled
+                  ? t("profile.publicDashboardEnabled")
+                  : t("profile.publicDashboardDisabled")}
+              </label>
+            </div>
+          </div>
+
+          {publicDashboard.enabled ? (
+            <div className="d-grid gap-3">
+              <div>
+                <label className="form-label text-dark fw-medium" htmlFor="publicDashboardUrl">
+                  {t("profile.publicDashboardLinkLabel")}
+                </label>
+                <input
+                  id="publicDashboardUrl"
+                  type="text"
+                  className="form-control finova-input"
+                  value={publicDashboard.publicUrl}
+                  readOnly
+                />
+                <div className="form-text">{t("profile.publicDashboardLinkHelp")}</div>
+              </div>
+
+              <div className="finova-actions-row">
+                <button
+                  type="button"
+                  className="btn finova-btn-light"
+                  onClick={handleCopyPublicDashboardLink}
+                >
+                  {t("profile.publicDashboardCopy")}
+                </button>
+                <a
+                  href={publicDashboard.publicUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn finova-btn-primary"
+                >
+                  {t("profile.publicDashboardOpen")}
+                </a>
+              </div>
+            </div>
+          ) : (
+            <p className="finova-subtitle mb-0">{t("profile.publicDashboardEmpty")}</p>
+          )}
+
+          {publicDashboardMessage ? (
+            <div className="alert alert-success py-2 mb-0 mt-3" role="status">
+              {publicDashboardMessage}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       {!isLoading ? (
         <div className="finova-card p-4 p-md-5" style={{ maxWidth: 760 }}>

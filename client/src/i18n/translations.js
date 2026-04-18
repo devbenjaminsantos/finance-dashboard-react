@@ -148,6 +148,23 @@ export const translations = {
       notificationHistoryEmpty: "Nenhum envio registrado por enquanto.",
       notificationTypeGoalAlert: "Alerta de meta",
       notificationTypeMonthlyReport: "Resumo mensal",
+      publicDashboardTitle: "Dashboard publico",
+      publicDashboardSubtitle:
+        "Ative um link so leitura para compartilhar seus graficos sem expor a area autenticada.",
+      publicDashboardEnabled: "Dashboard publico ativo",
+      publicDashboardDisabled: "Dashboard publico inativo",
+      publicDashboardLinkLabel: "Link compartilhavel",
+      publicDashboardLinkHelp:
+        "Qualquer pessoa com este link podera visualizar o painel em modo leitura.",
+      publicDashboardCopy: "Copiar link",
+      publicDashboardOpen: "Abrir painel publico",
+      publicDashboardEmpty:
+        "Ative o dashboard publico quando quiser compartilhar seus graficos em modo leitura.",
+      publicDashboardEnabledSuccess: "Dashboard publico ativado com sucesso.",
+      publicDashboardDisabledSuccess: "Dashboard publico desativado com sucesso.",
+      publicDashboardCopied: "Link copiado para a area de transferencia.",
+      publicDashboardCopyError: "Nao foi possivel copiar o link automaticamente.",
+      publicDashboardUpdateError: "Nao foi possivel atualizar o dashboard publico.",
       changePasswordTitle: "Alterar senha",
       changePasswordSubtitle:
         "Preencha os campos abaixo apenas se quiser trocar sua senha atual.",
@@ -222,6 +239,19 @@ export const translations = {
       accountsTitle: "Contas financeiras",
       accountsSubtitle:
         "Centralize contas manuais e contas conectadas. Nesta etapa, o Pluggy ja entra como integracao bancaria real do produto.",
+    },
+    publicDashboard: {
+      title: "Dashboard publico",
+      subtitle: "Painel compartilhado em modo leitura.",
+      subtitleWithName: "Painel financeiro compartilhado por {{name}} em modo leitura.",
+      readOnlyBadge: "Somente leitura",
+      readOnlyDescription:
+        "Este painel exibe um recorte compartilhado dos graficos e do resumo financeiro.",
+      lastUpdated: "Ultima movimentacao em {{date}}",
+      noUpdate: "Sem movimentacoes compartilhadas ainda",
+      unavailableTitle: "Painel indisponivel",
+      loadError: "Nao foi possivel carregar este dashboard publico.",
+      balanceLabel: "Saldo",
     },
     transactions: {
       searchPlaceholder: "Buscar por descricao...",
@@ -438,6 +468,23 @@ export const translations = {
       notificationHistoryEmpty: "No deliveries recorded yet.",
       notificationTypeGoalAlert: "Goal alert",
       notificationTypeMonthlyReport: "Monthly summary",
+      publicDashboardTitle: "Public dashboard",
+      publicDashboardSubtitle:
+        "Enable a read-only link to share your charts without exposing the authenticated area.",
+      publicDashboardEnabled: "Public dashboard enabled",
+      publicDashboardDisabled: "Public dashboard disabled",
+      publicDashboardLinkLabel: "Shareable link",
+      publicDashboardLinkHelp:
+        "Anyone with this link will be able to view the dashboard in read-only mode.",
+      publicDashboardCopy: "Copy link",
+      publicDashboardOpen: "Open public dashboard",
+      publicDashboardEmpty:
+        "Enable the public dashboard whenever you want to share your charts in read-only mode.",
+      publicDashboardEnabledSuccess: "Public dashboard enabled successfully.",
+      publicDashboardDisabledSuccess: "Public dashboard disabled successfully.",
+      publicDashboardCopied: "Link copied to clipboard.",
+      publicDashboardCopyError: "Unable to copy the link automatically.",
+      publicDashboardUpdateError: "Unable to update the public dashboard.",
       changePasswordTitle: "Change password",
       changePasswordSubtitle:
         "Fill the fields below only if you want to replace your current password.",
@@ -512,6 +559,19 @@ export const translations = {
       accountsTitle: "Financial accounts",
       accountsSubtitle:
         "Centralize manual and connected accounts. At this stage, Pluggy already appears as the product's real banking integration.",
+    },
+    publicDashboard: {
+      title: "Public dashboard",
+      subtitle: "Shared dashboard in read-only mode.",
+      subtitleWithName: "{{name}}'s shared financial dashboard in read-only mode.",
+      readOnlyBadge: "Read only",
+      readOnlyDescription:
+        "This dashboard shows a shared view of charts and the financial summary.",
+      lastUpdated: "Latest transaction on {{date}}",
+      noUpdate: "No shared activity yet",
+      unavailableTitle: "Dashboard unavailable",
+      loadError: "Unable to load this public dashboard.",
+      balanceLabel: "Balance",
     },
     transactions: {
       searchPlaceholder: "Search by description...",

@@ -1,9 +1,11 @@
 using FinanceDashboard.Api.Data;
 using FinanceDashboard.Api.DTOs;
+using FinanceDashboard.Api.DTOs.Profile;
 using FinanceDashboard.Api.Models;
 using FinanceDashboard.Api.Services.Audit;
 using FinanceDashboard.Api.Services.Auth;
 using FinanceDashboard.Api.Services.CurrentUser;
+using FinanceDashboard.Api.Services.PublicDashboard;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +23,7 @@ namespace FinanceDashboard.Api.Controllers
         private readonly PasswordHasher _passwordHasher;
         private readonly PasswordPolicyService _passwordPolicyService;
         private readonly IConfiguration _configuration;
+        private readonly PublicDashboardTokenService _publicDashboardTokenService;
 
         public ProfileController(
             AppDbContext context,
@@ -28,7 +31,8 @@ namespace FinanceDashboard.Api.Controllers
             PasswordHasher passwordHasher,
             PasswordPolicyService passwordPolicyService,
             AuditLogService auditLogService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            PublicDashboardTokenService publicDashboardTokenService)
         {
             _context = context;
             _currentUserService = currentUserService;
@@ -36,6 +40,7 @@ namespace FinanceDashboard.Api.Controllers
             _passwordPolicyService = passwordPolicyService;
             _auditLogService = auditLogService;
             _configuration = configuration;
+            _publicDashboardTokenService = publicDashboardTokenService;
         }
 
         [HttpGet]
@@ -80,6 +85,62 @@ namespace FinanceDashboard.Api.Controllers
                 .ToListAsync();
 
             return Ok(deliveries);
+        }
+
+        [HttpGet("public-dashboard")]
+        public async Task<ActionResult<PublicDashboardSettingsResponse>> GetPublicDashboardSettings()
+        {
+            var userId = _currentUserService.GetRequiredUserId();
+
+            var user = await _context.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(existing => existing.Id == userId);
+
+            if (user is null)
+            {
+                return NotFound(new ProblemDetails
+                {
+                    Title = "Usuario nao encontrado.",
+                    Status = StatusCodes.Status404NotFound
+                });
+            }
+
+            return Ok(ToPublicDashboardSettingsResponse(user));
+        }
+
+        [HttpPut("public-dashboard")]
+        public async Task<ActionResult<PublicDashboardSettingsResponse>> UpdatePublicDashboardSettings(
+            PublicDashboardSettingsRequest dto)
+        {
+            var userId = _currentUserService.GetRequiredUserId();
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(existing => existing.Id == userId);
+
+            if (user is null)
+            {
+                return NotFound(new ProblemDetails
+                {
+                    Title = "Usuario nao encontrado.",
+                    Status = StatusCodes.Status404NotFound
+                });
+            }
+
+            user.PublicDashboardEnabled = dto.Enabled;
+            await _context.SaveChangesAsync();
+
+            await _auditLogService.WriteAsync(
+                action: dto.Enabled
+                    ? "profile.public-dashboard.enabled"
+                    : "profile.public-dashboard.disabled",
+                entityType: "User",
+                entityId: user.Id.ToString(),
+                userId: user.Id,
+                summary: dto.Enabled
+                    ? "Dashboard publico ativado para leitura."
+                    : "Dashboard publico desativado.");
+
+            return Ok(ToPublicDashboardSettingsResponse(user));
         }
 
         [HttpPut]
@@ -248,7 +309,19 @@ namespace FinanceDashboard.Api.Controllers
                 EmailGoalAlertsEnabled = user.EmailGoalAlertsEnabled,
                 GoalAlertThresholdPercent = user.GoalAlertThresholdPercent,
                 MonthlyReportEmailsEnabled = user.MonthlyReportEmailsEnabled,
-                MonthlyReportDay = user.MonthlyReportDay
+                MonthlyReportDay = user.MonthlyReportDay,
+                PublicDashboardEnabled = user.PublicDashboardEnabled
+            };
+        }
+
+        private PublicDashboardSettingsResponse ToPublicDashboardSettingsResponse(User user)
+        {
+            return new PublicDashboardSettingsResponse
+            {
+                Enabled = user.PublicDashboardEnabled,
+                PublicUrl = user.PublicDashboardEnabled
+                    ? $"{GetClientBaseUrl().TrimEnd('/')}/compartilhado/{_publicDashboardTokenService.Generate(user)}"
+                    : null
             };
         }
 
@@ -269,6 +342,12 @@ namespace FinanceDashboard.Api.Controllers
         {
             var demoEmail = (_configuration["Demo:Email"] ?? "demo@finova.app").Trim().ToLowerInvariant();
             return user.Email == demoEmail;
+        }
+
+        private string GetClientBaseUrl()
+        {
+            return _configuration["Client:BaseUrl"]?.Trim()
+                ?? $"{Request.Scheme}://{Request.Host.Value}";
         }
     }
 }

@@ -565,6 +565,9 @@ namespace FinanceDashboard.Api.Migrations
                     b.Property<bool>("MonthlyReportEmailsEnabled")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("PublicDashboardEnabled")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)

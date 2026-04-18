@@ -6,6 +6,7 @@ using FinanceDashboard.Api.Models;
 using FinanceDashboard.Api.Services.Audit;
 using FinanceDashboard.Api.Services.Auth;
 using FinanceDashboard.Api.Services.CurrentUser;
+using FinanceDashboard.Api.Services.PublicDashboard;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -85,6 +86,37 @@ public class ProfileControllerTests
             log => log.Action == "profile.updated" && log.Summary.Contains("90%"));
     }
 
+    [Fact]
+    public async Task UpdatePublicDashboardSettings_ActivatesSharedLink()
+    {
+        using var context = CreateContext();
+        context.Users.Add(new User
+        {
+            Id = 7,
+            Name = "Keller",
+            Email = "keller@finova.app",
+            EmailConfirmed = true,
+            PasswordHash = HashPassword("SenhaSegura123!")
+        });
+        await context.SaveChangesAsync();
+
+        var controller = CreateController(context, 7);
+
+        var result = await controller.UpdatePublicDashboardSettings(new FinanceDashboard.Api.DTOs.Profile.PublicDashboardSettingsRequest
+        {
+            Enabled = true
+        });
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        var payload = Assert.IsType<FinanceDashboard.Api.DTOs.Profile.PublicDashboardSettingsResponse>(ok.Value);
+        var refreshedUser = await context.Users.SingleAsync();
+
+        Assert.True(payload.Enabled);
+        Assert.NotNull(payload.PublicUrl);
+        Assert.Contains("/compartilhado/", payload.PublicUrl);
+        Assert.True(refreshedUser.PublicDashboardEnabled);
+    }
+
     private static AppDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
@@ -99,7 +131,9 @@ public class ProfileControllerTests
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["Demo:Email"] = "demo@finova.app"
+                ["Demo:Email"] = "demo@finova.app",
+                ["Jwt:Key"] = "uma-chave-super-segura-para-testes-publicos",
+                ["Client:BaseUrl"] = "https://finova.app"
             })
             .Build();
 
@@ -123,7 +157,8 @@ public class ProfileControllerTests
             new AppPasswordHasher(new PasswordHasher<User>()),
             new PasswordPolicyService(),
             new AuditLogService(context, httpContextAccessor),
-            configuration);
+            configuration,
+            new PublicDashboardTokenService(configuration));
 
         controller.ControllerContext = new ControllerContext
         {

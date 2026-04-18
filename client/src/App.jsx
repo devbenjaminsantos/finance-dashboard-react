@@ -18,6 +18,7 @@ import Home from "./pages/Home";
 import Insights from "./pages/Insights";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
+import PublicDashboard from "./pages/PublicDashboard";
 import Register from "./pages/Register";
 import ResetPassword from "./pages/ResetPassword";
 import Transactions from "./pages/Transactions";
@@ -60,6 +61,7 @@ export default function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/compartilhado/:token" element={<PublicDashboard />} />
 
             <Route
               path="/"

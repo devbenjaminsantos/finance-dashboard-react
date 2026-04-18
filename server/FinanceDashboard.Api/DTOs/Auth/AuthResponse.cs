@@ -17,5 +17,6 @@ namespace FinanceDashboard.Api.DTOs
         public int GoalAlertThresholdPercent { get; set; }
         public bool MonthlyReportEmailsEnabled { get; set; }
         public int MonthlyReportDay { get; set; }
+        public bool PublicDashboardEnabled { get; set; }
     }
 }

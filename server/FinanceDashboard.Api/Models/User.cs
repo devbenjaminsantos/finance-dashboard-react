@@ -11,6 +11,7 @@ namespace FinanceDashboard.Api.Models
         public int GoalAlertThresholdPercent { get; set; } = 80;
         public bool MonthlyReportEmailsEnabled { get; set; }
         public int MonthlyReportDay { get; set; } = 1;
+        public bool PublicDashboardEnabled { get; set; }
         public string PasswordHash { get; set; } = string.Empty;
         public int FailedLoginAttempts { get; set; }
         public DateTime? LockoutEndsAtUtc { get; set; }

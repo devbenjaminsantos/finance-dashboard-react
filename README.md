@@ -388,9 +388,9 @@ Antes de avancar para a V6, vale tratar a etapa como uma evolucao estrutural do 
   - redefinicao de senha
   - confirmacao de e-mail
   - alerta de meta mensal
-- para relatorios mensais e orquestracao automatica, ainda falta infraestrutura de agendamento
-- ainda nao existe infraestrutura dedicada para jobs agendados
-  - a V6 vai precisar de processamento recorrente, idempotente e auditavel
+  - relatorio mensal automatico
+- a infraestrutura inicial de agendamento ja existe com worker hospedado e controle de entregas
+- ainda vale evoluir monitoramento, retry e operacao para workloads maiores
 
 ### O que precisa ser criado do zero
 
@@ -519,7 +519,13 @@ Dependencia forte:
 
 #### 6. Alerta por e-mail ao atingir percentual da meta
 
-Precisa revisar:
+Estado atual:
+
+- usuario ja pode ativar alertas por e-mail no perfil
+- o processamento automatico ja avalia metas do mes
+- o envio ja registra `NotificationDelivery` para evitar duplicidade
+
+Ainda pode evoluir:
 
 - em qual percentual dispara
 - se dispara uma vez por mes ou varias vezes
@@ -528,16 +534,15 @@ Precisa revisar:
   - por categoria
   - ambas
 
-Precisa criar:
-
-- preferencias de notificacao
-- servico que avalia metas
-- novo metodo no `IEmailSender`
-- persistencia do envio para evitar duplicidade
-
 #### 7. Relatorio mensal automatico
 
-Precisa revisar:
+Estado atual:
+
+- usuario ja pode ativar o resumo mensal no perfil
+- o worker automatico ja envia o resumo do mes anterior
+- o historico de envios fica salvo para consulta no sistema
+
+Ainda pode evoluir:
 
 - quando roda exatamente:
   - primeiro dia do mes
@@ -550,23 +555,16 @@ Precisa revisar:
   - metas batidas ou estouradas
   - categorias de maior peso
 
-Precisa criar:
-
-- job mensal
-- template de e-mail
-- snapshot de dados do periodo
-- trilha de auditoria de envio
-
 #### 8. Dashboard publico compartilhavel via link
 
-Precisa revisar:
+Decisoes tomadas:
 
-- quais dados podem aparecer em modo publico
-- se o link expira
-- se o usuario pode revogar manualmente
-- se o link mostra valores completos ou uma versao reduzida
+- o painel publico fica em modo somente leitura
+- o link pode ser desativado manualmente pelo usuario no Perfil
+- a visualizacao publica mostra resumo e graficos, sem acesso a area autenticada
+- o token do link e assinado no backend
 
-Precisa criar:
+Entregue:
 
 - token de compartilhamento
 - endpoint publico somente leitura
@@ -617,8 +615,7 @@ Para reduzir retrabalho, a V6 pode seguir esta ordem:
 
 #### Precisa fechar infraestrutura antes
 
-- alerta por e-mail ao atingir meta
-- relatorio mensal automatico
+- dashboard publico compartilhavel via link
 
 #### Precisa fechar seguranca e privacidade antes
 
@@ -686,7 +683,7 @@ Para reduzir retrabalho, a V6 pode seguir esta ordem:
 - [x] V5.5 Categorizacao assistida para lancamentos importados
 - [x] V5.6 Preparar arquitetura para integracao automatica com Open Finance/agregador
 - [x] V5.7 Sincronizacao automatica com conta bancaria
-- [ ] Avaliar se ainda faz sentido incluir 2FA em um cenario mais maduro do produto
+- [x] 2FA descartado nesta etapa para manter o produto mais enxuto
 - [ ] Dominio customizado como fechamento final da experiencia
 
 ### V6
@@ -697,9 +694,9 @@ Para reduzir retrabalho, a V6 pode seguir esta ordem:
 - [x] Parcelamento basico com geracao de parcelas mensais, identificacao por grupo e edicao/remocao em lote
 - [x] Recorrencias automaticas reais com geracao mensal
 - [x] Planejamento futuro com previsao baseada em historico
-- [ ] Alerta por e-mail ao atingir percentual da meta
-- [ ] Relatorio mensal automatico no primeiro dia do mes
-- [ ] Dashboard publico compartilhavel via link somente leitura
+- [x] Alerta por e-mail ao atingir percentual da meta
+- [x] Relatorio mensal automatico no primeiro dia do mes
+- [x] Dashboard publico compartilhavel via link somente leitura
 
 ## Autor
 

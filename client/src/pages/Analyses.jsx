@@ -7,14 +7,14 @@ import {
   SummaryCard,
 } from "../features/dashboard/DashboardCards";
 import {
-  COMPARISON_RANGE_OPTIONS,
+  getComparisonRangeOptions,
   getAutomaticInsights,
   getCategoryLeaders,
   getForecastSnapshot,
   getMonthsForPeriod,
   getPrescriptiveInsights,
   getRelativeMonthsISO,
-  PERIOD_OPTIONS,
+  getPeriodOptions,
   summarizeTransactions,
 } from "../features/dashboard/dashboardAnalytics";
 import { useTransactions } from "../features/transactions/useTransactions";
@@ -70,6 +70,8 @@ export default function Analyses() {
   const [comparisonRange, setComparisonRange] = useState(3);
   const [accountFilter, setAccountFilter] = useState("all");
   const accounts = useFinancialAccountOptions();
+  const periodOptions = useMemo(() => getPeriodOptions(t), [t]);
+  const comparisonRangeOptions = useMemo(() => getComparisonRangeOptions(t), [t]);
 
   const scopedTransactions = useMemo(
     () => filterTransactionsByFinancialAccount(transactions, accountFilter),
@@ -94,26 +96,26 @@ export default function Analyses() {
 
   const selectedComparisonRangeLabel = useMemo(
     () =>
-      COMPARISON_RANGE_OPTIONS.find((option) => option.value === comparisonRange)?.label ??
-      "3 meses",
-    [comparisonRange]
+      comparisonRangeOptions.find((option) => option.value === comparisonRange)?.label ??
+      t("analyses.defaultComparisonRange"),
+    [comparisonRange, comparisonRangeOptions, t]
   );
 
   const selectedPeriodLabel = useMemo(
-    () => PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? "Mes atual",
-    [period]
+    () => periodOptions.find((option) => option.value === period)?.label ?? t("dashboard.focusMonth"),
+    [period, periodOptions, t]
   );
 
   const summary = useMemo(() => summarizeTransactions(filteredTransactions), [filteredTransactions]);
 
   const automaticInsights = useMemo(
-    () => getAutomaticInsights(filteredTransactions),
-    [filteredTransactions]
+    () => getAutomaticInsights(filteredTransactions, t),
+    [filteredTransactions, t]
   );
 
   const prescriptiveInsights = useMemo(
-    () => getPrescriptiveInsights(filteredTransactions),
-    [filteredTransactions]
+    () => getPrescriptiveInsights(filteredTransactions, t),
+    [filteredTransactions, t]
   );
 
   const comparison = useMemo(() => {
@@ -131,20 +133,23 @@ export default function Analyses() {
 
     return {
       currentRangeLabel: selectedComparisonRangeLabel,
-      previousRangeLabel: `${selectedComparisonRangeLabel} anteriores`,
+      previousRangeLabel: t("analyses.previousRangeLabel", {
+        range: selectedComparisonRangeLabel,
+      }),
       current: summarizeTransactions(currentTransactions),
       previous: summarizeTransactions(previousTransactions),
-      categoryLeaders: getCategoryLeaders(currentTransactions, previousTransactions),
+      categoryLeaders: getCategoryLeaders(currentTransactions, previousTransactions, t),
     };
-  }, [scopedTransactions, comparisonRange, selectedComparisonRangeLabel]);
+  }, [scopedTransactions, comparisonRange, selectedComparisonRangeLabel, t]);
 
   const forecast = useMemo(
     () =>
       getForecastSnapshot(scopedTransactions, {
         historyMonths: Math.max(3, comparisonRange),
         horizon: 3,
+        t,
       }),
-    [scopedTransactions, comparisonRange]
+    [scopedTransactions, comparisonRange, t]
   );
 
   const totalInsightCount = automaticInsights.length + prescriptiveInsights.length;
@@ -156,10 +161,10 @@ export default function Analyses() {
         : "finova-badge-income";
   const highlightBadgeLabel =
     summary.balance < 0
-      ? "Atencao"
+      ? t("analyses.highlightAlert")
       : totalInsightCount > 0
-        ? `${totalInsightCount} sinais`
-        : "Estavel";
+        ? t("analyses.highlightSignals", { count: totalInsightCount })
+        : t("analyses.highlightStable");
 
   const confidenceBadgeClass =
     forecast.confidence.tone === "income"
@@ -186,7 +191,7 @@ export default function Analyses() {
                 value={period}
                 onChange={(event) => setPeriod(event.target.value)}
               >
-                {PERIOD_OPTIONS.map((option) => (
+                {periodOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -201,7 +206,7 @@ export default function Analyses() {
                 value={comparisonRange}
                 onChange={(event) => setComparisonRange(Number(event.target.value))}
               >
-                {COMPARISON_RANGE_OPTIONS.map((option) => (
+                {comparisonRangeOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -237,30 +242,23 @@ export default function Analyses() {
         <div className="row g-3">
           <div className="col-12 col-lg-4">
             <div className="finova-card-soft p-3 h-100">
-              <div className="finova-subtitle small mb-1">Leitura do periodo</div>
-              <div className="finova-title h6 mb-2">Contexto e prioridade</div>
-              <p className="finova-subtitle mb-0">
-                Reunimos sinais automaticos, comparativos e metas na mesma area para facilitar a
-                tomada de decisao.
-              </p>
+              <div className="finova-subtitle small mb-1">{t("analyses.overviewCurrentEyebrow")}</div>
+              <div className="finova-title h6 mb-2">{t("analyses.overviewCurrentTitle")}</div>
+              <p className="finova-subtitle mb-0">{t("analyses.overviewCurrentDescription")}</p>
             </div>
           </div>
           <div className="col-12 col-lg-4">
             <div className="finova-card-soft p-3 h-100">
-              <div className="finova-subtitle small mb-1">Recorte atual</div>
+              <div className="finova-subtitle small mb-1">{t("analyses.overviewSelectedEyebrow")}</div>
               <div className="finova-title h6 mb-2">{selectedPeriodLabel}</div>
-              <p className="finova-subtitle mb-0">
-                O bloco de insights e o resumo financeiro respeitam esse periodo selecionado.
-              </p>
+              <p className="finova-subtitle mb-0">{t("analyses.overviewSelectedDescription")}</p>
             </div>
           </div>
           <div className="col-12 col-lg-4">
             <div className="finova-card-soft p-3 h-100">
-              <div className="finova-subtitle small mb-1">Janela comparativa</div>
+              <div className="finova-subtitle small mb-1">{t("analyses.overviewWindowEyebrow")}</div>
               <div className="finova-title h6 mb-2">{selectedComparisonRangeLabel}</div>
-              <p className="finova-subtitle mb-0">
-                Os comparativos usam a janela atual contra a imediatamente anterior do mesmo tamanho.
-              </p>
+              <p className="finova-subtitle mb-0">{t("analyses.overviewWindowDescription")}</p>
             </div>
           </div>
         </div>
@@ -268,62 +266,77 @@ export default function Analyses() {
 
       {isLoading ? (
         <div className="finova-card p-4">
-          <p className="finova-subtitle mb-0">Carregando analises...</p>
+          <p className="finova-subtitle mb-0">{t("analyses.loading")}</p>
         </div>
       ) : (
         <>
           <div className="row g-3 mb-4">
             <AnalysisOverviewCard
-              eyebrow="Momento atual"
+              eyebrow={t("analyses.summaryNowEyebrow")}
               title={selectedPeriodLabel}
-              description={`A leitura atual considera ${filteredTransactions.length} movimentacao${filteredTransactions.length === 1 ? "" : "es"} no recorte selecionado.`}
+              description={t(
+                filteredTransactions.length === 1
+                  ? "analyses.summaryNowDescriptionSingle"
+                  : "analyses.summaryNowDescriptionPlural",
+                {
+                  count: filteredTransactions.length,
+                }
+              )}
               badgeClass={highlightBadgeClass}
               badge={highlightBadgeLabel}
             />
             <AnalysisOverviewCard
-              eyebrow="Comparacao"
+              eyebrow={t("analyses.summaryComparisonEyebrow")}
               title={selectedComparisonRangeLabel}
-              description={`A janela atual sera comparada com os ${selectedComparisonRangeLabel.toLowerCase()} anteriores para identificar mudancas de ritmo.`}
+              description={t("analyses.summaryComparisonDescription", {
+                range: selectedComparisonRangeLabel.toLowerCase(),
+              })}
               badgeClass="finova-badge-neutral"
-              badge="Tendencia"
+              badge={t("analyses.summaryComparisonBadge")}
             />
             <AnalysisOverviewCard
-              eyebrow="Projecao"
+              eyebrow={t("analyses.summaryProjectionEyebrow")}
               title={
                 forecast.hasEnoughData
-                  ? `Confianca ${forecast.confidence.label.toLowerCase()}`
-                  : "Historico insuficiente"
+                  ? t("analyses.summaryProjectionTitleReady", {
+                      confidence: forecast.confidence.label.toLowerCase(),
+                    })
+                  : t("analyses.summaryProjectionTitleEmpty")
               }
               description={
                 forecast.hasEnoughData
-                  ? "A previsao dos proximos meses ja pode apoiar ajustes de metas e prioridades."
-                  : "Adicione mais meses de movimentacao para destravar a leitura preditiva."
+                  ? t("analyses.summaryProjectionDescriptionReady")
+                  : t("analyses.summaryProjectionDescriptionEmpty")
               }
               badgeClass={confidenceBadgeClass}
-              badge={forecast.hasEnoughData ? forecast.confidence.label : "Aguardando base"}
+              badge={
+                forecast.hasEnoughData
+                  ? forecast.confidence.label
+                  : t("analyses.summaryProjectionBadgeEmpty")
+              }
             />
           </div>
 
           <div className="finova-card p-4 mb-4">
             <AnalysisSectionHeader
-              eyebrow="Leitura automatica"
-              title="Insights do periodo"
-              description="Sinais automaticos e recomendacoes objetivas para o recorte selecionado."
+              eyebrow={t("analyses.insightsEyebrow")}
+              title={t("analyses.insightsTitle")}
+              description={t("analyses.insightsDescription")}
             />
 
             <div className="row g-3 mb-4">
               <SummaryCard
-                label="Receitas"
+                label={t("transactions.incomePlural")}
                 value={formatCurrencyFromCents(summary.income)}
                 tone="income"
               />
               <SummaryCard
-                label="Despesas"
+                label={t("transactions.expensePlural")}
                 value={formatCurrencyFromCents(summary.expense)}
                 tone="expense"
               />
               <SummaryCard
-                label="Saldo"
+                label={t("publicDashboard.balanceLabel")}
                 value={formatCurrencyFromCents(summary.balance)}
                 tone="default"
               />
@@ -331,10 +344,8 @@ export default function Analyses() {
 
             {automaticInsights.length === 0 && prescriptiveInsights.length === 0 ? (
               <div className="text-center py-4">
-                <h3 className="finova-title h6 mb-2">Ainda nao ha dados suficientes</h3>
-                <p className="finova-subtitle mb-0">
-                  Adicione transacoes para que o Finova consiga interpretar padroes e sugerir acoes.
-                </p>
+                <h3 className="finova-title h6 mb-2">{t("analyses.insightsEmptyTitle")}</h3>
+                <p className="finova-subtitle mb-0">{t("analyses.insightsEmptyDescription")}</p>
               </div>
             ) : (
               <div className="row g-3">
@@ -363,28 +374,28 @@ export default function Analyses() {
 
           <div className="finova-card p-4 mb-4">
             <AnalysisSectionHeader
-              eyebrow="Mudanca de ritmo"
-              title="Comparativos"
-              description="Entenda o que mudou entre a janela atual e a anterior, com previsao dos proximos meses."
+              eyebrow={t("analyses.comparisonsEyebrow")}
+              title={t("analyses.comparisonsTitle")}
+              description={t("analyses.comparisonsDescription")}
             />
 
             <div className="row g-3 mb-3">
               <ComparisonCard
-                label="Receitas na janela atual"
+                label={t("analyses.comparisonsIncomeLabel")}
                 currentValue={comparison.current.income}
                 previousValue={comparison.previous.income}
                 currentRangeLabel={comparison.currentRangeLabel}
                 previousRangeLabel={comparison.previousRangeLabel}
               />
               <ComparisonCard
-                label="Despesas na janela atual"
+                label={t("analyses.comparisonsExpenseLabel")}
                 currentValue={comparison.current.expense}
                 previousValue={comparison.previous.expense}
                 currentRangeLabel={comparison.currentRangeLabel}
                 previousRangeLabel={comparison.previousRangeLabel}
               />
               <ComparisonCard
-                label="Saldo na janela atual"
+                label={t("analyses.comparisonsBalanceLabel")}
                 currentValue={comparison.current.balance}
                 previousValue={comparison.previous.balance}
                 currentRangeLabel={comparison.currentRangeLabel}
@@ -394,13 +405,13 @@ export default function Analyses() {
 
             <div className="row g-3 mb-4">
               <CategoryInsightCard
-                title="Categoria que mais pesou"
+                title={t("analyses.comparisonsHeaviestCategory")}
                 category={comparison.categoryLeaders.biggestIncrease.category}
                 value={comparison.categoryLeaders.biggestIncrease.value}
                 tone="up"
               />
               <CategoryInsightCard
-                title="Categoria que mais aliviou"
+                title={t("analyses.comparisonsLightestCategory")}
                 category={comparison.categoryLeaders.biggestDrop.category}
                 value={comparison.categoryLeaders.biggestDrop.value}
                 tone="down"
@@ -509,9 +520,9 @@ export default function Analyses() {
 
           <div className="finova-card p-4">
             <AnalysisSectionHeader
-              eyebrow="Planejamento mensal"
-              title="Metas do mes"
-              description="Revise o orcamento mensal geral e por categoria sem sair da mesma area de analise."
+              eyebrow={t("analyses.goalsEyebrow")}
+              title={t("analyses.goalsTitle")}
+              description={t("analyses.goalsDescription")}
             />
 
             <BudgetGoalsSection transactions={scopedTransactions} />

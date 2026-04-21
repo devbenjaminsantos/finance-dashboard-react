@@ -52,7 +52,7 @@ export function ComparisonCard({
   currentRangeLabel,
   previousRangeLabel,
 }) {
-  const { formatCurrencyFromCents } = useI18n();
+  const { formatCurrencyFromCents, t } = useI18n();
   const delta = currentValue - previousValue;
   const hasPreviousData = previousValue > 0;
   const percentChange = hasPreviousData ? Math.round((delta / previousValue) * 100) : null;
@@ -64,7 +64,12 @@ export function ComparisonCard({
         ? "finova-badge-expense"
         : "finova-badge-primary";
 
-  const toneText = delta > 0 ? "Subiu" : delta < 0 ? "Caiu" : "Sem variacao";
+  const toneText =
+    delta > 0
+      ? t("dashboardCards.deltaUp")
+      : delta < 0
+        ? t("dashboardCards.deltaDown")
+        : t("dashboardCards.deltaNeutral");
 
   return (
     <div className="col-12 col-md-4">
@@ -78,18 +83,24 @@ export function ComparisonCard({
         </div>
 
         <div className="small finova-subtitle mb-2">
-          Base anterior ({previousRangeLabel}): {formatCurrencyFromCents(previousValue)}
+          {t("dashboardCards.previousBase", {
+            range: previousRangeLabel,
+          })}: {formatCurrencyFromCents(previousValue)}
         </div>
 
         <div className="small">
           {hasPreviousData ? (
             <span className="fw-semibold">
-              {percentChange > 0 ? "+" : ""}
-              {percentChange}% em relacao a {previousRangeLabel}
+              {t("dashboardCards.percentVsPrevious", {
+                percent: `${percentChange > 0 ? "+" : ""}${percentChange}%`,
+                range: previousRangeLabel,
+              })}
             </span>
           ) : (
             <span className="finova-subtitle">
-              Sem base anterior suficiente para comparar {currentRangeLabel}.
+              {t("dashboardCards.noPreviousBase", {
+                range: currentRangeLabel,
+              })}
             </span>
           )}
         </div>
@@ -99,7 +110,7 @@ export function ComparisonCard({
 }
 
 export function CategoryInsightCard({ title, category, value, tone }) {
-  const { formatCurrencyFromCents } = useI18n();
+  const { formatCurrencyFromCents, t } = useI18n();
   const badgeClass =
     tone === "up"
       ? "finova-badge-expense"
@@ -107,7 +118,12 @@ export function CategoryInsightCard({ title, category, value, tone }) {
         ? "finova-badge-income"
         : "finova-badge-primary";
 
-  const badgeText = tone === "up" ? "Maior peso" : tone === "down" ? "Maior alivio" : "Sem destaque";
+  const badgeText =
+    tone === "up"
+      ? t("dashboardCards.categoryUp")
+      : tone === "down"
+        ? t("dashboardCards.categoryDown")
+        : t("dashboardCards.categoryNeutral");
 
   return (
     <div className="col-12 col-md-6">
@@ -115,11 +131,13 @@ export function CategoryInsightCard({ title, category, value, tone }) {
         <div className="d-flex justify-content-between align-items-start gap-2 mb-3">
           <div>
             <div className="finova-subtitle small mb-1">{title}</div>
-            <div className="finova-title h5 mb-1">{category || "Sem categoria dominante"}</div>
+            <div className="finova-title h5 mb-1">
+              {category || t("dashboardCards.noDominantCategory")}
+            </div>
             <div className="finova-subtitle small">
               {value > 0
                 ? formatCurrencyFromCents(value)
-                : "Ainda nao ha despesas suficientes para destacar uma categoria."}
+                : t("dashboardCards.noCategoryData")}
             </div>
           </div>
           <span className={badgeClass}>{badgeText}</span>

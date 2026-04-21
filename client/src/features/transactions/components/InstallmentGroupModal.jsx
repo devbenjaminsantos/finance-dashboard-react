@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getTransactionCategories } from "../../../lib/constants/transactionCategories";
+import { useI18n } from "../../../i18n/LanguageProvider";
 
 function formatTagNamesForInput(tagNames) {
   return Array.isArray(tagNames) ? tagNames.join(", ") : "";
@@ -22,6 +23,7 @@ export default function InstallmentGroupModal({
   onSubmit,
   initial,
 }) {
+  const { t } = useI18n();
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
   const [tagNamesInput, setTagNamesInput] = useState("");
@@ -67,13 +69,13 @@ export default function InstallmentGroupModal({
     setIsSubmitting(true);
 
     if (!description.trim()) {
-      setError("Informe uma descrição.");
+      setError(t("transactions.installmentGroupValidationDescription"));
       setIsSubmitting(false);
       return;
     }
 
     if (!category.trim()) {
-      setError("Escolha uma categoria.");
+      setError(t("transactions.installmentGroupValidationCategory"));
       setIsSubmitting(false);
       return;
     }
@@ -86,7 +88,7 @@ export default function InstallmentGroupModal({
       });
       onClose();
     } catch (requestError) {
-      setError(requestError.message || "Não foi possível atualizar a compra parcelada.");
+      setError(requestError.message || t("transactions.installmentGroupSaveError"));
     } finally {
       setIsSubmitting(false);
     }
@@ -112,16 +114,16 @@ export default function InstallmentGroupModal({
         <div className="modal-content border-0" style={{ borderRadius: "16px" }}>
           <div className="modal-header border-0 pb-0 px-4 pt-4">
             <div>
-              <h2 className="finova-title h4 mb-1">Editar compra parcelada</h2>
+              <h2 className="finova-title h4 mb-1">{t("transactions.installmentGroupTitle")}</h2>
               <p className="finova-subtitle small mb-0">
-                Atualize descrição, categoria e tags para todas as parcelas deste plano.
+                {t("transactions.installmentGroupSubtitle")}
               </p>
             </div>
 
             <button
               type="button"
               className="btn-close"
-              aria-label="Fechar"
+              aria-label={t("transactions.close")}
               onClick={onClose}
             />
           </div>
@@ -130,7 +132,7 @@ export default function InstallmentGroupModal({
             <form onSubmit={handleSubmit} className="row g-3">
               <div className="col-12">
                 <label className="form-label text-dark fw-medium" htmlFor="installment-group-description">
-                  Descrição
+                  {t("common.description")}
                 </label>
                 <input
                   id="installment-group-description"
@@ -144,7 +146,7 @@ export default function InstallmentGroupModal({
 
               <div className="col-12">
                 <label className="form-label text-dark fw-medium" htmlFor="installment-group-category">
-                  Categoria
+                  {t("common.category")}
                 </label>
                 <select
                   id="installment-group-category"
@@ -162,7 +164,7 @@ export default function InstallmentGroupModal({
 
               <div className="col-12">
                 <label className="form-label text-dark fw-medium" htmlFor="installment-group-tags">
-                  Tags
+                  {t("common.tags")}
                 </label>
                 <input
                   id="installment-group-tags"
@@ -170,7 +172,7 @@ export default function InstallmentGroupModal({
                   className="form-control finova-input"
                   value={tagNamesInput}
                   onChange={(event) => setTagNamesInput(event.target.value)}
-                  placeholder="Ex: viagem, trabalho, reembolsavel"
+                  placeholder={t("transactions.installmentGroupTagsPlaceholder")}
                 />
               </div>
 
@@ -188,7 +190,7 @@ export default function InstallmentGroupModal({
                     onClick={onClose}
                     disabled={isSubmitting}
                   >
-                    Cancelar
+                    {t("common.cancel")}
                   </button>
 
                   <button
@@ -196,7 +198,7 @@ export default function InstallmentGroupModal({
                     className="btn finova-btn-primary px-4"
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? "Salvando..." : "Salvar compra"}
+                    {isSubmitting ? t("transactions.saving") : t("transactions.installmentGroupSave")}
                   </button>
                 </div>
               </div>

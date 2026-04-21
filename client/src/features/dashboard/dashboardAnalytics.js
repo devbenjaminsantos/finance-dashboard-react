@@ -1,17 +1,94 @@
 import { formatBRLFromCents } from "../../lib/format/currency";
 
-export const PERIOD_OPTIONS = [
-  { value: "current-month", label: "Mês atual" },
-  { value: "last-3-months", label: "Últimos 3 meses" },
-  { value: "last-6-months", label: "Últimos 6 meses" },
-  { value: "all", label: "Todo o histórico" },
-];
+const FALLBACK_TRANSLATIONS = {
+  "dashboardAnalytics.period.currentMonth": "Mes atual",
+  "dashboardAnalytics.period.last3Months": "Ultimos 3 meses",
+  "dashboardAnalytics.period.last6Months": "Ultimos 6 meses",
+  "dashboardAnalytics.period.allHistory": "Todo o historico",
+  "dashboardAnalytics.comparisonRange.singleMonth": "1 mes",
+  "dashboardAnalytics.comparisonRange.months": "{{count}} meses",
+  "dashboardAnalytics.defaultCategory": "Outros",
+  "dashboardAnalytics.biggestExpenseBadge": "Despesa",
+  "dashboardAnalytics.insights.topCategoryTitle": "Categoria mais representativa",
+  "dashboardAnalytics.insights.topCategoryDescription":
+    "{{category}} concentra {{share}}% das despesas do periodo e merece atencao extra.",
+  "dashboardAnalytics.insights.savingsRateTitle": "Ritmo de sobra no periodo",
+  "dashboardAnalytics.insights.savingsRateHealthy":
+    "Seu saldo esta preservando uma parcela saudavel das receitas neste recorte.",
+  "dashboardAnalytics.insights.savingsRatePositive":
+    "O saldo ainda esta positivo, mas ha espaco para aumentar a folga financeira.",
+  "dashboardAnalytics.insights.savingsRateNegative":
+    "As despesas superaram as receitas neste periodo e pedem correcao rapida.",
+  "dashboardAnalytics.insights.recurringTitle": "Compromissos recorrentes",
+  "dashboardAnalytics.insights.recurringItems": "{{count}} itens",
+  "dashboardAnalytics.insights.recurringPositive":
+    "Os lancamentos recorrentes deixam {{amount}} de margem entre entradas e saidas fixas.",
+  "dashboardAnalytics.insights.recurringNegative":
+    "Os lancamentos recorrentes ja comprometem {{amount}} alem das entradas fixas.",
+  "dashboardAnalytics.insights.biggestExpenseTitle": "Maior despesa avulsa",
+  "dashboardAnalytics.insights.biggestExpenseDescription":
+    "{{description}} foi o maior lancamento de saida do periodo, totalizando {{amount}}.",
+  "dashboardAnalytics.prescriptive.priorityTitle": "Acao prioritaria",
+  "dashboardAnalytics.prescriptive.priorityBadge": "Ajuste imediato",
+  "dashboardAnalytics.prescriptive.priorityDescription":
+    "As despesas passaram das receitas neste periodo. Vale revisar as saidas variaveis primeiro e congelar gastos menos essenciais ate o saldo voltar a respirar.",
+  "dashboardAnalytics.prescriptive.nextStepTitle": "Proximo movimento sugerido",
+  "dashboardAnalytics.prescriptive.nextStepBadge": "Baixa folga",
+  "dashboardAnalytics.prescriptive.nextStepDescription":
+    "Sua folga esta curta. Um bom proximo passo e transformar pelo menos uma despesa previsivel em lancamento recorrente e definir uma meta mensal para a categoria mais pesada.",
+  "dashboardAnalytics.prescriptive.opportunityTitle": "Oportunidade clara",
+  "dashboardAnalytics.prescriptive.opportunityBadge": "Saldo saudavel",
+  "dashboardAnalytics.prescriptive.opportunityDescription":
+    "O periodo esta com boa sobra. Este e um momento favoravel para reforcar metas, antecipar despesas previsiveis ou criar uma reserva para os proximos meses.",
+  "dashboardAnalytics.prescriptive.topCategoryTitle": "Categoria que pede atencao",
+  "dashboardAnalytics.prescriptive.topCategoryDescription":
+    "{{category}} ja representa {{share}}% das despesas deste recorte. Vale criar ou revisar uma meta especifica para essa categoria antes que ela dite o resultado do mes sozinha.",
+  "dashboardAnalytics.prescriptive.recurringTitle": "Estrutura fixa pressionada",
+  "dashboardAnalytics.prescriptive.recurringBadge": "Recorrencia",
+  "dashboardAnalytics.prescriptive.recurringDescription":
+    "As saidas recorrentes ja superam as entradas recorrentes. A melhor alavanca aqui e renegociar compromissos fixos ou aumentar uma entrada previsivel antes de ampliar novos gastos.",
+  "dashboardAnalytics.prescriptive.defaultTitle": "Proximo passo sugerido",
+  "dashboardAnalytics.prescriptive.defaultBadge": "Organizacao",
+  "dashboardAnalytics.prescriptive.defaultDescription":
+    "Seu cenario esta relativamente equilibrado. O proximo ganho pratico costuma vir de manter recorrencias em dia e revisar o comparativo entre meses para identificar mudancas cedo.",
+  "dashboardAnalytics.confidence.high": "Alta",
+  "dashboardAnalytics.confidence.medium": "Media",
+  "dashboardAnalytics.confidence.low": "Baixa",
+};
 
-export const COMPARISON_RANGE_OPTIONS = [
-  { value: 1, label: "1 mês" },
-  { value: 3, label: "3 meses" },
-  { value: 6, label: "6 meses" },
-];
+function fallbackTranslate(key, params = {}) {
+  const template = FALLBACK_TRANSLATIONS[key] ?? key;
+
+  return Object.entries(params).reduce(
+    (result, [paramKey, value]) => result.replaceAll(`{{${paramKey}}}`, String(value)),
+    template
+  );
+}
+
+function translate(t, key, params) {
+  if (typeof t === "function") {
+    return t(key, params);
+  }
+
+  return fallbackTranslate(key, params);
+}
+
+export function getPeriodOptions(t) {
+  return [
+    { value: "current-month", label: translate(t, "dashboardAnalytics.period.currentMonth") },
+    { value: "last-3-months", label: translate(t, "dashboardAnalytics.period.last3Months") },
+    { value: "last-6-months", label: translate(t, "dashboardAnalytics.period.last6Months") },
+    { value: "all", label: translate(t, "dashboardAnalytics.period.allHistory") },
+  ];
+}
+
+export function getComparisonRangeOptions(t) {
+  return [
+    { value: 1, label: translate(t, "dashboardAnalytics.comparisonRange.singleMonth") },
+    { value: 3, label: translate(t, "dashboardAnalytics.comparisonRange.months", { count: 3 }) },
+    { value: 6, label: translate(t, "dashboardAnalytics.comparisonRange.months", { count: 6 }) },
+  ];
+}
 
 export function currentMonthISO() {
   const d = new Date();
@@ -132,7 +209,7 @@ export function buildMonthlySeries(transactions, months) {
   });
 }
 
-export function buildExpenseTotalsByCategory(transactions) {
+export function buildExpenseTotalsByCategory(transactions, t) {
   const totals = new Map();
 
   for (const transaction of transactions) {
@@ -140,16 +217,16 @@ export function buildExpenseTotalsByCategory(transactions) {
       continue;
     }
 
-    const category = transaction.category || "Outros";
+    const category = transaction.category || translate(t, "dashboardAnalytics.defaultCategory");
     totals.set(category, (totals.get(category) || 0) + (Number(transaction.amountCents) || 0));
   }
 
   return totals;
 }
 
-export function getCategoryLeaders(currentTransactions, previousTransactions) {
-  const currentTotals = buildExpenseTotalsByCategory(currentTransactions);
-  const previousTotals = buildExpenseTotalsByCategory(previousTransactions);
+export function getCategoryLeaders(currentTransactions, previousTransactions, t) {
+  const currentTotals = buildExpenseTotalsByCategory(currentTransactions, t);
+  const previousTotals = buildExpenseTotalsByCategory(previousTransactions, t);
   const allCategories = new Set([...currentTotals.keys(), ...previousTotals.keys()]);
 
   let biggestIncrease = { category: "", value: 0 };
@@ -173,7 +250,7 @@ export function getCategoryLeaders(currentTransactions, previousTransactions) {
   };
 }
 
-export function getAutomaticInsights(transactions) {
+export function getAutomaticInsights(transactions, t) {
   const incomeTransactions = transactions.filter((transaction) => transaction.type === "income");
   const expenseTransactions = transactions.filter((transaction) => transaction.type === "expense");
 
@@ -187,7 +264,7 @@ export function getAutomaticInsights(transactions) {
   );
   const balance = totalIncome - totalExpense;
 
-  const topExpenseCategory = Array.from(buildExpenseTotalsByCategory(transactions).entries()).sort(
+  const topExpenseCategory = Array.from(buildExpenseTotalsByCategory(transactions, t).entries()).sort(
     (a, b) => b[1] - a[1]
   )[0];
 
@@ -211,10 +288,13 @@ export function getAutomaticInsights(transactions) {
 
     insights.push({
       key: "top-category",
-      title: "Categoria mais representativa",
+      title: translate(t, "dashboardAnalytics.insights.topCategoryTitle"),
       badge: `${share}%`,
       tone: "expense",
-      description: `${categoryName} concentra ${share}% das despesas do período e merece atenção extra.`,
+      description: translate(t, "dashboardAnalytics.insights.topCategoryDescription", {
+        category: categoryName,
+        share,
+      }),
     });
   }
 
@@ -225,15 +305,15 @@ export function getAutomaticInsights(transactions) {
 
     insights.push({
       key: "savings-rate",
-      title: "Ritmo de sobra no período",
+      title: translate(t, "dashboardAnalytics.insights.savingsRateTitle"),
       badge,
       tone,
       description:
         savingsRate >= 20
-          ? "Seu saldo está preservando uma parcela saudável das receitas neste recorte."
+          ? translate(t, "dashboardAnalytics.insights.savingsRateHealthy")
           : savingsRate >= 0
-            ? "O saldo ainda está positivo, mas há espaço para aumentar a folga financeira."
-            : "As despesas superaram as receitas neste período e pedem correção rápida.",
+            ? translate(t, "dashboardAnalytics.insights.savingsRatePositive")
+            : translate(t, "dashboardAnalytics.insights.savingsRateNegative"),
     });
   }
 
@@ -243,13 +323,19 @@ export function getAutomaticInsights(transactions) {
 
     insights.push({
       key: "recurring",
-      title: "Compromissos recorrentes",
-      badge: `${recurringExpenses.length + recurringIncomes.length} itens`,
+      title: translate(t, "dashboardAnalytics.insights.recurringTitle"),
+      badge: translate(t, "dashboardAnalytics.insights.recurringItems", {
+        count: recurringExpenses.length + recurringIncomes.length,
+      }),
       tone,
       description:
         recurringNet >= 0
-          ? `Os lançamentos recorrentes deixam ${formatBRLFromCents(recurringNet)} de margem entre entradas e saídas fixas.`
-          : `Os lançamentos recorrentes já comprometem ${formatBRLFromCents(Math.abs(recurringNet))} além das entradas fixas.`,
+          ? translate(t, "dashboardAnalytics.insights.recurringPositive", {
+              amount: formatBRLFromCents(recurringNet),
+            })
+          : translate(t, "dashboardAnalytics.insights.recurringNegative", {
+              amount: formatBRLFromCents(Math.abs(recurringNet)),
+            }),
     });
   } else {
     const biggestExpense = [...expenseTransactions].sort(
@@ -259,10 +345,13 @@ export function getAutomaticInsights(transactions) {
     if (biggestExpense) {
       insights.push({
         key: "biggest-expense",
-        title: "Maior despesa avulsa",
-        badge: biggestExpense.category || "Despesa",
+        title: translate(t, "dashboardAnalytics.insights.biggestExpenseTitle"),
+        badge: biggestExpense.category || translate(t, "dashboardAnalytics.biggestExpenseBadge"),
         tone: "expense",
-        description: `${biggestExpense.description} foi o maior lançamento de saída do período, totalizando ${formatBRLFromCents(biggestExpense.amountCents)}.`,
+        description: translate(t, "dashboardAnalytics.insights.biggestExpenseDescription", {
+          description: biggestExpense.description,
+          amount: formatBRLFromCents(biggestExpense.amountCents),
+        }),
       });
     }
   }
@@ -270,7 +359,7 @@ export function getAutomaticInsights(transactions) {
   return insights.slice(0, 3);
 }
 
-export function getPrescriptiveInsights(transactions) {
+export function getPrescriptiveInsights(transactions, t) {
   const incomeTransactions = transactions.filter((transaction) => transaction.type === "income");
   const expenseTransactions = transactions.filter((transaction) => transaction.type === "expense");
 
@@ -285,7 +374,7 @@ export function getPrescriptiveInsights(transactions) {
   const balance = totalIncome - totalExpense;
   const savingsRate = totalIncome > 0 ? Math.round((balance / totalIncome) * 100) : null;
 
-  const topExpenseCategory = Array.from(buildExpenseTotalsByCategory(transactions).entries()).sort(
+  const topExpenseCategory = Array.from(buildExpenseTotalsByCategory(transactions, t).entries()).sort(
     (a, b) => b[1] - a[1]
   )[0];
 
@@ -307,29 +396,26 @@ export function getPrescriptiveInsights(transactions) {
     if (savingsRate < 0) {
       recommendations.push({
         key: "prescriptive-balance-negative",
-        title: "Ação prioritária",
-        badge: "Ajuste imediato",
+        title: translate(t, "dashboardAnalytics.prescriptive.priorityTitle"),
+        badge: translate(t, "dashboardAnalytics.prescriptive.priorityBadge"),
         tone: "expense",
-        description:
-          "As despesas passaram das receitas neste período. Vale revisar as saídas variáveis primeiro e congelar gastos menos essenciais até o saldo voltar a respirar.",
+        description: translate(t, "dashboardAnalytics.prescriptive.priorityDescription"),
       });
     } else if (savingsRate < 10) {
       recommendations.push({
         key: "prescriptive-balance-low",
-        title: "Próximo movimento sugerido",
-        badge: "Baixa folga",
+        title: translate(t, "dashboardAnalytics.prescriptive.nextStepTitle"),
+        badge: translate(t, "dashboardAnalytics.prescriptive.nextStepBadge"),
         tone: "primary",
-        description:
-          "Sua folga está curta. Um bom próximo passo é transformar pelo menos uma despesa previsível em lançamento recorrente e definir uma meta mensal para a categoria mais pesada.",
+        description: translate(t, "dashboardAnalytics.prescriptive.nextStepDescription"),
       });
     } else if (savingsRate >= 20) {
       recommendations.push({
         key: "prescriptive-balance-healthy",
-        title: "Oportunidade clara",
-        badge: "Saldo saudável",
+        title: translate(t, "dashboardAnalytics.prescriptive.opportunityTitle"),
+        badge: translate(t, "dashboardAnalytics.prescriptive.opportunityBadge"),
         tone: "income",
-        description:
-          "O período está com boa sobra. Este é um momento favorável para reforçar metas, antecipar despesas previsíveis ou criar uma reserva para os próximos meses.",
+        description: translate(t, "dashboardAnalytics.prescriptive.opportunityDescription"),
       });
     }
   }
@@ -341,10 +427,13 @@ export function getPrescriptiveInsights(transactions) {
     if (share >= 35) {
       recommendations.push({
         key: "prescriptive-top-category",
-        title: "Categoria que pede atenção",
+        title: translate(t, "dashboardAnalytics.prescriptive.topCategoryTitle"),
         badge: categoryName,
         tone: "expense",
-        description: `${categoryName} já representa ${share}% das despesas deste recorte. Vale criar ou revisar uma meta específica para essa categoria antes que ela dite o resultado do mês sozinha.`,
+        description: translate(t, "dashboardAnalytics.prescriptive.topCategoryDescription", {
+          category: categoryName,
+          share,
+        }),
       });
     }
   }
@@ -355,11 +444,10 @@ export function getPrescriptiveInsights(transactions) {
     if (recurringNet < 0) {
       recommendations.push({
         key: "prescriptive-recurring-negative",
-        title: "Estrutura fixa pressionada",
-        badge: "Recorrência",
+        title: translate(t, "dashboardAnalytics.prescriptive.recurringTitle"),
+        badge: translate(t, "dashboardAnalytics.prescriptive.recurringBadge"),
         tone: "expense",
-        description:
-          "As saídas recorrentes já superam as entradas recorrentes. A melhor alavanca aqui é renegociar compromissos fixos ou aumentar uma entrada previsível antes de ampliar novos gastos.",
+        description: translate(t, "dashboardAnalytics.prescriptive.recurringDescription"),
       });
     }
   }
@@ -367,11 +455,10 @@ export function getPrescriptiveInsights(transactions) {
   if (recommendations.length === 0 && totalIncome + totalExpense > 0) {
     recommendations.push({
       key: "prescriptive-default",
-      title: "Próximo passo sugerido",
-      badge: "Organização",
+      title: translate(t, "dashboardAnalytics.prescriptive.defaultTitle"),
+      badge: translate(t, "dashboardAnalytics.prescriptive.defaultBadge"),
       tone: "neutral",
-      description:
-        "Seu cenário está relativamente equilibrado. O próximo ganho prático costuma vir de manter recorrências em dia e revisar o comparativo entre meses para identificar mudanças cedo.",
+      description: translate(t, "dashboardAnalytics.prescriptive.defaultDescription"),
     });
   }
 
@@ -415,7 +502,7 @@ function getAverageAbsoluteChange(values) {
 
 export function getForecastSnapshot(
   transactions,
-  { historyMonths = 6, horizon = 3 } = {}
+  { historyMonths = 6, horizon = 3, t } = {}
 ) {
   const latestMonth = getLatestTransactionMonthISO(transactions);
 
@@ -425,7 +512,7 @@ export function getForecastSnapshot(
       history: [],
       forecast: [],
       confidence: {
-        label: "Baixa",
+        label: translate(t, "dashboardAnalytics.confidence.low"),
         tone: "neutral",
       },
     };
@@ -447,7 +534,7 @@ export function getForecastSnapshot(
       history: [],
       forecast: [],
       confidence: {
-        label: "Baixa",
+        label: translate(t, "dashboardAnalytics.confidence.low"),
         tone: "neutral",
       },
     };
@@ -462,7 +549,7 @@ export function getForecastSnapshot(
       history: historySeries,
       forecast: [],
       confidence: {
-        label: "Baixa",
+        label: translate(t, "dashboardAnalytics.confidence.low"),
         tone: "neutral",
       },
     };
@@ -496,20 +583,20 @@ export function getForecastSnapshot(
   const volatility = Math.max(incomeVolatility, expenseVolatility);
 
   let confidence = {
-    label: "Alta",
+    label: translate(t, "dashboardAnalytics.confidence.high"),
     tone: "income",
   };
 
   if (historySeries.length < 5 || volatility > 0.45) {
     confidence = {
-      label: "Media",
+      label: translate(t, "dashboardAnalytics.confidence.medium"),
       tone: "primary",
     };
   }
 
   if (historySeries.length < 4 || volatility > 0.75) {
     confidence = {
-      label: "Baixa",
+      label: translate(t, "dashboardAnalytics.confidence.low"),
       tone: "neutral",
     };
   }

@@ -4,8 +4,8 @@ import { SummaryCard } from "../features/dashboard/DashboardCards";
 import DashboardCharts from "../features/dashboard/DashboardCharts";
 import {
   getMonthsForPeriod,
+  getPeriodOptions,
   lastNMonthsISO,
-  PERIOD_OPTIONS,
   summarizeTransactions,
 } from "../features/dashboard/dashboardAnalytics";
 import { getPublicDashboard } from "../lib/api/publicDashboard";
@@ -18,6 +18,7 @@ export default function PublicDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [dashboard, setDashboard] = useState(null);
+  const periodOptions = useMemo(() => getPeriodOptions(t), [t]);
 
   useEffect(() => {
     let active = true;
@@ -53,8 +54,8 @@ export default function PublicDashboard() {
   const transactions = dashboard?.transactions ?? [];
 
   const selectedPeriodLabel = useMemo(
-    () => PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? t("dashboard.focusMonth"),
-    [period, t]
+    () => periodOptions.find((option) => option.value === period)?.label ?? t("dashboard.focusMonth"),
+    [period, periodOptions, t]
   );
 
   const chartMonths = useMemo(
@@ -95,7 +96,7 @@ export default function PublicDashboard() {
             onChange={(event) => setPeriod(event.target.value)}
             disabled={isLoading || Boolean(error)}
           >
-            {PERIOD_OPTIONS.map((option) => (
+            {periodOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>

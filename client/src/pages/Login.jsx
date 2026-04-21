@@ -76,10 +76,7 @@ export default function Login() {
 
     try {
       const response = await resendEmailVerificationRequest(email);
-      setInfo(
-        response.message ||
-          "Se a conta existir e ainda nao estiver confirmada, enviaremos um novo link."
-      );
+      setInfo(response.message || t("auth.resendVerificationSuccess"));
     } catch (requestError) {
       setError(requestError.message || t("auth.verifyError"));
     } finally {

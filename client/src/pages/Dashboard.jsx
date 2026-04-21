@@ -3,8 +3,8 @@ import { SummaryCard } from "../features/dashboard/DashboardCards";
 import DashboardCharts from "../features/dashboard/DashboardCharts";
 import {
   getMonthsForPeriod,
+  getPeriodOptions,
   lastNMonthsISO,
-  PERIOD_OPTIONS,
   summarizeTransactions,
 } from "../features/dashboard/dashboardAnalytics";
 import { useTransactions } from "../features/transactions/useTransactions";
@@ -18,6 +18,7 @@ export default function Dashboard() {
   const [period, setPeriod] = useState("current-month");
   const [accountFilter, setAccountFilter] = useState("all");
   const [accounts, setAccounts] = useState([]);
+  const periodOptions = useMemo(() => getPeriodOptions(t), [t]);
 
   useEffect(() => {
     let active = true;
@@ -51,8 +52,8 @@ export default function Dashboard() {
   }, [t]);
 
   const selectedPeriodLabel = useMemo(
-    () => PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? t("dashboard.focusMonth"),
-    [period, t]
+    () => periodOptions.find((option) => option.value === period)?.label ?? t("dashboard.focusMonth"),
+    [period, periodOptions, t]
   );
 
   const chartMonths = useMemo(
@@ -116,7 +117,7 @@ export default function Dashboard() {
                 value={period}
                 onChange={(event) => setPeriod(event.target.value)}
               >
-                {PERIOD_OPTIONS.map((option) => (
+                {periodOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>

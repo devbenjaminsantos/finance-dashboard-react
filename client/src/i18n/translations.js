@@ -8,6 +8,8 @@ export const LANGUAGE_OPTIONS = [
 export const translations = {
   "pt-BR": {
     common: {
+      brandName: "Finova",
+      brandLogoAlt: "Logo da Finova",
       brandSubtitle: "Seu painel financeiro pessoal, com clareza e controle.",
       email: "E-mail",
       emailPlaceholder: "seuemail@exemplo.com",
@@ -84,6 +86,8 @@ export const translations = {
       submittingReset: "Redefinindo senha...",
       resendVerification: "Reenviar e-mail de confirmacao",
       resendingVerification: "Reenviando confirmacao...",
+      resendVerificationSuccess:
+        "Se a conta existir e ainda nao estiver confirmada, enviaremos um novo link.",
       preparingDemo: "Preparando a demonstracao...",
       demoReady: "Demonstracao pronta. Redirecionando...",
       loginSuccess: "Login realizado com sucesso. Redirecionando...",
@@ -298,6 +302,139 @@ export const translations = {
       comparisonLoading: "Carregando comparativo...",
       comparisonHeaviestCategory: "Categoria que mais pesou",
       comparisonLightestCategory: "Categoria que mais aliviou",
+    },
+    analyses: {
+      defaultComparisonRange: "3 meses",
+      previousRangeLabel: "{{range}} anteriores",
+      highlightAlert: "Atencao",
+      highlightSignals: "{{count}} sinais",
+      highlightStable: "Estavel",
+      overviewCurrentEyebrow: "Leitura do periodo",
+      overviewCurrentTitle: "Contexto e prioridade",
+      overviewCurrentDescription:
+        "Reunimos sinais automaticos, comparativos e metas na mesma area para facilitar a tomada de decisao.",
+      overviewSelectedEyebrow: "Recorte atual",
+      overviewSelectedDescription:
+        "O bloco de insights e o resumo financeiro respeitam esse periodo selecionado.",
+      overviewWindowEyebrow: "Janela comparativa",
+      overviewWindowDescription:
+        "Os comparativos usam a janela atual contra a imediatamente anterior do mesmo tamanho.",
+      loading: "Carregando analises...",
+      summaryNowEyebrow: "Momento atual",
+      summaryNowDescriptionSingle:
+        "A leitura atual considera {{count}} movimentacao no recorte selecionado.",
+      summaryNowDescriptionPlural:
+        "A leitura atual considera {{count}} movimentacoes no recorte selecionado.",
+      summaryComparisonEyebrow: "Comparacao",
+      summaryComparisonDescription:
+        "A janela atual sera comparada com os {{range}} anteriores para identificar mudancas de ritmo.",
+      summaryComparisonBadge: "Tendencia",
+      summaryProjectionEyebrow: "Projecao",
+      summaryProjectionTitleReady: "Confianca {{confidence}}",
+      summaryProjectionTitleEmpty: "Historico insuficiente",
+      summaryProjectionDescriptionReady:
+        "A previsao dos proximos meses ja pode apoiar ajustes de metas e prioridades.",
+      summaryProjectionDescriptionEmpty:
+        "Adicione mais meses de movimentacao para destravar a leitura preditiva.",
+      summaryProjectionBadgeEmpty: "Aguardando base",
+      insightsEyebrow: "Leitura automatica",
+      insightsTitle: "Insights do periodo",
+      insightsDescription:
+        "Sinais automaticos e recomendacoes objetivas para o recorte selecionado.",
+      insightsEmptyTitle: "Ainda nao ha dados suficientes",
+      insightsEmptyDescription:
+        "Adicione transacoes para que o Finova consiga interpretar padroes e sugerir acoes.",
+      comparisonsEyebrow: "Mudanca de ritmo",
+      comparisonsTitle: "Comparativos",
+      comparisonsDescription:
+        "Entenda o que mudou entre a janela atual e a anterior, com previsao dos proximos meses.",
+      comparisonsIncomeLabel: "Receitas na janela atual",
+      comparisonsExpenseLabel: "Despesas na janela atual",
+      comparisonsBalanceLabel: "Saldo na janela atual",
+      comparisonsHeaviestCategory: "Categoria que mais pesou",
+      comparisonsLightestCategory: "Categoria que mais aliviou",
+      goalsEyebrow: "Planejamento mensal",
+      goalsTitle: "Metas do mes",
+      goalsDescription:
+        "Revise o orcamento mensal geral e por categoria sem sair da mesma area de analise.",
+    },
+    dashboardCards: {
+      deltaUp: "Subiu",
+      deltaDown: "Caiu",
+      deltaNeutral: "Sem variacao",
+      previousBase: "Base anterior ({{range}})",
+      percentVsPrevious: "{{percent}} em relacao a {{range}}",
+      noPreviousBase: "Sem base anterior suficiente para comparar {{range}}.",
+      categoryUp: "Maior peso",
+      categoryDown: "Maior alivio",
+      categoryNeutral: "Sem destaque",
+      noDominantCategory: "Sem categoria dominante",
+      noCategoryData: "Ainda nao ha despesas suficientes para destacar uma categoria.",
+    },
+    dashboardAnalytics: {
+      period: {
+        currentMonth: "Mes atual",
+        last3Months: "Ultimos 3 meses",
+        last6Months: "Ultimos 6 meses",
+        allHistory: "Todo o historico",
+      },
+      comparisonRange: {
+        singleMonth: "1 mes",
+        months: "{{count}} meses",
+      },
+      defaultCategory: "Outros",
+      biggestExpenseBadge: "Despesa",
+      insights: {
+        topCategoryTitle: "Categoria mais representativa",
+        topCategoryDescription:
+          "{{category}} concentra {{share}}% das despesas do periodo e merece atencao extra.",
+        savingsRateTitle: "Ritmo de sobra no periodo",
+        savingsRateHealthy:
+          "Seu saldo esta preservando uma parcela saudavel das receitas neste recorte.",
+        savingsRatePositive:
+          "O saldo ainda esta positivo, mas ha espaco para aumentar a folga financeira.",
+        savingsRateNegative:
+          "As despesas superaram as receitas neste periodo e pedem correcao rapida.",
+        recurringTitle: "Compromissos recorrentes",
+        recurringItems: "{{count}} itens",
+        recurringPositive:
+          "Os lancamentos recorrentes deixam {{amount}} de margem entre entradas e saidas fixas.",
+        recurringNegative:
+          "Os lancamentos recorrentes ja comprometem {{amount}} alem das entradas fixas.",
+        biggestExpenseTitle: "Maior despesa avulsa",
+        biggestExpenseDescription:
+          "{{description}} foi o maior lancamento de saida do periodo, totalizando {{amount}}.",
+      },
+      prescriptive: {
+        priorityTitle: "Acao prioritaria",
+        priorityBadge: "Ajuste imediato",
+        priorityDescription:
+          "As despesas passaram das receitas neste periodo. Vale revisar as saidas variaveis primeiro e congelar gastos menos essenciais ate o saldo voltar a respirar.",
+        nextStepTitle: "Proximo movimento sugerido",
+        nextStepBadge: "Baixa folga",
+        nextStepDescription:
+          "Sua folga esta curta. Um bom proximo passo e transformar pelo menos uma despesa previsivel em lancamento recorrente e definir uma meta mensal para a categoria mais pesada.",
+        opportunityTitle: "Oportunidade clara",
+        opportunityBadge: "Saldo saudavel",
+        opportunityDescription:
+          "O periodo esta com boa sobra. Este e um momento favoravel para reforcar metas, antecipar despesas previsiveis ou criar uma reserva para os proximos meses.",
+        topCategoryTitle: "Categoria que pede atencao",
+        topCategoryDescription:
+          "{{category}} ja representa {{share}}% das despesas deste recorte. Vale criar ou revisar uma meta especifica para essa categoria antes que ela dite o resultado do mes sozinha.",
+        recurringTitle: "Estrutura fixa pressionada",
+        recurringBadge: "Recorrencia",
+        recurringDescription:
+          "As saidas recorrentes ja superam as entradas recorrentes. A melhor alavanca aqui e renegociar compromissos fixos ou aumentar uma entrada previsivel antes de ampliar novos gastos.",
+        defaultTitle: "Proximo passo sugerido",
+        defaultBadge: "Organizacao",
+        defaultDescription:
+          "Seu cenario esta relativamente equilibrado. O proximo ganho pratico costuma vir de manter recorrencias em dia e revisar o comparativo entre meses para identificar mudancas cedo.",
+      },
+      confidence: {
+        high: "Alta",
+        medium: "Media",
+        low: "Baixa",
+      },
     },
     accounts: {
       providerManual: "Manual",
@@ -626,6 +763,14 @@ export const translations = {
       installmentProgress: "Progresso da quitacao",
       editInstallmentPlan: "Editar compra",
       removeInstallmentPlan: "Remover compra",
+      installmentGroupTitle: "Editar compra parcelada",
+      installmentGroupSubtitle:
+        "Atualize descricao, categoria e tags para todas as parcelas deste plano.",
+      installmentGroupValidationDescription: "Informe uma descricao.",
+      installmentGroupValidationCategory: "Escolha uma categoria.",
+      installmentGroupSaveError: "Nao foi possivel atualizar a compra parcelada.",
+      installmentGroupTagsPlaceholder: "Ex: viagem, trabalho, reembolsavel",
+      installmentGroupSave: "Salvar compra",
       installmentRemaining: "{{count}} parcela(s) restantes, somando {{amount}}.",
       importedAt: "Entrou no sistema em {{date}}",
       newInImport: "Nova nesta importacao",
@@ -640,6 +785,7 @@ export const translations = {
       selectedAccountFallback: "Conta selecionada",
       unlinkedAccount: "Sem conta vinculada",
       accountLabel: "Conta",
+      accountFilterLabel: "Conta",
       close: "Fechar",
       modalCreateTitle: "Nova transacao",
       modalEditTitle: "Editar transacao",
@@ -733,6 +879,7 @@ export const translations = {
       importBulkSelectSameType: "Selecione linhas do mesmo tipo",
       importBulkApplyType: "Aplicar tipo",
       importBulkApplyCategory: "Aplicar cat.",
+      importTableImport: "Importar",
       importTableStatus: "Status",
       importTableAction: "Acao",
       importSelectRow: "Selecionar {{description}}",
@@ -748,6 +895,8 @@ export const translations = {
   },
   "en-US": {
     common: {
+      brandName: "Finova",
+      brandLogoAlt: "Finova logo",
       brandSubtitle: "Your personal finance dashboard with clarity and control.",
       email: "Email",
       emailPlaceholder: "you@example.com",
@@ -824,6 +973,8 @@ export const translations = {
       submittingReset: "Resetting password...",
       resendVerification: "Resend confirmation email",
       resendingVerification: "Resending confirmation...",
+      resendVerificationSuccess:
+        "If the account exists and is still unconfirmed, we will send a new link.",
       preparingDemo: "Preparing the demo...",
       demoReady: "Demo ready. Redirecting...",
       loginSuccess: "Login successful. Redirecting...",
@@ -1036,6 +1187,139 @@ export const translations = {
       comparisonLoading: "Loading comparison...",
       comparisonHeaviestCategory: "Category that weighed the most",
       comparisonLightestCategory: "Category that eased the most",
+    },
+    analyses: {
+      defaultComparisonRange: "3 months",
+      previousRangeLabel: "Previous {{range}}",
+      highlightAlert: "Attention",
+      highlightSignals: "{{count}} signals",
+      highlightStable: "Stable",
+      overviewCurrentEyebrow: "Period reading",
+      overviewCurrentTitle: "Context and priority",
+      overviewCurrentDescription:
+        "We bring together automatic signals, comparisons, and goals in the same area to support decisions more clearly.",
+      overviewSelectedEyebrow: "Current scope",
+      overviewSelectedDescription:
+        "The insight block and financial summary both respect the selected period.",
+      overviewWindowEyebrow: "Comparison window",
+      overviewWindowDescription:
+        "Comparisons use the current window against the immediately previous window of the same size.",
+      loading: "Loading analyses...",
+      summaryNowEyebrow: "Current moment",
+      summaryNowDescriptionSingle:
+        "The current reading considers {{count}} transaction in the selected range.",
+      summaryNowDescriptionPlural:
+        "The current reading considers {{count}} transactions in the selected range.",
+      summaryComparisonEyebrow: "Comparison",
+      summaryComparisonDescription:
+        "The current window will be compared against the previous {{range}} to identify pace changes.",
+      summaryComparisonBadge: "Trend",
+      summaryProjectionEyebrow: "Projection",
+      summaryProjectionTitleReady: "{{confidence}} confidence",
+      summaryProjectionTitleEmpty: "Not enough history",
+      summaryProjectionDescriptionReady:
+        "The next months forecast can already support goal and priority adjustments.",
+      summaryProjectionDescriptionEmpty:
+        "Add more months of activity to unlock the predictive reading.",
+      summaryProjectionBadgeEmpty: "Waiting for history",
+      insightsEyebrow: "Automated reading",
+      insightsTitle: "Period insights",
+      insightsDescription:
+        "Automatic signals and objective recommendations for the selected range.",
+      insightsEmptyTitle: "There is still not enough data",
+      insightsEmptyDescription:
+        "Add transactions so Finova can interpret patterns and suggest actions.",
+      comparisonsEyebrow: "Rhythm change",
+      comparisonsTitle: "Comparisons",
+      comparisonsDescription:
+        "Understand what changed between the current and previous window, with a forecast for the coming months.",
+      comparisonsIncomeLabel: "Income in the current window",
+      comparisonsExpenseLabel: "Expenses in the current window",
+      comparisonsBalanceLabel: "Balance in the current window",
+      comparisonsHeaviestCategory: "Category that weighed the most",
+      comparisonsLightestCategory: "Category that eased the most",
+      goalsEyebrow: "Monthly planning",
+      goalsTitle: "Goals this month",
+      goalsDescription:
+        "Review your overall and per-category monthly budget without leaving the same analysis area.",
+    },
+    dashboardCards: {
+      deltaUp: "Up",
+      deltaDown: "Down",
+      deltaNeutral: "No change",
+      previousBase: "Previous base ({{range}})",
+      percentVsPrevious: "{{percent}} compared with {{range}}",
+      noPreviousBase: "There is not enough previous data to compare {{range}}.",
+      categoryUp: "Heaviest weight",
+      categoryDown: "Biggest relief",
+      categoryNeutral: "No highlight",
+      noDominantCategory: "No dominant category",
+      noCategoryData: "There is still not enough expense data to highlight a category.",
+    },
+    dashboardAnalytics: {
+      period: {
+        currentMonth: "Current month",
+        last3Months: "Last 3 months",
+        last6Months: "Last 6 months",
+        allHistory: "Full history",
+      },
+      comparisonRange: {
+        singleMonth: "1 month",
+        months: "{{count}} months",
+      },
+      defaultCategory: "Other",
+      biggestExpenseBadge: "Expense",
+      insights: {
+        topCategoryTitle: "Most representative category",
+        topCategoryDescription:
+          "{{category}} accounts for {{share}}% of the expenses in this period and deserves extra attention.",
+        savingsRateTitle: "Cash buffer pace in this period",
+        savingsRateHealthy:
+          "Your balance is preserving a healthy share of the income in this view.",
+        savingsRatePositive:
+          "The balance is still positive, but there is room to increase your financial cushion.",
+        savingsRateNegative:
+          "Expenses exceeded income in this period and require a quick correction.",
+        recurringTitle: "Recurring commitments",
+        recurringItems: "{{count}} items",
+        recurringPositive:
+          "Recurring entries leave {{amount}} of margin between fixed income and fixed expenses.",
+        recurringNegative:
+          "Recurring entries already consume {{amount}} beyond fixed income.",
+        biggestExpenseTitle: "Largest one-off expense",
+        biggestExpenseDescription:
+          "{{description}} was the largest outgoing entry in this period, totaling {{amount}}.",
+      },
+      prescriptive: {
+        priorityTitle: "Priority action",
+        priorityBadge: "Immediate adjustment",
+        priorityDescription:
+          "Expenses have exceeded income in this period. It is worth reviewing variable expenses first and freezing less essential spending until the balance can breathe again.",
+        nextStepTitle: "Suggested next move",
+        nextStepBadge: "Low cushion",
+        nextStepDescription:
+          "Your cushion is tight. A good next step is to turn at least one predictable expense into a recurring entry and define a monthly goal for the heaviest category.",
+        opportunityTitle: "Clear opportunity",
+        opportunityBadge: "Healthy balance",
+        opportunityDescription:
+          "This period shows a solid surplus. It is a good time to reinforce goals, anticipate predictable expenses, or build a reserve for the next few months.",
+        topCategoryTitle: "Category that needs attention",
+        topCategoryDescription:
+          "{{category}} already represents {{share}}% of the expenses in this range. It is worth creating or reviewing a specific goal for this category before it drives the month's result by itself.",
+        recurringTitle: "Fixed structure under pressure",
+        recurringBadge: "Recurring",
+        recurringDescription:
+          "Recurring expenses already exceed recurring income. The best lever here is to renegotiate fixed commitments or increase a predictable income before taking on new spending.",
+        defaultTitle: "Suggested next step",
+        defaultBadge: "Organization",
+        defaultDescription:
+          "Your scenario is relatively balanced. The next practical gain usually comes from keeping recurring entries up to date and reviewing month-to-month comparisons to spot changes early.",
+      },
+      confidence: {
+        high: "High",
+        medium: "Medium",
+        low: "Low",
+      },
     },
     accounts: {
       providerManual: "Manual",
@@ -1363,6 +1647,14 @@ export const translations = {
       installmentProgress: "Payoff progress",
       editInstallmentPlan: "Edit purchase",
       removeInstallmentPlan: "Remove purchase",
+      installmentGroupTitle: "Edit installment purchase",
+      installmentGroupSubtitle:
+        "Update description, category, and tags for all installments in this plan.",
+      installmentGroupValidationDescription: "Please enter a description.",
+      installmentGroupValidationCategory: "Please choose a category.",
+      installmentGroupSaveError: "Unable to update the installment purchase.",
+      installmentGroupTagsPlaceholder: "Example: travel, work, reimbursable",
+      installmentGroupSave: "Save purchase",
       installmentRemaining: "{{count}} installment(s) remaining, totaling {{amount}}.",
       importedAt: "Added to the system on {{date}}",
       newInImport: "New in this import",
@@ -1377,6 +1669,7 @@ export const translations = {
       selectedAccountFallback: "Selected account",
       unlinkedAccount: "No linked account",
       accountLabel: "Account",
+      accountFilterLabel: "Account",
       close: "Close",
       modalCreateTitle: "New transaction",
       modalEditTitle: "Edit transaction",
@@ -1470,6 +1763,7 @@ export const translations = {
       importBulkSelectSameType: "Select rows of the same type",
       importBulkApplyType: "Apply type",
       importBulkApplyCategory: "Apply cat.",
+      importTableImport: "Import",
       importTableStatus: "Status",
       importTableAction: "Action",
       importSelectRow: "Select {{description}}",

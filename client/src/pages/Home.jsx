@@ -8,14 +8,14 @@ import {
   SummaryCard,
 } from "../features/dashboard/DashboardCards";
 import {
-  COMPARISON_RANGE_OPTIONS,
+  getComparisonRangeOptions,
   currentMonthISO,
   getAutomaticInsights,
   getCategoryLeaders,
   getMonthsForPeriod,
   getPrescriptiveInsights,
   getRelativeMonthsISO,
-  PERIOD_OPTIONS,
+  getPeriodOptions,
   summarizeTransactions,
 } from "../features/dashboard/dashboardAnalytics";
 import {
@@ -307,6 +307,8 @@ export default function Home() {
   const [isLoadingGoals, setIsLoadingGoals] = useState(true);
   const [historyLogs, setHistoryLogs] = useState([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const periodOptions = useMemo(() => getPeriodOptions(t), [t]);
+  const comparisonRangeOptions = useMemo(() => getComparisonRangeOptions(t), [t]);
 
   useEffect(() => {
     function handleSessionChange() {
@@ -463,7 +465,7 @@ export default function Home() {
   );
 
   const comparison = useMemo(() => {
-    const range = COMPARISON_RANGE_OPTIONS[0].value;
+    const range = comparisonRangeOptions[0].value;
     const currentMonths = getRelativeMonthsISO(0, range);
     const previousMonths = getRelativeMonthsISO(range, range);
     const currentSet = new Set(currentMonths);
@@ -479,25 +481,26 @@ export default function Home() {
     return {
       current: summarizeTransactions(currentTransactions),
       previous: summarizeTransactions(previousTransactions),
-      categoryLeaders: getCategoryLeaders(currentTransactions, previousTransactions),
-      currentRangeLabel: "Mes atual",
-      previousRangeLabel: "Mes anterior",
+      categoryLeaders: getCategoryLeaders(currentTransactions, previousTransactions, t),
+      currentRangeLabel:
+        periodOptions.find((option) => option.value === "current-month")?.label ?? t("dashboard.focusMonth"),
+      previousRangeLabel: t("dashboard.previousMonth"),
     };
-  }, [scopedTransactions]);
+  }, [comparisonRangeOptions, periodOptions, scopedTransactions, t]);
 
   const selectedPeriodLabel = useMemo(
-    () => PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? "Mes atual",
-    [period]
+    () => periodOptions.find((option) => option.value === period)?.label ?? t("dashboard.focusMonth"),
+    [period, periodOptions, t]
   );
 
   const automaticInsights = useMemo(
-    () => getAutomaticInsights(filteredTransactions).slice(0, 2),
-    [filteredTransactions]
+    () => getAutomaticInsights(filteredTransactions, t).slice(0, 2),
+    [filteredTransactions, t]
   );
 
   const prescriptiveInsights = useMemo(
-    () => getPrescriptiveInsights(filteredTransactions).slice(0, 1),
-    [filteredTransactions]
+    () => getPrescriptiveInsights(filteredTransactions, t).slice(0, 1),
+    [filteredTransactions, t]
   );
 
   async function handleOnboardingChoice(onboardingOptIn) {
@@ -574,7 +577,7 @@ export default function Home() {
                 value={period}
                 onChange={(event) => setPeriod(event.target.value)}
               >
-                {PERIOD_OPTIONS.map((option) => (
+                {periodOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>

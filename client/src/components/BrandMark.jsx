@@ -1,4 +1,5 @@
 import logo from "../assets/icone/logo.png";
+import { useI18n } from "../i18n/LanguageProvider";
 
 export default function BrandMark({
   subtitle,
@@ -7,6 +8,7 @@ export default function BrandMark({
   centered = false,
   showWordmark = true,
 }) {
+  const { t } = useI18n();
   const classes = [
     "finova-brand-mark",
     size ? `finova-brand-mark-${size}` : "",
@@ -18,11 +20,11 @@ export default function BrandMark({
 
   return (
     <div className={classes}>
-      <img src={logo} alt="Finova" className="finova-brand-logo" />
+      <img src={logo} alt={t("common.brandLogoAlt")} className="finova-brand-logo" />
 
       {showWordmark ? (
         <div className="finova-brand-copy">
-          <span className="finova-brand-wordmark">Finova</span>
+          <span className="finova-brand-wordmark">{t("common.brandName")}</span>
           {subtitle ? <span className="finova-brand-caption">{subtitle}</span> : null}
         </div>
       ) : null}

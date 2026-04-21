@@ -41,7 +41,7 @@ export default function TransactionsFilters({
 
         <div className="col-6 col-lg-2">
           <label className="form-label text-dark fw-medium" htmlFor="transactions-account-filter">
-            Conta
+            {t("transactions.accountFilterLabel")}
           </label>
           <select
             id="transactions-account-filter"
@@ -49,8 +49,8 @@ export default function TransactionsFilters({
             value={accountFilter}
             onChange={(event) => setAccountFilter(event.target.value)}
           >
-            <option value="all">Todas as contas</option>
-            <option value="unassigned">Sem conta vinculada</option>
+            <option value="all">{t("pages.allAccountsScope")}</option>
+            <option value="unassigned">{t("pages.unassignedScope")}</option>
             {accounts.map((account) => (
               <option key={account.id} value={String(account.id)}>
                 {account.label}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import BrandMark from "./BrandMark";
 import { useI18n } from "../i18n/LanguageProvider";
 import { getStoredUser, hasValidSession, logout } from "../lib/api/auth";
 import { useTheme } from "../theme/ThemeProvider";
@@ -39,8 +40,8 @@ export default function Navbar() {
       style={{ background: "var(--primary)", borderColor: "var(--nav-border)" }}
     >
       <div className="container">
-        <NavLink className="navbar-brand text-white finova-brand" to="/">
-          Finova
+        <NavLink className="navbar-brand text-white finova-brand-link" to="/">
+          <BrandMark size="navbar" />
         </NavLink>
 
         <div className="d-flex align-items-center order-lg-2 ms-auto finova-navbar-actions">

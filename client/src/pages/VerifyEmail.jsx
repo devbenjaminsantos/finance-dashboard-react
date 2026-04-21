@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import BrandMark from "../components/BrandMark";
 import { useI18n } from "../i18n/LanguageProvider";
 import { verifyEmailRequest } from "../lib/api/auth";
 
@@ -52,7 +53,7 @@ export default function VerifyEmail() {
     <div className="finova-page d-flex align-items-center justify-content-center px-3">
       <div className="finova-auth-shell finova-auth-shell-md">
         <div className="text-center mb-4">
-          <h1 className="finova-title finova-brand mb-2">Finova</h1>
+          <BrandMark className="mb-2" size="hero" centered />
           <p className="finova-subtitle mb-0">{t("auth.verifySubtitle")}</p>
         </div>
 

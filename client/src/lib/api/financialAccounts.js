@@ -11,6 +11,19 @@ export function createFinancialAccount(payload) {
   });
 }
 
+export function updateFinancialAccount(id, payload) {
+  return apiRequest(`/financialaccounts/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteFinancialAccount(id) {
+  return apiRequest(`/financialaccounts/${id}`, {
+    method: "DELETE",
+  });
+}
+
 export function syncFinancialAccount(id) {
   return apiRequest(`/financialaccounts/${id}/sync`, {
     method: "POST",

@@ -13,5 +13,6 @@ namespace FinanceDashboard.Api.DTOs
         public string? ProviderItemId { get; set; }
         public string Status { get; set; } = string.Empty;
         public DateTime? LastSyncedAtUtc { get; set; }
+        public int LinkedTransactionsCount { get; set; }
     }
 }

@@ -1,0 +1,32 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace FinanceDashboard.Api.DTOs
+{
+    public class FinancialAccountUpdateRequest
+    {
+        [Required]
+        [StringLength(40, MinimumLength = 2)]
+        public string AccountType { get; set; } = "bank_account";
+
+        [Required]
+        [StringLength(40, MinimumLength = 2)]
+        public string Provider { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(120, MinimumLength = 2)]
+        public string InstitutionName { get; set; } = string.Empty;
+
+        [StringLength(40)]
+        public string? InstitutionCode { get; set; }
+
+        [Required]
+        [StringLength(120, MinimumLength = 2)]
+        public string AccountName { get; set; } = string.Empty;
+
+        [StringLength(32)]
+        public string? AccountMask { get; set; }
+
+        [StringLength(120)]
+        public string? ExternalAccountId { get; set; }
+    }
+}

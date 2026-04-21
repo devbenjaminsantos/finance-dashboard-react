@@ -42,13 +42,13 @@ namespace FinanceDashboard.Api.Controllers
             var userId = _currentUserService.GetRequiredUserId();
 
             var accounts = await _context.FinancialAccounts
+                .Include(account => account.Transactions)
                 .Where(account => account.UserId == userId)
                 .OrderBy(account => account.InstitutionName)
                 .ThenBy(account => account.AccountName)
-                .Select(account => ToResponse(account))
                 .ToListAsync();
 
-            return Ok(accounts);
+            return Ok(accounts.Select(ToResponse).ToList());
         }
 
         [HttpPost]
@@ -80,6 +80,72 @@ namespace FinanceDashboard.Api.Controllers
                 summary: $"Conta financeira adicionada: {account.InstitutionName} - {account.AccountName}.");
 
             return CreatedAtAction(nameof(GetAll), new { id = account.Id }, ToResponse(account));
+        }
+
+        [HttpPut("{id:int}")]
+        public async Task<ActionResult<FinancialAccountResponse>> Update(int id, FinancialAccountUpdateRequest dto)
+        {
+            var userId = _currentUserService.GetRequiredUserId();
+
+            var account = await _context.FinancialAccounts
+                .Include(item => item.Transactions)
+                .FirstOrDefaultAsync(item => item.Id == id && item.UserId == userId);
+
+            if (account is null)
+            {
+                return NotFound();
+            }
+
+            account.AccountType = dto.AccountType.Trim().ToLowerInvariant();
+            account.Provider = dto.Provider.Trim().ToLowerInvariant();
+            account.InstitutionName = dto.InstitutionName.Trim();
+            account.InstitutionCode = dto.InstitutionCode?.Trim();
+            account.AccountName = dto.AccountName.Trim();
+            account.AccountMask = dto.AccountMask?.Trim();
+            account.ExternalAccountId = dto.ExternalAccountId?.Trim();
+
+            await _context.SaveChangesAsync();
+
+            await _auditLogService.WriteAsync(
+                action: "financial-account.updated",
+                entityType: "FinancialAccount",
+                entityId: account.Id.ToString(),
+                userId: userId,
+                summary: $"Conta financeira atualizada: {account.InstitutionName} - {account.AccountName}.");
+
+            return Ok(ToResponse(account));
+        }
+
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var userId = _currentUserService.GetRequiredUserId();
+
+            var account = await _context.FinancialAccounts
+                .Include(item => item.Transactions)
+                .FirstOrDefaultAsync(item => item.Id == id && item.UserId == userId);
+
+            if (account is null)
+            {
+                return NotFound();
+            }
+
+            var linkedTransactionsCount = account.Transactions.Count;
+
+            _context.FinancialAccounts.Remove(account);
+            await _context.SaveChangesAsync();
+
+            await _auditLogService.WriteAsync(
+                action: "financial-account.deleted",
+                entityType: "FinancialAccount",
+                entityId: id.ToString(),
+                userId: userId,
+                summary:
+                    linkedTransactionsCount > 0
+                        ? $"Conta financeira removida: {account.InstitutionName} - {account.AccountName}. {linkedTransactionsCount} transacao(oes) seguiram sem vinculacao."
+                        : $"Conta financeira removida: {account.InstitutionName} - {account.AccountName}.");
+
+            return NoContent();
         }
 
         [HttpPost("{id:int}/connect-token")]
@@ -226,7 +292,8 @@ namespace FinanceDashboard.Api.Controllers
                 ExternalAccountId = account.ExternalAccountId,
                 ProviderItemId = account.ProviderItemId,
                 Status = account.Status,
-                LastSyncedAtUtc = account.LastSyncedAtUtc
+                LastSyncedAtUtc = account.LastSyncedAtUtc,
+                LinkedTransactionsCount = account.Transactions?.Count ?? 0
             };
         }
 

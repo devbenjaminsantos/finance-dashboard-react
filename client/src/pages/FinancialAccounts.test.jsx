@@ -6,7 +6,9 @@ import FinancialAccounts from "./FinancialAccounts";
 vi.mock("../lib/api/financialAccounts", () => ({
   getFinancialAccounts: vi.fn(),
   createFinancialAccount: vi.fn(),
+  deleteFinancialAccount: vi.fn(),
   syncFinancialAccount: vi.fn(),
+  updateFinancialAccount: vi.fn(),
 }));
 
 vi.mock("../features/transactions/useTransactions", () => ({
@@ -15,8 +17,10 @@ vi.mock("../features/transactions/useTransactions", () => ({
 
 import {
   createFinancialAccount,
+  deleteFinancialAccount,
   getFinancialAccounts,
   syncFinancialAccount,
+  updateFinancialAccount,
 } from "../lib/api/financialAccounts";
 import { useTransactions } from "../features/transactions/useTransactions";
 
@@ -48,6 +52,7 @@ describe("FinancialAccounts page", () => {
         externalAccountId: null,
         status: "pending",
         lastSyncedAtUtc: null,
+        linkedTransactionsCount: 2,
       },
     ]);
   });
@@ -60,7 +65,13 @@ describe("FinancialAccounts page", () => {
     expect(screen.getAllByText("Conta bancaria").length).toBeGreaterThan(0);
     expect(screen.getByText("Pendente")).toBeInTheDocument();
     expect(screen.getByText("Manual por enquanto")).toBeInTheDocument();
-    expect(screen.getByText("Conta principal • final 1234")).toBeInTheDocument();
+    expect(screen.getByText(/Conta principal . final 1234/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Remover uma conta nao apaga suas transacoes\./i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Esta conta possui 2 transacao\(oes\) vinculada\(s\)\./i)
+    ).toBeInTheDocument();
   });
 
   it("creates a new manual financial account", async () => {
@@ -75,6 +86,7 @@ describe("FinancialAccounts page", () => {
       externalAccountId: null,
       status: "pending",
       lastSyncedAtUtc: null,
+      linkedTransactionsCount: 0,
     });
 
     renderPage();
@@ -137,6 +149,7 @@ describe("FinancialAccounts page", () => {
           externalAccountId: null,
           status: "pending",
           lastSyncedAtUtc: null,
+          linkedTransactionsCount: 2,
         },
       ])
       .mockResolvedValueOnce([
@@ -151,6 +164,7 @@ describe("FinancialAccounts page", () => {
           externalAccountId: null,
           status: "connected",
           lastSyncedAtUtc: "2026-04-16T18:30:00Z",
+          linkedTransactionsCount: 2,
         },
       ]);
 
@@ -168,5 +182,80 @@ describe("FinancialAccounts page", () => {
     });
 
     expect(await screen.findByText("Conectada")).toBeInTheDocument();
+  });
+
+  it("edits a registered financial account", async () => {
+    updateFinancialAccount.mockResolvedValue({
+      id: 1,
+      accountType: "wallet",
+      provider: "manual",
+      institutionName: "Nubank",
+      institutionCode: null,
+      accountName: "Reserva imediata",
+      accountMask: "7777",
+      externalAccountId: null,
+      status: "pending",
+      lastSyncedAtUtc: null,
+      linkedTransactionsCount: 2,
+    });
+
+    renderPage();
+    await screen.findByText("Nubank");
+
+    fireEvent.click(screen.getByRole("button", { name: "Editar" }));
+    fireEvent.change(screen.getByLabelText("Nome da conta"), {
+      target: { value: "Reserva imediata" },
+    });
+    fireEvent.change(screen.getByLabelText("Mascara"), {
+      target: { value: "7777" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Salvar alteracoes" }));
+
+    await waitFor(() => {
+      expect(updateFinancialAccount).toHaveBeenCalledWith(1, {
+        accountType: "bank_account",
+        provider: "manual",
+        institutionName: "Nubank",
+        institutionCode: null,
+        accountName: "Reserva imediata",
+        accountMask: "7777",
+        externalAccountId: null,
+      });
+    });
+
+    expect(await screen.findByText("Conta financeira atualizada com sucesso.")).toBeInTheDocument();
+    expect(screen.getByText("Reserva imediata")).toBeInTheDocument();
+  });
+
+  it("removes an account and preserves transactions", async () => {
+    const reloadTransactions = vi.fn().mockResolvedValue(undefined);
+    const originalConfirm = window.confirm;
+    window.confirm = vi.fn(() => true);
+
+    useTransactions.mockReturnValue({
+      loadAll: reloadTransactions,
+    });
+
+    deleteFinancialAccount.mockResolvedValue(undefined);
+
+    renderPage();
+    await screen.findByText("Nubank");
+
+    fireEvent.click(screen.getByRole("button", { name: "Remover" }));
+
+    await waitFor(() => {
+      expect(deleteFinancialAccount).toHaveBeenCalledWith(1);
+    });
+
+    await waitFor(() => {
+      expect(reloadTransactions).toHaveBeenCalled();
+    });
+
+    expect(
+      await screen.findByText("Conta removida. As transacoes foram preservadas e seguiram sem vinculacao.")
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Nubank")).not.toBeInTheDocument();
+
+    window.confirm = originalConfirm;
   });
 });

@@ -3,8 +3,10 @@ import { useTransactions } from "../features/transactions/useTransactions";
 import { useI18n } from "../i18n/LanguageProvider";
 import {
   createFinancialAccount,
+  deleteFinancialAccount,
   getFinancialAccounts,
   syncFinancialAccount,
+  updateFinancialAccount,
 } from "../lib/api/financialAccounts";
 import { formatFinancialAccountLabel } from "../lib/financialAccounts/presentation";
 import { formatDateTimeBR } from "../lib/format/date";
@@ -98,9 +100,11 @@ export default function FinancialAccounts() {
   const { loadAll: reloadTransactions } = useTransactions();
   const [accounts, setAccounts] = useState([]);
   const [form, setForm] = useState(INITIAL_FORM);
+  const [editingAccountId, setEditingAccountId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [syncingAccountId, setSyncingAccountId] = useState(null);
+  const [removingAccountId, setRemovingAccountId] = useState(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -143,6 +147,28 @@ export default function FinancialAccounts() {
     setSuccess("");
   }
 
+  function handleStartEdit(account) {
+    setEditingAccountId(account.id);
+    setForm({
+      accountType: account.accountType,
+      provider: account.provider,
+      institutionName: account.institutionName || "",
+      institutionCode: account.institutionCode || "",
+      accountName: account.accountName || "",
+      accountMask: account.accountMask || "",
+      externalAccountId: account.externalAccountId || "",
+    });
+    setError("");
+    setSuccess("");
+  }
+
+  function handleCancelEdit() {
+    setEditingAccountId(null);
+    setForm(INITIAL_FORM);
+    setError("");
+    setSuccess("");
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
@@ -161,7 +187,7 @@ export default function FinancialAccounts() {
     setIsSubmitting(true);
 
     try {
-      const created = await createFinancialAccount({
+      const payload = {
         accountType: form.accountType,
         provider: form.provider,
         institutionName: form.institutionName.trim(),
@@ -169,13 +195,29 @@ export default function FinancialAccounts() {
         accountName: form.accountName.trim(),
         accountMask: form.accountMask.trim() || null,
         externalAccountId: form.externalAccountId.trim() || null,
-      });
+      };
 
-      setAccounts((current) => sortAccounts([...current, created]));
+      if (editingAccountId) {
+        const updated = await updateFinancialAccount(editingAccountId, payload);
+        setAccounts((current) =>
+          sortAccounts(current.map((account) => (account.id === editingAccountId ? updated : account)))
+        );
+        setSuccess("Conta financeira atualizada com sucesso.");
+      } else {
+        const created = await createFinancialAccount(payload);
+        setAccounts((current) => sortAccounts([...current, created]));
+        setSuccess("Conta financeira adicionada para uso manual e futuras importacoes.");
+      }
+
+      setEditingAccountId(null);
       setForm(INITIAL_FORM);
-      setSuccess("Conta financeira adicionada para uso manual e futuras importacoes.");
     } catch (err) {
-      setError(err.message || "Nao foi possivel adicionar a conta financeira.");
+      setError(
+        err.message ||
+          (editingAccountId
+            ? "Nao foi possivel atualizar a conta financeira."
+            : "Nao foi possivel adicionar a conta financeira.")
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -198,6 +240,41 @@ export default function FinancialAccounts() {
       setError(err.message || "Nao foi possivel sincronizar esta conta.");
     } finally {
       setSyncingAccountId(null);
+    }
+  }
+
+  async function handleRemove(account) {
+    const message =
+      account.linkedTransactionsCount > 0
+        ? `Remover ${account.institutionName} - ${account.accountName}? As ${account.linkedTransactionsCount} transacoes vinculadas continuarao no sistema, mas ficarao sem conta associada.`
+        : `Remover ${account.institutionName} - ${account.accountName}?`;
+
+    if (!window.confirm(message)) {
+      return;
+    }
+
+    setRemovingAccountId(account.id);
+    setError("");
+    setSuccess("");
+
+    try {
+      await deleteFinancialAccount(account.id);
+      setAccounts((current) => current.filter((item) => item.id !== account.id));
+      await reloadTransactions();
+
+      if (editingAccountId === account.id) {
+        handleCancelEdit();
+      }
+
+      setSuccess(
+        account.linkedTransactionsCount > 0
+          ? "Conta removida. As transacoes foram preservadas e seguiram sem vinculacao."
+          : "Conta removida com sucesso."
+      );
+    } catch (err) {
+      setError(err.message || "Nao foi possivel remover esta conta.");
+    } finally {
+      setRemovingAccountId(null);
     }
   }
 
@@ -250,9 +327,13 @@ export default function FinancialAccounts() {
           <div className="col-12 col-xxl-5">
             <div className="finova-card p-4 h-100">
               <div className="mb-3">
-                <h2 className="finova-title h5 mb-1">Adicionar conta</h2>
+                <h2 className="finova-title h5 mb-1">
+                  {editingAccountId ? "Editar conta" : "Adicionar conta"}
+                </h2>
                 <p className="finova-subtitle mb-0">
-                  Cadastre contas e cartoes manualmente enquanto a integracao de Open Finance aguarda liberacao.
+                  {editingAccountId
+                    ? "Atualize os dados da conta selecionada sem perder o historico ja vinculado."
+                    : "Cadastre contas e cartoes manualmente enquanto a integracao de Open Finance aguarda liberacao."}
                 </p>
               </div>
 
@@ -403,8 +484,24 @@ export default function FinancialAccounts() {
 
                 <div className="col-12">
                   <div className="finova-actions-row finova-actions-row-end pt-2">
+                    {editingAccountId ? (
+                      <button
+                        type="button"
+                        className="btn finova-btn-light"
+                        onClick={handleCancelEdit}
+                        disabled={isSubmitting}
+                      >
+                        Cancelar edicao
+                      </button>
+                    ) : null}
                     <button type="submit" className="btn finova-btn-primary px-4" disabled={isSubmitting}>
-                      {isSubmitting ? "Adicionando conta..." : "Adicionar conta"}
+                      {isSubmitting
+                        ? editingAccountId
+                          ? "Salvando conta..."
+                          : "Adicionando conta..."
+                        : editingAccountId
+                          ? "Salvar alteracoes"
+                          : "Adicionar conta"}
                     </button>
                   </div>
                 </div>
@@ -439,6 +536,11 @@ export default function FinancialAccounts() {
                 </div>
               </div>
 
+              <div className="finova-page-note mb-3">
+                Remover uma conta nao apaga suas transacoes. Os lancamentos continuam no sistema e
+                apenas deixam de ficar vinculados a essa conta.
+              </div>
+
               {isLoading ? (
                 <div className="d-flex align-items-center gap-3">
                   <div className="spinner-border spinner-border-sm text-primary" />
@@ -457,6 +559,7 @@ export default function FinancialAccounts() {
                     const statusMeta = getStatusMeta(account.status);
                     const accountTypeMeta = getAccountTypeMeta(account.accountType);
                     const isSyncing = syncingAccountId === account.id;
+                    const isRemoving = removingAccountId === account.id;
                     const canSync = account.provider === "manual";
 
                     return (
@@ -489,22 +592,49 @@ export default function FinancialAccounts() {
                                 </span>
                               ) : null}
                               <span>
+                                <strong>Transacoes:</strong> {account.linkedTransactionsCount ?? 0}
+                              </span>
+                              <span>
                                 <strong>Ultimo sync:</strong>{" "}
                                 {account.lastSyncedAtUtc
                                   ? formatDateTimeBR(account.lastSyncedAtUtc)
                                   : "Ainda nao sincronizada"}
                               </span>
                             </div>
+
+                            {account.linkedTransactionsCount > 0 ? (
+                              <div className="finova-page-note mt-3">
+                                Esta conta possui {account.linkedTransactionsCount} transacao(oes)
+                                vinculada(s). Se voce remover a conta, os lancamentos serao
+                                preservados e continuarao no historico sem vinculacao.
+                              </div>
+                            ) : null}
                           </div>
 
                           <div className="finova-actions-row">
                             <button
                               type="button"
                               className="btn finova-btn-light"
+                              onClick={() => handleStartEdit(account)}
+                              disabled={isSyncing || isRemoving}
+                            >
+                              Editar
+                            </button>
+                            <button
+                              type="button"
+                              className="btn finova-btn-light"
                               onClick={() => handleSync(account)}
-                              disabled={isSyncing || !canSync}
+                              disabled={isSyncing || isRemoving || !canSync}
                             >
                               {isSyncing ? "Sincronizando..." : "Sincronizar"}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-outline-danger"
+                              onClick={() => handleRemove(account)}
+                              disabled={isSyncing || isRemoving}
+                            >
+                              {isRemoving ? "Removendo..." : "Remover"}
                             </button>
                           </div>
                         </div>

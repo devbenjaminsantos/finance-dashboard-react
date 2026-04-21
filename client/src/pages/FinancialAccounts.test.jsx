@@ -65,7 +65,7 @@ describe("FinancialAccounts page", () => {
     expect(screen.getAllByText("Conta bancaria").length).toBeGreaterThan(0);
     expect(screen.getByText("Pendente")).toBeInTheDocument();
     expect(screen.getByText("Manual por enquanto")).toBeInTheDocument();
-    expect(screen.getByText(/Conta principal . final 1234/i)).toBeInTheDocument();
+    expect(screen.getByText(/Conta principal - final 1234/i)).toBeInTheDocument();
     expect(
       screen.getByText(/Remover uma conta nao apaga suas transacoes\./i)
     ).toBeInTheDocument();

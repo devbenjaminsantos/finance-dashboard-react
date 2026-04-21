@@ -15,7 +15,7 @@ const transactions = [
   {
     id: 1,
     description: "Mercado",
-    category: "Alimentação",
+    category: "Alimentacao",
     amountCents: 90000,
     date: "2026-04-10",
     type: "expense",
@@ -30,8 +30,8 @@ const transactions = [
   },
   {
     id: 3,
-    description: "Salário",
-    category: "Salário",
+    description: "Salario",
+    category: "Salario",
     amountCents: 500000,
     date: "2026-04-05",
     type: "income",
@@ -46,7 +46,7 @@ describe("BudgetGoalsSection", () => {
   it("highlights uncovered spending categories as suggestions", async () => {
     getBudgetGoals.mockResolvedValue([
       { id: 1, month: "2026-04", category: "", amountCents: 300000 },
-      { id: 2, month: "2026-04", category: "Alimentação", amountCents: 120000 },
+      { id: 2, month: "2026-04", category: "Alimentacao", amountCents: 120000 },
     ]);
 
     render(<BudgetGoalsSection transactions={transactions} />);
@@ -72,7 +72,7 @@ describe("BudgetGoalsSection", () => {
       expect(getBudgetGoals).toHaveBeenCalledTimes(1);
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /Próximo mês/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Proximo mes/i }));
 
     await waitFor(() => {
       expect(getBudgetGoals).toHaveBeenCalledTimes(2);

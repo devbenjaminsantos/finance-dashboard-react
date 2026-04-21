@@ -12,7 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { formatBRLFromCents } from "../../lib/format/currency";
+import { useI18n } from "../../i18n/LanguageProvider";
 
 function monthLabel(yyyyMM) {
   const [y, m] = yyyyMM.split("-");
@@ -23,25 +23,16 @@ function cents(n) {
   return Number(n) || 0;
 }
 
-function formatAxisValue(value) {
-  const amount = Number(value) || 0;
-  const brl = amount / 100;
-
-  if (Math.abs(brl) >= 1000) {
-    return `R$ ${(brl / 1000).toFixed(1)}k`;
-  }
-
-  return `R$ ${brl.toFixed(0)}`;
-}
-
-function buildExpenseByCategory(transactions) {
+function buildExpenseByCategory(transactions, fallbackCategory) {
   const map = new Map();
 
-  for (const t of transactions) {
-    if (t.type !== "expense") continue;
+  for (const transaction of transactions) {
+    if (transaction.type !== "expense") {
+      continue;
+    }
 
-    const cat = t.category || "Outros";
-    map.set(cat, (map.get(cat) || 0) + cents(t.amountCents));
+    const category = transaction.category || fallbackCategory;
+    map.set(category, (map.get(category) || 0) + cents(transaction.amountCents));
   }
 
   return Array.from(map.entries())
@@ -50,33 +41,42 @@ function buildExpenseByCategory(transactions) {
 }
 
 function buildIncomeVsExpenseByMonth(transactions, months) {
-  const base = new Map(
-    months.map((month) => [month, { month, income: 0, expense: 0 }])
-  );
+  const base = new Map(months.map((month) => [month, { month, income: 0, expense: 0 }]));
 
-  for (const t of transactions) {
-    const month = (t.date || "").slice(0, 7);
+  for (const transaction of transactions) {
+    const month = (transaction.date || "").slice(0, 7);
 
-    if (!base.has(month)) continue;
+    if (!base.has(month)) {
+      continue;
+    }
 
-    if (t.type === "income") {
-      base.get(month).income += cents(t.amountCents);
+    if (transaction.type === "income") {
+      base.get(month).income += cents(transaction.amountCents);
     } else {
-      base.get(month).expense += cents(t.amountCents);
+      base.get(month).expense += cents(transaction.amountCents);
     }
   }
 
   return months.map((month) => base.get(month));
 }
 
-export default function DashboardCharts({
-  transactions,
-  chartMonths,
-  periodLabel,
-}) {
+export default function DashboardCharts({ transactions, chartMonths, periodLabel }) {
+  const { t, formatCurrencyFromCents } = useI18n();
+
+  function formatAxisValue(value) {
+    const amount = Number(value) || 0;
+    const brl = amount / 100;
+
+    if (Math.abs(brl) >= 1000) {
+      return `R$ ${(brl / 1000).toFixed(1)}k`;
+    }
+
+    return `R$ ${brl.toFixed(0)}`;
+  }
+
   const expenseByCategory = useMemo(
-    () => buildExpenseByCategory(transactions),
-    [transactions]
+    () => buildExpenseByCategory(transactions, t("dashboard.goalOtherCategory")),
+    [transactions, t]
   );
 
   const incomeVsExpense = useMemo(
@@ -89,29 +89,20 @@ export default function DashboardCharts({
     [incomeVsExpense]
   );
 
-  const pieColors = [
-    "#0d6efd",
-    "#198754",
-    "#dc3545",
-    "#ffc107",
-    "#6f42c1",
-    "#20c997",
-    "#fd7e14",
-    "#6c757d",
-  ];
+  const pieColors = ["#0d6efd", "#198754", "#dc3545", "#ffc107", "#6f42c1", "#20c997", "#fd7e14", "#6c757d"];
 
   const pieLegend = useMemo(
     () =>
       expenseByCategory.map((item) => ({
         ...item,
-        label: `${item.name} - ${formatBRLFromCents(item.value)}`,
+        label: `${item.name} - ${formatCurrencyFromCents(item.value)}`,
       })),
-    [expenseByCategory]
+    [expenseByCategory, formatCurrencyFromCents]
   );
 
   const categoryCaption =
-    periodLabel === "Todos os períodos"
-      ? "Todas as despesas registradas"
+    periodLabel === t("dashboard.allPeriodsLabel")
+      ? t("dashboard.allExpensesRecorded")
       : periodLabel;
 
   return (
@@ -120,19 +111,17 @@ export default function DashboardCharts({
         <div className="finova-card h-100" style={{ minWidth: 0 }}>
           <div className="p-4">
             <div className="d-flex justify-content-between align-items-baseline mb-2 gap-2 flex-wrap">
-              <h2 className="finova-title h5 mb-0">Despesas por categoria</h2>
+              <h2 className="finova-title h5 mb-0">{t("dashboard.expensesByCategory")}</h2>
               <span className="text-muted small">{categoryCaption}</span>
             </div>
 
             {expenseByCategory.length === 0 ? (
-              <div className="finova-subtitle">
-                Sem despesas registradas no período selecionado.
-              </div>
+              <div className="finova-subtitle">{t("dashboard.noExpensesInPeriod")}</div>
             ) : (
               <div className="finova-chart-shell">
                 <ResponsiveContainer width="100%" height="100%" debounce={100}>
                   <PieChart>
-                    <Tooltip formatter={(value) => formatBRLFromCents(value)} />
+                    <Tooltip formatter={(value) => formatCurrencyFromCents(value)} />
                     <Pie
                       data={pieLegend}
                       dataKey="value"
@@ -142,10 +131,7 @@ export default function DashboardCharts({
                       paddingAngle={2}
                     >
                       {expenseByCategory.map((item, idx) => (
-                        <Cell
-                          key={item.name}
-                          fill={pieColors[idx % pieColors.length]}
-                        />
+                        <Cell key={item.name} fill={pieColors[idx % pieColors.length]} />
                       ))}
                     </Pie>
                     <Legend />
@@ -160,7 +146,7 @@ export default function DashboardCharts({
       <div className="col-12 col-lg-7" style={{ minWidth: 0 }}>
         <div className="finova-card h-100" style={{ minWidth: 0 }}>
           <div className="p-4">
-            <h2 className="finova-title h5 mb-2">Receitas vs despesas</h2>
+            <h2 className="finova-title h5 mb-2">{t("dashboard.incomeVsExpense")}</h2>
             <p className="finova-subtitle small mb-3">{periodLabel}</p>
 
             {hasIncomeVsExpenseData ? (
@@ -172,26 +158,24 @@ export default function DashboardCharts({
                       <XAxis dataKey="month" tickFormatter={monthLabel} />
                       <YAxis tickFormatter={formatAxisValue} width={70} />
                       <Tooltip
-                        formatter={(value) => formatBRLFromCents(value)}
+                        formatter={(value) => formatCurrencyFromCents(value)}
                         labelFormatter={monthLabel}
                       />
                       <Legend />
-                      <Bar dataKey="income" name="Receitas" fill="#198754" />
-                      <Bar dataKey="expense" name="Despesas" fill="#dc3545" />
+                      <Bar dataKey="income" name={t("transactions.incomePlural")} fill="#198754" />
+                      <Bar
+                        dataKey="expense"
+                        name={t("transactions.expensePlural")}
+                        fill="#dc3545"
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
 
-                <div className="text-muted small">
-                  Valores em BRL com base nas transações salvas no período
-                  selecionado.
-                </div>
+                <div className="text-muted small">{t("dashboard.chartFootnote")}</div>
               </>
             ) : (
-              <div className="finova-subtitle">
-                Sem movimentações suficientes para exibir o comparativo do
-                período selecionado.
-              </div>
+              <div className="finova-subtitle">{t("dashboard.noMovementComparison")}</div>
             )}
           </div>
         </div>

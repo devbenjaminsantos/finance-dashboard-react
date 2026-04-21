@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useI18n } from "../../i18n/LanguageProvider";
 import { getFinancialAccounts } from "../api/financialAccounts";
 import { formatFinancialAccountLabel } from "./presentation";
 
 export function useFinancialAccountOptions() {
+  const { t } = useI18n();
   const [accounts, setAccounts] = useState([]);
 
   useEffect(() => {
@@ -16,7 +18,10 @@ export function useFinancialAccountOptions() {
           setAccounts(
             (Array.isArray(data) ? data : []).map((account) => ({
               ...account,
-              label: formatFinancialAccountLabel(account),
+              label: formatFinancialAccountLabel(account, {
+                fallbackName: t("accounts.fallbackAccountName"),
+                endingLabel: t("accounts.endingLabel"),
+              }),
             }))
           );
         }
@@ -32,7 +37,7 @@ export function useFinancialAccountOptions() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [t]);
 
   return accounts;
 }

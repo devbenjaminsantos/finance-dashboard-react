@@ -132,7 +132,10 @@ export default function Transactions() {
           setAccounts(
             (Array.isArray(data) ? data : []).map((account) => ({
               ...account,
-              label: formatFinancialAccountLabel(account),
+              label: formatFinancialAccountLabel(account, {
+                fallbackName: t("accounts.fallbackAccountName"),
+                endingLabel: t("accounts.endingLabel"),
+              }),
             }))
           );
         }
@@ -148,7 +151,7 @@ export default function Transactions() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [t]);
 
   const categories = useMemo(() => {
     const baseCategories =

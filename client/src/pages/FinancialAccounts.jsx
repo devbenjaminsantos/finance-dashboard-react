@@ -583,7 +583,10 @@ export default function FinancialAccounts() {
                             </div>
 
                             <div className="finova-subtitle small mb-2">
-                              {formatFinancialAccountLabel(account)}
+                              {formatFinancialAccountLabel(account, {
+                                fallbackName: t("accounts.fallbackAccountName"),
+                                endingLabel: t("accounts.endingLabel"),
+                              })}
                             </div>
 
                             <div className="finova-financial-account-meta">

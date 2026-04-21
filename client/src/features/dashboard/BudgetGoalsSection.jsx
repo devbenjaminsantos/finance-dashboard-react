@@ -6,7 +6,8 @@ import {
   updateBudgetGoal,
 } from "../../lib/api/budgetGoals";
 import { EXPENSE_TRANSACTION_CATEGORIES } from "../../lib/constants/transactionCategories";
-import { formatBRLFromCents, parseMoneyToCents } from "../../lib/format/currency";
+import { parseMoneyToCents } from "../../lib/format/currency";
+import { useI18n } from "../../i18n/LanguageProvider";
 
 function dispatchBudgetGoalsChange() {
   window.dispatchEvent(new Event("finova-budget-goals-change"));
@@ -24,10 +25,10 @@ function shiftMonth(month, delta) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 }
 
-function formatMonthLabel(month) {
+function formatMonthLabel(month, locale) {
   const [year, rawMonth] = month.split("-");
   const date = new Date(Number(year), Number(rawMonth) - 1, 1);
-  return new Intl.DateTimeFormat("pt-BR", {
+  return new Intl.DateTimeFormat(locale, {
     month: "long",
     year: "numeric",
   }).format(date);
@@ -69,19 +70,19 @@ function getGoalTone(progress) {
   return "safe";
 }
 
-function getGoalStatus(progress) {
+function getGoalStatus(progress, t) {
   if (progress >= 1) {
-    return "Meta ultrapassada";
+    return t("dashboard.goalStatusExceeded");
   }
 
   if (progress >= 0.8) {
-    return "Atenção ao limite";
+    return t("dashboard.goalStatusWarning");
   }
 
-  return "Dentro do planejado";
+  return t("dashboard.goalStatusSafe");
 }
 
-function GoalCard({ goal, spentCents, onEdit, onDelete, isDeleting }) {
+function GoalCard({ goal, spentCents, onEdit, onDelete, isDeleting, t, formatCurrencyFromCents }) {
   const progress = goal.amountCents > 0 ? spentCents / goal.amountCents : 0;
   const tone = getGoalTone(progress);
   const percent = Math.round(progress * 100);
@@ -92,10 +93,10 @@ function GoalCard({ goal, spentCents, onEdit, onDelete, isDeleting }) {
       <div className="d-flex justify-content-between align-items-start gap-3 mb-3">
         <div>
           <div className="finova-title h6 mb-1">
-            {goal.category || "Orçamento geral"}
+            {goal.category || t("dashboard.goalOverallBudget")}
           </div>
           <div className={`finova-goal-pill finova-goal-pill-${tone}`}>
-            {getGoalStatus(progress)}
+            {getGoalStatus(progress, t)}
           </div>
         </div>
 
@@ -105,7 +106,7 @@ function GoalCard({ goal, spentCents, onEdit, onDelete, isDeleting }) {
             className="btn btn-sm finova-btn-light"
             onClick={() => onEdit(goal)}
           >
-            Editar
+            {t("transactions.edit")}
           </button>
           <button
             type="button"
@@ -113,25 +114,25 @@ function GoalCard({ goal, spentCents, onEdit, onDelete, isDeleting }) {
             onClick={() => onDelete(goal.id)}
             disabled={isDeleting}
           >
-            {isDeleting ? "Removendo..." : "Excluir"}
+            {isDeleting ? t("accounts.removing") : t("dashboard.goalDelete")}
           </button>
         </div>
       </div>
 
       <div className="d-flex justify-content-between small mb-2">
-        <span className="finova-subtitle">Gasto atual</span>
-        <strong>{formatBRLFromCents(spentCents)}</strong>
+        <span className="finova-subtitle">{t("dashboard.goalCurrentSpent")}</span>
+        <strong>{formatCurrencyFromCents(spentCents)}</strong>
       </div>
       <div className="d-flex justify-content-between small mb-2">
-        <span className="finova-subtitle">Meta</span>
-        <strong>{formatBRLFromCents(goal.amountCents)}</strong>
+        <span className="finova-subtitle">{t("dashboard.goalTarget")}</span>
+        <strong>{formatCurrencyFromCents(goal.amountCents)}</strong>
       </div>
       <div className="d-flex justify-content-between small mb-3">
         <span className="finova-subtitle">
-          {remaining >= 0 ? "Saldo disponível" : "Excedente"}
+          {remaining >= 0 ? t("dashboard.goalAvailableBalance") : t("dashboard.goalOverage")}
         </span>
         <strong className={remaining >= 0 ? "" : "text-danger"}>
-          {formatBRLFromCents(Math.abs(remaining))}
+          {formatCurrencyFromCents(Math.abs(remaining))}
         </strong>
       </div>
 
@@ -143,7 +144,7 @@ function GoalCard({ goal, spentCents, onEdit, onDelete, isDeleting }) {
       </div>
 
       <div className="small finova-subtitle">
-        {percent}% da meta consumida neste mês.
+        {t("dashboard.goalProgressConsumed", { percent })}
       </div>
     </div>
   );
@@ -160,6 +161,7 @@ function GoalSummaryStat({ label, value, helper }) {
 }
 
 export default function BudgetGoalsSection({ transactions }) {
+  const { locale, t, formatCurrencyFromCents } = useI18n();
   const [month, setMonth] = useState(currentMonthISO);
   const [goals, setGoals] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -180,15 +182,14 @@ export default function BudgetGoalsSection({ transactions }) {
       }
     }
 
-    return Array.from(categorySet).sort((a, b) => a.localeCompare(b, "pt-BR"));
-  }, [transactions]);
+    return Array.from(categorySet).sort((a, b) => a.localeCompare(b, locale));
+  }, [transactions, locale]);
 
   const monthlyExpenses = useMemo(
     () =>
       transactions.filter(
         (transaction) =>
-          transaction.type === "expense" &&
-          (transaction.date || "").slice(0, 7) === month
+          transaction.type === "expense" && (transaction.date || "").slice(0, 7) === month
       ),
     [transactions, month]
   );
@@ -197,32 +198,20 @@ export default function BudgetGoalsSection({ transactions }) {
     const totals = new Map();
 
     for (const transaction of monthlyExpenses) {
-      const key = transaction.category || "Outros";
+      const key = transaction.category || t("dashboard.goalOtherCategory");
       totals.set(key, (totals.get(key) || 0) + (Number(transaction.amountCents) || 0));
     }
 
     return totals;
-  }, [monthlyExpenses]);
+  }, [monthlyExpenses, t]);
 
   const totalSpent = useMemo(
-    () =>
-      monthlyExpenses.reduce(
-        (sum, item) => sum + (Number(item.amountCents) || 0),
-        0
-      ),
+    () => monthlyExpenses.reduce((sum, item) => sum + (Number(item.amountCents) || 0), 0),
     [monthlyExpenses]
   );
 
-  const overallGoal = useMemo(
-    () => goals.find((goal) => !goal.category) || null,
-    [goals]
-  );
-
-  const categoryGoals = useMemo(
-    () => goals.filter((goal) => goal.category),
-    [goals]
-  );
-
+  const overallGoal = useMemo(() => goals.find((goal) => !goal.category) || null, [goals]);
+  const categoryGoals = useMemo(() => goals.filter((goal) => goal.category), [goals]);
   const categoryGoalSet = useMemo(
     () => new Set(categoryGoals.map((goal) => goal.category)),
     [categoryGoals]
@@ -233,8 +222,8 @@ export default function BudgetGoalsSection({ transactions }) {
       Array.from(spentByCategory.entries())
         .filter(([, value]) => value > 0)
         .map(([goalCategory]) => goalCategory)
-        .sort((a, b) => a.localeCompare(b, "pt-BR")),
-    [spentByCategory]
+        .sort((a, b) => a.localeCompare(b, locale)),
+    [spentByCategory, locale]
   );
 
   const uncoveredCategorySuggestions = useMemo(
@@ -269,7 +258,7 @@ export default function BudgetGoalsSection({ transactions }) {
         }
       } catch (requestError) {
         if (active) {
-          setError(requestError.message || "Não foi possível carregar as metas do mês.");
+          setError(requestError.message || t("dashboard.goalsLoadError"));
         }
       } finally {
         if (active) {
@@ -283,7 +272,7 @@ export default function BudgetGoalsSection({ transactions }) {
     return () => {
       active = false;
     };
-  }, [month]);
+  }, [month, t]);
 
   function resetForm() {
     setEditingGoalId(null);
@@ -299,7 +288,7 @@ export default function BudgetGoalsSection({ transactions }) {
     const amountCents = parseMoneyToCents(amount);
 
     if (!Number.isFinite(amountCents) || amountCents <= 0) {
-      setError("Informe um valor de meta válido.");
+      setError(t("dashboard.goalValidationAmount"));
       return;
     }
 
@@ -315,21 +304,19 @@ export default function BudgetGoalsSection({ transactions }) {
       if (editingGoalId) {
         const updated = await updateBudgetGoal(editingGoalId, payload);
         setGoals((current) =>
-          current
-            .map((goal) => (goal.id === editingGoalId ? updated : goal))
-            .sort(sortGoals)
+          current.map((goal) => (goal.id === editingGoalId ? updated : goal)).sort(sortGoals)
         );
-        setFeedback("Meta atualizada com sucesso.");
+        setFeedback(t("dashboard.goalUpdated"));
       } else {
         const created = await createBudgetGoal(payload);
         setGoals((current) => [...current, created].sort(sortGoals));
-        setFeedback("Meta adicionada com sucesso.");
+        setFeedback(t("dashboard.goalCreated"));
       }
 
       dispatchBudgetGoalsChange();
       resetForm();
     } catch (requestError) {
-      setError(requestError.message || "Não foi possível salvar a meta.");
+      setError(requestError.message || t("dashboard.goalSaveError"));
     } finally {
       setIsSaving(false);
     }
@@ -350,7 +337,7 @@ export default function BudgetGoalsSection({ transactions }) {
   }
 
   async function handleDelete(id) {
-    if (!window.confirm("Remover esta meta mensal?")) {
+    if (!window.confirm(t("dashboard.goalDeleteConfirm"))) {
       return;
     }
 
@@ -367,9 +354,9 @@ export default function BudgetGoalsSection({ transactions }) {
         handleCancelEdit();
       }
 
-      setFeedback("Meta removida com sucesso.");
+      setFeedback(t("dashboard.goalDeleted"));
     } catch (requestError) {
-      setError(requestError.message || "Não foi possível remover a meta.");
+      setError(requestError.message || t("dashboard.goalDeleteError"));
     } finally {
       setDeletingId(null);
     }
@@ -382,7 +369,7 @@ export default function BudgetGoalsSection({ transactions }) {
     setFeedback("");
   }
 
-  const monthLabel = formatMonthLabel(month);
+  const monthLabel = formatMonthLabel(month, locale);
   const currentMonth = currentMonthISO();
   const isCurrentMonth = month === currentMonth;
 
@@ -390,11 +377,8 @@ export default function BudgetGoalsSection({ transactions }) {
     <div className="finova-card p-4 mb-4">
       <div className="d-flex flex-column flex-xl-row justify-content-between align-items-xl-end gap-3 mb-4">
         <div>
-          <h2 className="finova-title h4 mb-1">Metas de orçamento</h2>
-          <p className="finova-subtitle mb-0">
-            Trabalhe o orçamento geral e, quando fizer sentido, distribua limites por categoria
-            para acompanhar onde o mês realmente está apertando.
-          </p>
+          <h2 className="finova-title h4 mb-1">{t("dashboard.goalsTitle")}</h2>
+          <p className="finova-subtitle mb-0">{t("dashboard.goalsSubtitle")}</p>
         </div>
 
         <div className="finova-actions-row align-items-center">
@@ -403,10 +387,10 @@ export default function BudgetGoalsSection({ transactions }) {
             className="btn finova-btn-light"
             onClick={() => setMonth((currentValue) => shiftMonth(currentValue, -1))}
           >
-            Mês anterior
+            {t("dashboard.previousMonth")}
           </button>
           <div className="finova-goal-summary text-center">
-            <span className="finova-subtitle small d-block">Mês em foco</span>
+            <span className="finova-subtitle small d-block">{t("dashboard.focusMonth")}</span>
             <strong className="text-capitalize">{monthLabel}</strong>
           </div>
           <button
@@ -414,7 +398,7 @@ export default function BudgetGoalsSection({ transactions }) {
             className="btn finova-btn-light"
             onClick={() => setMonth((currentValue) => shiftMonth(currentValue, 1))}
           >
-            Próximo mês
+            {t("dashboard.nextMonth")}
           </button>
           {!isCurrentMonth ? (
             <button
@@ -422,7 +406,7 @@ export default function BudgetGoalsSection({ transactions }) {
               className="btn finova-btn-light"
               onClick={() => setMonth(currentMonth)}
             >
-              Voltar ao mês atual
+              {t("dashboard.backToCurrentMonth")}
             </button>
           ) : null}
         </div>
@@ -431,30 +415,30 @@ export default function BudgetGoalsSection({ transactions }) {
       <div className="row g-3 mb-4">
         <div className="col-12 col-md-6 col-xl-3">
           <GoalSummaryStat
-            label="Despesas no mês"
-            value={formatBRLFromCents(totalSpent)}
-            helper="Base usada para medir o avanço das metas."
+            label={t("dashboard.summarySpentMonth")}
+            value={formatCurrencyFromCents(totalSpent)}
+            helper={t("dashboard.summarySpentMonthHelp")}
           />
         </div>
         <div className="col-12 col-md-6 col-xl-3">
           <GoalSummaryStat
-            label="Categorias com meta"
+            label={t("dashboard.summaryGoalCategories")}
             value={String(categoryGoals.length)}
-            helper="Categorias com limite específico configurado."
+            helper={t("dashboard.summaryGoalCategoriesHelp")}
           />
         </div>
         <div className="col-12 col-md-6 col-xl-3">
           <GoalSummaryStat
-            label="Categorias sem meta"
+            label={t("dashboard.summaryWithoutGoal")}
             value={String(Math.max(categoriesWithExpenses.length - categoryGoals.length, 0))}
-            helper="Categorias com gasto no mês e ainda sem limite próprio."
+            helper={t("dashboard.summaryWithoutGoalHelp")}
           />
         </div>
         <div className="col-12 col-md-6 col-xl-3">
           <GoalSummaryStat
-            label="Metas em risco"
+            label={t("dashboard.summaryGoalsAtRisk")}
             value={String(categoriesOverLimitCount)}
-            helper="Categorias já estouradas ou no limite do valor definido."
+            helper={t("dashboard.summaryGoalsAtRiskHelp")}
           />
         </div>
       </div>
@@ -463,10 +447,9 @@ export default function BudgetGoalsSection({ transactions }) {
         <div className="finova-card-soft p-3 mb-4">
           <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
             <div>
-              <h3 className="finova-title h6 mb-1">Categorias que merecem meta própria</h3>
+              <h3 className="finova-title h6 mb-1">{t("dashboard.suggestionsTitle")}</h3>
               <p className="finova-subtitle mb-0">
-                Estas categorias já estão pesando em {monthLabel} e ainda não têm meta
-                específica.
+                {t("dashboard.suggestionsSubtitle", { month: monthLabel })}
               </p>
             </div>
 
@@ -479,7 +462,7 @@ export default function BudgetGoalsSection({ transactions }) {
                   onClick={() => handlePickSuggestedCategory(item.category)}
                 >
                   <span>{item.category}</span>
-                  <strong>{formatBRLFromCents(item.spentCents)}</strong>
+                  <strong>{formatCurrencyFromCents(item.spentCents)}</strong>
                 </button>
               ))}
             </div>
@@ -490,7 +473,7 @@ export default function BudgetGoalsSection({ transactions }) {
       <form className="row g-3 mb-4" onSubmit={handleSubmit}>
         <div className="col-12 col-lg-5">
           <label className="form-label text-dark fw-medium" htmlFor="budget-goal-category">
-            Categoria
+            {t("common.category")}
           </label>
           <select
             id="budget-goal-category"
@@ -499,7 +482,7 @@ export default function BudgetGoalsSection({ transactions }) {
             onChange={(event) => setCategory(event.target.value)}
             disabled={isSaving}
           >
-            <option value="__overall__">Orçamento geral do mês</option>
+            <option value="__overall__">{t("dashboard.goalOverallBudgetMonth")}</option>
             {availableCategories.map((item) => (
               <option key={item} value={item}>
                 {item}
@@ -510,13 +493,13 @@ export default function BudgetGoalsSection({ transactions }) {
 
         <div className="col-12 col-lg-4">
           <label className="form-label text-dark fw-medium" htmlFor="budget-goal-amount">
-            Valor da meta
+            {t("dashboard.goalAmountLabel")}
           </label>
           <input
             id="budget-goal-amount"
             type="text"
             className="form-control finova-input"
-            placeholder="Ex: 1500,00"
+            placeholder={t("dashboard.goalAmountPlaceholder")}
             value={amount}
             onChange={(event) => setAmount(event.target.value)}
             inputMode="decimal"
@@ -530,7 +513,11 @@ export default function BudgetGoalsSection({ transactions }) {
             className="btn finova-btn-primary flex-grow-1"
             disabled={isSaving}
           >
-            {isSaving ? "Salvando..." : editingGoalId ? "Salvar meta" : "Adicionar meta"}
+            {isSaving
+              ? t("dashboard.goalSaving")
+              : editingGoalId
+                ? t("dashboard.goalSaveButton")
+                : t("dashboard.goalAddButton")}
           </button>
 
           {editingGoalId ? (
@@ -540,7 +527,7 @@ export default function BudgetGoalsSection({ transactions }) {
               onClick={handleCancelEdit}
               disabled={isSaving}
             >
-              Cancelar
+              {t("common.cancel")}
             </button>
           ) : null}
         </div>
@@ -550,16 +537,14 @@ export default function BudgetGoalsSection({ transactions }) {
       {feedback ? <div className="alert alert-success py-2">{feedback}</div> : null}
 
       {isLoading ? (
-        <div className="finova-subtitle">Carregando metas do mês...</div>
+        <div className="finova-subtitle">{t("dashboard.goalsLoading")}</div>
       ) : (
         <>
           <div className="mb-4">
             <div className="d-flex justify-content-between align-items-center gap-3 mb-3">
               <div>
-                <h3 className="finova-title h5 mb-1">Visão geral do mês</h3>
-                <p className="finova-subtitle mb-0">
-                  A meta geral ajuda a entender se o conjunto das despesas está no ritmo esperado.
-                </p>
+                <h3 className="finova-title h5 mb-1">{t("dashboard.overviewTitle")}</h3>
+                <p className="finova-subtitle mb-0">{t("dashboard.overviewSubtitle")}</p>
               </div>
             </div>
 
@@ -570,14 +555,15 @@ export default function BudgetGoalsSection({ transactions }) {
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 isDeleting={deletingId === overallGoal.id}
+                t={t}
+                formatCurrencyFromCents={formatCurrencyFromCents}
               />
             ) : (
               <div className="finova-card-soft p-4">
-                <h4 className="finova-title h6 mb-2">Ainda não há meta geral para {monthLabel}</h4>
-                <p className="finova-subtitle mb-0">
-                  Se quiser uma leitura mais ampla do mês, comece criando um orçamento geral antes
-                  de detalhar as categorias.
-                </p>
+                <h4 className="finova-title h6 mb-2">
+                  {t("dashboard.overviewEmptyTitle", { month: monthLabel })}
+                </h4>
+                <p className="finova-subtitle mb-0">{t("dashboard.overviewEmptySubtitle")}</p>
               </div>
             )}
           </div>
@@ -585,24 +571,18 @@ export default function BudgetGoalsSection({ transactions }) {
           <div>
             <div className="d-flex justify-content-between align-items-center gap-3 mb-3">
               <div>
-                <h3 className="finova-title h5 mb-1">Metas por categoria</h3>
-                <p className="finova-subtitle mb-0">
-                  Aqui é onde a análise fica mais precisa: cada categoria mostra o quanto já
-                  consumiu e quanto ainda resta.
-                </p>
+                <h3 className="finova-title h5 mb-1">{t("dashboard.categoryGoalsTitle")}</h3>
+                <p className="finova-subtitle mb-0">{t("dashboard.categoryGoalsSubtitle")}</p>
               </div>
               <span className="finova-badge-primary">
-                {categoryGoals.length} configurada{categoryGoals.length === 1 ? "" : "s"}
+                {t("dashboard.categoryGoalsConfigured", { count: categoryGoals.length })}
               </span>
             </div>
 
             {categoryGoals.length === 0 ? (
               <div className="finova-card-soft p-4">
-                <h4 className="finova-title h6 mb-2">Nenhuma meta por categoria neste mês</h4>
-                <p className="finova-subtitle mb-0">
-                  Crie metas para as categorias mais relevantes e acompanhe onde o orçamento aperta
-                  com mais clareza.
-                </p>
+                <h4 className="finova-title h6 mb-2">{t("dashboard.categoryGoalsEmptyTitle")}</h4>
+                <p className="finova-subtitle mb-0">{t("dashboard.categoryGoalsEmptySubtitle")}</p>
               </div>
             ) : (
               <div className="row g-3">
@@ -614,6 +594,8 @@ export default function BudgetGoalsSection({ transactions }) {
                       onEdit={handleEdit}
                       onDelete={handleDelete}
                       isDeleting={deletingId === goal.id}
+                      t={t}
+                      formatCurrencyFromCents={formatCurrencyFromCents}
                     />
                   </div>
                 ))}

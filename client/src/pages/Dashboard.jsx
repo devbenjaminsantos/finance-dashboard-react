@@ -29,7 +29,10 @@ export default function Dashboard() {
           setAccounts(
             (Array.isArray(data) ? data : []).map((account) => ({
               ...account,
-              label: formatFinancialAccountLabel(account),
+              label: formatFinancialAccountLabel(account, {
+                fallbackName: t("accounts.fallbackAccountName"),
+                endingLabel: t("accounts.endingLabel"),
+              }),
             }))
           );
         }
@@ -45,7 +48,7 @@ export default function Dashboard() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [t]);
 
   const selectedPeriodLabel = useMemo(
     () => PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? "Mes atual",
@@ -82,15 +85,18 @@ export default function Dashboard() {
 
   const selectedAccountLabel = useMemo(() => {
     if (accountFilter === "all") {
-      return "Saldo global em todas as contas";
+      return t("pages.dashboardAllAccountsBalance");
     }
 
     if (accountFilter === "unassigned") {
-      return "Movimentacoes sem conta vinculada";
+      return t("pages.dashboardUnassignedAccount");
     }
 
-    return accounts.find((account) => String(account.id) === accountFilter)?.label || "Conta selecionada";
-  }, [accounts, accountFilter]);
+    return (
+      accounts.find((account) => String(account.id) === accountFilter)?.label ||
+      t("pages.dashboardSelectedAccountFallback")
+    );
+  }, [accounts, accountFilter, t]);
 
   return (
     <section className="finova-section-space">

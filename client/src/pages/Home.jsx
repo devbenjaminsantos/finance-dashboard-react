@@ -587,14 +587,14 @@ export default function Home() {
             </div>
 
             <div>
-              <label className="form-label text-dark fw-medium">Conta exibida</label>
+              <label className="form-label text-dark fw-medium">{t("pages.displayedAccountLabel")}</label>
               <select
                 className="form-select finova-select"
                 value={accountFilter}
                 onChange={(event) => setAccountFilter(event.target.value)}
               >
-                <option value="all">Todas as contas (saldo global)</option>
-                <option value="unassigned">Sem conta vinculada</option>
+                <option value="all">{t("pages.allAccountsScope")}</option>
+                <option value="unassigned">{t("pages.unassignedScope")}</option>
                 {accounts.map((account) => (
                   <option key={account.id} value={String(account.id)}>
                     {account.label}
@@ -607,6 +607,10 @@ export default function Home() {
       </div>
 
       <div className="d-grid gap-4">
+        <div className="finova-page-note">
+          {t("pages.homePageNote")}
+        </div>
+
         {visibleWidgetCount === 0 ? (
           <div className="finova-card p-4 text-center">
             <h2 className="finova-title h5 mb-2">Sua Home esta vazia</h2>

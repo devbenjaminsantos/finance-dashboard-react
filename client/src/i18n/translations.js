@@ -125,6 +125,8 @@ export const translations = {
       title: "Perfil",
       subtitle:
         "Centralize aqui suas preferencias da conta, notificacoes e visibilidade do que aparece para voce logo na entrada.",
+      pageNote:
+        "Ajuste aqui como voce quer ser identificado, quais comunicacoes deseja receber e o que realmente merece espaco na sua experiencia inicial.",
       accountSectionTitle: "Dados da conta",
       accountSectionSubtitle:
         "Revise como seu nome aparece no app e acompanhe as configuracoes principais do seu acesso.",
@@ -332,6 +334,8 @@ export const translations = {
       homeTitle: "Home",
       homeSubtitle: "Monte sua entrada principal com os blocos que mais ajudam no seu dia a dia.",
       homePeriod: "Recorte rapido",
+      homePageNote:
+        "Use a Home como painel de apoio rapido: mantenha aqui o essencial e deixe os detalhes mais profundos para as areas dedicadas.",
       dashboardTitle: "Graficos",
       dashboardSubtitle:
         "Sua visao geral financeira com foco em resumo e graficos do periodo selecionado.",
@@ -362,6 +366,11 @@ export const translations = {
         "Reuna insights, comparativos e metas em uma area unica para interpretar o momento financeiro e decidir os proximos ajustes.",
       analysesPeriod: "Periodo",
       analysesRange: "Janela comparativa",
+      analysesPageNote:
+        "Esta area concentra leitura, comparacao e planejamento no mesmo fluxo para reduzir troca de contexto e facilitar decisoes.",
+      displayedAccountLabel: "Conta exibida",
+      allAccountsScope: "Todas as contas (saldo global)",
+      unassignedScope: "Sem conta vinculada",
       insightsTitle: "Insights",
       insightsSubtitle:
         "Veja padroes, sinais de atencao e proximos passos sugeridos com base nas suas movimentacoes.",
@@ -773,6 +782,8 @@ export const translations = {
       title: "Profile",
       subtitle:
         "Manage your account preferences, notifications, and what you want to see first when you open the app.",
+      pageNote:
+        "Adjust how you want to be identified, which communications you want to receive, and what truly deserves space in your starting experience.",
       accountSectionTitle: "Account details",
       accountSectionSubtitle:
         "Review how your name appears in the app and keep the main account settings under control.",
@@ -978,6 +989,8 @@ export const translations = {
       homeTitle: "Home",
       homeSubtitle: "Build your main entry page with the blocks that help you most every day.",
       homePeriod: "Quick range",
+      homePageNote:
+        "Use Home as a quick support panel: keep only the essentials here and leave deeper details for the dedicated areas.",
       dashboardTitle: "Charts",
       dashboardSubtitle:
         "Your financial overview focused on summary cards and charts for the selected range.",
@@ -1008,6 +1021,11 @@ export const translations = {
         "Bring together insights, comparisons, and goals in one area to interpret your current financial picture and decide the next adjustments.",
       analysesPeriod: "Period",
       analysesRange: "Comparison window",
+      analysesPageNote:
+        "This area concentrates interpretation, comparison, and planning in the same flow to reduce context switching and support decisions.",
+      displayedAccountLabel: "Displayed account",
+      allAccountsScope: "All accounts (global balance)",
+      unassignedScope: "No linked account",
       insightsTitle: "Insights",
       insightsSubtitle:
         "See patterns, warning signs, and suggested next steps based on your activity.",

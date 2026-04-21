@@ -210,14 +210,14 @@ export default function Analyses() {
             </div>
 
             <div>
-              <label className="form-label text-dark fw-medium">Conta exibida</label>
+              <label className="form-label text-dark fw-medium">{t("pages.displayedAccountLabel")}</label>
               <select
                 className="form-select finova-select"
                 value={accountFilter}
                 onChange={(event) => setAccountFilter(event.target.value)}
               >
-                <option value="all">Todas as contas (saldo global)</option>
-                <option value="unassigned">Sem conta vinculada</option>
+                <option value="all">{t("pages.allAccountsScope")}</option>
+                <option value="unassigned">{t("pages.unassignedScope")}</option>
                 {accounts.map((account) => (
                   <option key={account.id} value={String(account.id)}>
                     {account.label}
@@ -227,6 +227,10 @@ export default function Analyses() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="finova-page-note mb-4">
+        {t("pages.analysesPageNote")}
       </div>
 
       <div className="finova-card p-4 mb-4">

@@ -37,7 +37,7 @@ export default function Navbar() {
   return (
     <nav
       className="navbar navbar-expand-xl border-bottom"
-      style={{ background: "var(--primary)", borderColor: "var(--nav-border)" }}
+      style={{ background: "var(--nav-surface)", borderColor: "var(--nav-border)" }}
     >
       <div className="container">
         <NavLink className="navbar-brand text-white finova-brand-link" to="/">
@@ -112,16 +112,13 @@ export default function Navbar() {
                   {t("navbar.profile")}
                 </NavLink>
 
-                <span className="text-white-50 small ms-lg-3 me-lg-3 mt-2 mt-lg-0 finova-navbar-user">
-                  {user?.name}
-                </span>
+                <div className="finova-navbar-account-area">
+                  <span className="text-white-50 small finova-navbar-user">{user?.name}</span>
 
-                <button
-                  className="btn finova-btn-light btn-sm mt-2 mt-lg-0 finova-navbar-logout"
-                  onClick={handleLogout}
-                >
-                  {t("navbar.logout")}
-                </button>
+                  <button className="btn finova-btn-light btn-sm finova-navbar-logout" onClick={handleLogout}>
+                    {t("navbar.logout")}
+                  </button>
+                </div>
               </>
             ) : null}
           </div>

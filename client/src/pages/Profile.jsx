@@ -216,8 +216,12 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="finova-page-stack">
-        <div className="finova-card p-4 p-md-5" style={{ maxWidth: 760 }}>
+      <div className="finova-page-note">
+        {t("profile.pageNote")}
+      </div>
+
+      <div className="finova-page-stack finova-page-stack-narrow">
+        <div className="finova-card p-4 p-md-5">
           {isLoading ? (
             <div className="d-flex align-items-center gap-3">
               <div className="spinner-border spinner-border-sm text-primary" />
@@ -475,7 +479,7 @@ export default function Profile() {
         </div>
 
         {!isLoading ? (
-          <div style={{ maxWidth: 760 }}>
+          <div>
             <HomeCustomizationCard
               widgets={homeWidgets}
               onToggle={handleToggleHomeWidget}
@@ -488,7 +492,7 @@ export default function Profile() {
         ) : null}
 
         {!isLoading ? (
-          <div className="finova-card p-4 p-md-5" style={{ maxWidth: 760 }}>
+          <div className="finova-card p-4 p-md-5">
             <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-start gap-3 mb-3">
               <div>
                 <h2 className="finova-title h5 mb-1">{t("profile.publicDashboardTitle")}</h2>
@@ -564,7 +568,7 @@ export default function Profile() {
         ) : null}
 
         {!isLoading ? (
-          <div className="finova-card p-4 p-md-5" style={{ maxWidth: 760 }}>
+          <div className="finova-card p-4 p-md-5">
             <div className="d-flex flex-column gap-1 mb-3">
               <h2 className="finova-title h5 mb-0">{t("profile.notificationHistoryTitle")}</h2>
               <p className="finova-subtitle small mb-0">

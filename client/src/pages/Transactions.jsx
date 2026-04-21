@@ -565,6 +565,8 @@ export default function Transactions() {
         </div>
       </div>
 
+      <div className="finova-page-note mb-4">{t("pages.transactionsPageNote")}</div>
+
       <TransactionModal
         mode={mode}
         isOpen={isOpen}

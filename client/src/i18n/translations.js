@@ -233,6 +233,72 @@ export const translations = {
       actionProfileUpdatedWithPassword: "Perfil e senha atualizados",
       actionFallback: "Atividade registrada",
     },
+    home: {
+      demoTitle: "Conta de demonstracao",
+      demoDescription:
+        "Voce esta explorando um ambiente com dados ficticios. Use esta Home como vitrine dos blocos que mais importam para voce e aprofunde a analise nas paginas dedicadas.",
+      onboardingPromptTitle: "Quer ajuda para configurar seu Finova?",
+      onboardingPromptDescription:
+        "Posso te orientar pelos primeiros passos para deixar sua Home util desde os primeiros acessos.",
+      onboardingPromptAccept: "Quero ajuda",
+      onboardingPromptDecline: "Agora nao",
+      onboardingTransactionsLabel: "Registrar a primeira transacao",
+      onboardingTransactionsDescription:
+        "Adicione pelo menos uma receita ou despesa para alimentar o painel inicial.",
+      onboardingGoalsLabel: "Criar a primeira meta mensal",
+      onboardingGoalsDescription:
+        "Defina um limite geral ou por categoria para ativar os alertas visuais.",
+      onboardingRecurringLabel: "Automatizar um lancamento recorrente",
+      onboardingRecurringDescription:
+        "Cadastre salario, aluguel, condominio ou assinaturas como recorrentes.",
+      onboardingHiddenTitle: "Guia inicial oculto",
+      onboardingHiddenDescription:
+        "Se voce quiser, o checklist pode voltar para a Home a qualquer momento.",
+      onboardingShowAgain: "Mostrar guia inicial",
+      onboardingTitle: "Guia inicial",
+      onboardingCompletedDescription: "Tudo pronto. Sua base inicial ja esta montada.",
+      onboardingDescription:
+        "Siga estes passos para transformar a Home em um ponto de apoio real no dia a dia.",
+      onboardingProgress: "{{current}}/{{total}} concluidos",
+      onboardingHide: "Ocultar guia",
+      onboardingDone: "Feito",
+      onboardingPending: "Pendente",
+      goalsTitle: "Metas do mes",
+      goalsDescription: "Um resumo rapido para saber se o planejamento ja esta armado.",
+      goalsConfiguredLabel: "Metas configuradas",
+      goalsConfiguredHelp: "Entre meta geral e limites por categoria.",
+      goalsRiskLabel: "Metas em atencao",
+      goalsRiskHelp: "Metas no limite ou ja ultrapassadas no mes atual.",
+      openAnalyses: "Abrir analises",
+      historyTitle: "Historico recente",
+      historyDescription: "As ultimas acoes mais relevantes da sua conta, sem a parte tecnica.",
+      historyEmpty: "Assim que voce usar o sistema, as principais acoes aparecem aqui.",
+      openHistory: "Ver historico completo",
+      emptyTitle: "Sua Home esta vazia",
+      emptyDescription:
+        "Reative pelo menos um bloco para transformar esta pagina em um ponto de apoio util.",
+      restoreWidgets: "Restaurar blocos padrao",
+      summaryTitle: "Resumo financeiro",
+      summaryDescription: "Uma leitura rapida do recorte {{period}}.",
+      summaryLoading: "Carregando resumo...",
+      shortcutsTitle: "Atalhos principais",
+      shortcutsDescription:
+        "Cada area ganhou uma pagina propria. Deixe aqui os caminhos que voce mais usa.",
+      shortcutChartsDescription: "Acompanhe graficos e resumo geral do periodo.",
+      shortcutAnalysesDescription: "Reuna insights, comparativos e metas em uma unica area.",
+      shortcutTransactionsDescription: "Consulte lancamentos, filtros e importacoes em um so lugar.",
+      shortcutAccountsDescription: "Gerencie bancos, cartoes e contas manuais cadastradas.",
+      insightsTitle: "Insights em destaque",
+      insightsDescription: "Um recorte rapido do que mais chama atencao agora.",
+      insightsLoading: "Carregando insights...",
+      insightsEmpty: "Adicione mais movimentacoes para ativar os insights da Home.",
+      openFullAnalyses: "Abrir analises completas",
+      comparisonTitle: "Comparativo rapido",
+      comparisonDescription: "Um resumo do mes atual contra o mes anterior.",
+      comparisonLoading: "Carregando comparativo...",
+      comparisonHeaviestCategory: "Categoria que mais pesou",
+      comparisonLightestCategory: "Categoria que mais aliviou",
+    },
     accounts: {
       providerManual: "Manual",
       providerManualDescription: "Conta pensada para importacao por arquivo e conciliacao assistida.",
@@ -341,6 +407,8 @@ export const translations = {
       dashboardSubtitle:
         "Sua visao geral financeira com foco em resumo e graficos do periodo selecionado.",
       dashboardPeriod: "Periodo",
+      dashboardPageNote:
+        "Use esta area para leitura rapida do momento atual. Quando precisar aprofundar contexto, comparacao ou planejamento, siga para Analises.",
       dashboardEmptyTitle: "Nenhum dado para o periodo selecionado",
       dashboardEmptySubtitle:
         "Ajuste o periodo ou adicione novas transacoes para acompanhar seu desempenho.",
@@ -353,6 +421,8 @@ export const translations = {
       transactionsTitle: "Transacoes",
       transactionsSubtitle:
         "Gerencie receitas e despesas com controle total do seu fluxo financeiro.",
+      transactionsPageNote:
+        "Concentre aqui os lancamentos, filtros, importacoes e blocos especiais como recorrencias e parcelamentos, mantendo a operacao do dia a dia em um unico fluxo.",
       importFile: "Importar arquivo",
       newTransaction: "Nova transacao",
       importSuccessSingle: "1 transacao importada com sucesso via {{format}}.",
@@ -400,9 +470,13 @@ export const translations = {
       historySubtitle:
         "Acompanhe as acoes mais relevantes da sua conta, como acessos, mudancas de perfil, transacoes e metas.",
       historyLimit: "Exibir",
+      historyPageNote:
+        "O historico foi simplificado para mostrar acontecimentos relevantes em linguagem mais direta, sem excesso de detalhes tecnicos.",
       accountsTitle: "Contas financeiras",
       accountsSubtitle:
         "Centralize contas manuais e contas conectadas. Nesta etapa, o Pluggy ja entra como integracao bancaria real do produto.",
+      accountsPageNote:
+        "Organize suas contas por instituicao, tipo e nome do jeito que faz mais sentido para a sua rotina. O foco aqui e clareza de leitura, nao excesso de configuracao.",
     },
     publicDashboard: {
       title: "Dashboard publico",
@@ -897,6 +971,72 @@ export const translations = {
       actionProfileUpdatedWithPassword: "Profile and password updated",
       actionFallback: "Activity recorded",
     },
+    home: {
+      demoTitle: "Demo account",
+      demoDescription:
+        "You are exploring an environment with fictional data. Use this Home as a showcase for the blocks that matter most to you and go deeper in the dedicated pages.",
+      onboardingPromptTitle: "Want help setting up your Finova?",
+      onboardingPromptDescription:
+        "I can guide you through the first steps so your Home becomes useful from the very first visits.",
+      onboardingPromptAccept: "I want help",
+      onboardingPromptDecline: "Not now",
+      onboardingTransactionsLabel: "Add your first transaction",
+      onboardingTransactionsDescription:
+        "Add at least one income or expense to start feeding your main panel.",
+      onboardingGoalsLabel: "Create your first monthly goal",
+      onboardingGoalsDescription:
+        "Set a general or category-based limit to activate visual alerts.",
+      onboardingRecurringLabel: "Automate a recurring entry",
+      onboardingRecurringDescription:
+        "Register salary, rent, condo fees, or subscriptions as recurring items.",
+      onboardingHiddenTitle: "Starter guide hidden",
+      onboardingHiddenDescription:
+        "If you want, the checklist can return to Home at any time.",
+      onboardingShowAgain: "Show starter guide",
+      onboardingTitle: "Starter guide",
+      onboardingCompletedDescription: "Everything is ready. Your initial base is already set.",
+      onboardingDescription:
+        "Follow these steps to turn Home into a truly useful support point in your day to day.",
+      onboardingProgress: "{{current}}/{{total}} completed",
+      onboardingHide: "Hide guide",
+      onboardingDone: "Done",
+      onboardingPending: "Pending",
+      goalsTitle: "Goals this month",
+      goalsDescription: "A quick summary to see whether the plan is already in place.",
+      goalsConfiguredLabel: "Configured goals",
+      goalsConfiguredHelp: "Including overall and per-category limits.",
+      goalsRiskLabel: "Goals needing attention",
+      goalsRiskHelp: "Goals near the limit or already exceeded this month.",
+      openAnalyses: "Open analyses",
+      historyTitle: "Recent history",
+      historyDescription: "The most relevant recent actions from your account, without the technical noise.",
+      historyEmpty: "As soon as you use the system, the main actions will show up here.",
+      openHistory: "View full history",
+      emptyTitle: "Your Home is empty",
+      emptyDescription:
+        "Re-enable at least one block to turn this page back into a useful support area.",
+      restoreWidgets: "Restore default blocks",
+      summaryTitle: "Financial summary",
+      summaryDescription: "A quick read of the {{period}} range.",
+      summaryLoading: "Loading summary...",
+      shortcutsTitle: "Main shortcuts",
+      shortcutsDescription:
+        "Each area now has its own page. Keep here the paths you use the most.",
+      shortcutChartsDescription: "Follow charts and the overall summary for the selected period.",
+      shortcutAnalysesDescription: "Bring together insights, comparisons, and goals in one area.",
+      shortcutTransactionsDescription: "Review entries, filters, and imports in one place.",
+      shortcutAccountsDescription: "Manage banks, cards, and registered manual accounts.",
+      insightsTitle: "Highlighted insights",
+      insightsDescription: "A quick snapshot of what deserves attention right now.",
+      insightsLoading: "Loading insights...",
+      insightsEmpty: "Add more activity to unlock Home insights.",
+      openFullAnalyses: "Open full analyses",
+      comparisonTitle: "Quick comparison",
+      comparisonDescription: "A summary of the current month against the previous month.",
+      comparisonLoading: "Loading comparison...",
+      comparisonHeaviestCategory: "Category that weighed the most",
+      comparisonLightestCategory: "Category that eased the most",
+    },
     accounts: {
       providerManual: "Manual",
       providerManualDescription: "Account designed for file import and assisted reconciliation.",
@@ -1004,6 +1144,8 @@ export const translations = {
       dashboardSubtitle:
         "Your financial overview focused on summary cards and charts for the selected range.",
       dashboardPeriod: "Period",
+      dashboardPageNote:
+        "Use this area for a quick read of the current moment. When you need deeper context, comparison, or planning, move to Analyses.",
       dashboardEmptyTitle: "No data for the selected period",
       dashboardEmptySubtitle:
         "Adjust the period or add new transactions to track your performance.",
@@ -1016,6 +1158,8 @@ export const translations = {
       transactionsTitle: "Transactions",
       transactionsSubtitle:
         "Manage income and expenses with full control over your cash flow.",
+      transactionsPageNote:
+        "Keep entries, filters, imports, and special blocks such as recurring items and installments in one operational flow.",
       importFile: "Import file",
       newTransaction: "New transaction",
       importSuccessSingle: "1 transaction imported successfully via {{format}}.",
@@ -1063,9 +1207,13 @@ export const translations = {
       historySubtitle:
         "Track the most relevant actions in your account, such as sign-ins, profile changes, transactions, and goals.",
       historyLimit: "Show",
+      historyPageNote:
+        "History was simplified to highlight meaningful events in clearer language, without overloading the page with technical details.",
       accountsTitle: "Financial accounts",
       accountsSubtitle:
         "Centralize manual and connected accounts. At this stage, Pluggy already appears as the product's real banking integration.",
+      accountsPageNote:
+        "Organize your accounts by institution, type, and name in the way that best matches your routine. The goal here is clarity, not excessive configuration.",
     },
     publicDashboard: {
       title: "Public dashboard",

@@ -51,8 +51,8 @@ export default function Dashboard() {
   }, [t]);
 
   const selectedPeriodLabel = useMemo(
-    () => PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? "Mes atual",
-    [period]
+    () => PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? t("dashboard.focusMonth"),
+    [period, t]
   );
 
   const chartMonths = useMemo(
@@ -125,14 +125,14 @@ export default function Dashboard() {
             </div>
 
             <div>
-              <label className="form-label text-dark fw-medium">Conta exibida</label>
+              <label className="form-label text-dark fw-medium">{t("pages.displayedAccountLabel")}</label>
               <select
                 className="form-select finova-select"
                 value={accountFilter}
                 onChange={(event) => setAccountFilter(event.target.value)}
               >
-                <option value="all">Todas as contas (saldo global)</option>
-                <option value="unassigned">Sem conta vinculada</option>
+                <option value="all">{t("pages.allAccountsScope")}</option>
+                <option value="unassigned">{t("pages.unassignedScope")}</option>
                 {accounts.map((account) => (
                   <option key={account.id} value={String(account.id)}>
                     {account.label}
@@ -143,6 +143,8 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      <div className="finova-page-note mb-4">{t("pages.dashboardPageNote")}</div>
 
       {isLoading ? (
         <div className="finova-card p-4">
@@ -162,7 +164,7 @@ export default function Dashboard() {
               tone="expense"
             />
             <SummaryCard
-              label="Saldo"
+              label={t("publicDashboard.balanceLabel")}
               value={formatCurrencyFromCents(summary.balance)}
               tone="default"
             />

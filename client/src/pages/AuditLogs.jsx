@@ -76,6 +76,8 @@ export default function AuditLogs() {
         </div>
       </div>
 
+      <div className="finova-page-note mb-4">{t("pages.historyPageNote")}</div>
+
       <div className="finova-card p-4">
         {isLoading ? (
           <div className="d-flex align-items-center gap-3">

@@ -45,27 +45,25 @@ import {
 import { useI18n } from "../i18n/LanguageProvider";
 
 function DemoInfoCard() {
+  const { t } = useI18n();
+
   return (
     <div className="finova-card p-4 finova-demo-panel">
-      <h2 className="finova-title h5 mb-2">Conta de demonstracao</h2>
-      <p className="finova-subtitle mb-0">
-        Voce esta explorando um ambiente com dados ficticios. Use esta Home como vitrine dos
-        blocos que mais importam para voce e aprofunde a analise nas paginas dedicadas.
-      </p>
+      <h2 className="finova-title h5 mb-2">{t("home.demoTitle")}</h2>
+      <p className="finova-subtitle mb-0">{t("home.demoDescription")}</p>
     </div>
   );
 }
 
 function OnboardingPromptCard({ isSaving, onChoose }) {
+  const { t } = useI18n();
+
   return (
     <div className="finova-card p-4">
       <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
         <div>
-          <h2 className="finova-title h5 mb-2">Quer ajuda para configurar seu Finova?</h2>
-          <p className="finova-subtitle mb-0">
-            Posso te orientar pelos primeiros passos para deixar sua Home util desde os primeiros
-            acessos.
-          </p>
+          <h2 className="finova-title h5 mb-2">{t("home.onboardingPromptTitle")}</h2>
+          <p className="finova-subtitle mb-0">{t("home.onboardingPromptDescription")}</p>
         </div>
 
         <div className="finova-actions-row">
@@ -75,7 +73,7 @@ function OnboardingPromptCard({ isSaving, onChoose }) {
             disabled={isSaving}
             onClick={() => onChoose(true)}
           >
-            {isSaving ? "Salvando..." : "Quero ajuda"}
+            {isSaving ? t("common.loading") : t("home.onboardingPromptAccept")}
           </button>
           <button
             type="button"
@@ -83,7 +81,7 @@ function OnboardingPromptCard({ isSaving, onChoose }) {
             disabled={isSaving}
             onClick={() => onChoose(false)}
           >
-            Agora nao
+            {t("home.onboardingPromptDecline")}
           </button>
         </div>
       </div>
@@ -101,23 +99,24 @@ function OnboardingChecklistCard({
   isVisible,
   isCompleted,
 }) {
+  const { t } = useI18n();
   const items = [
     {
       key: "transactions",
-      label: "Registrar a primeira transacao",
-      description: "Adicione pelo menos uma receita ou despesa para alimentar o painel inicial.",
+      label: t("home.onboardingTransactionsLabel"),
+      description: t("home.onboardingTransactionsDescription"),
       done: transactionsCount > 0,
     },
     {
       key: "goals",
-      label: "Criar a primeira meta mensal",
-      description: "Defina um limite geral ou por categoria para ativar os alertas visuais.",
+      label: t("home.onboardingGoalsLabel"),
+      description: t("home.onboardingGoalsDescription"),
       done: goalsCount > 0,
     },
     {
       key: "recurring",
-      label: "Automatizar um lancamento recorrente",
-      description: "Cadastre salario, aluguel, condominio ou assinaturas como recorrentes.",
+      label: t("home.onboardingRecurringLabel"),
+      description: t("home.onboardingRecurringDescription"),
       done: recurringCount > 0,
     },
   ];
@@ -133,10 +132,8 @@ function OnboardingChecklistCard({
       <div className="finova-card p-4">
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
           <div>
-            <h2 className="finova-title h6 mb-1">Guia inicial oculto</h2>
-            <p className="finova-subtitle mb-0">
-              Se voce quiser, o checklist pode voltar para a Home a qualquer momento.
-            </p>
+            <h2 className="finova-title h6 mb-1">{t("home.onboardingHiddenTitle")}</h2>
+            <p className="finova-subtitle mb-0">{t("home.onboardingHiddenDescription")}</p>
           </div>
 
           <button
@@ -145,7 +142,7 @@ function OnboardingChecklistCard({
             disabled={isSaving}
             onClick={onShowAgain}
           >
-            {isSaving ? "Salvando..." : "Mostrar guia inicial"}
+            {isSaving ? t("common.loading") : t("home.onboardingShowAgain")}
           </button>
         </div>
       </div>
@@ -156,17 +153,20 @@ function OnboardingChecklistCard({
     <div className="finova-card p-4">
       <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-start gap-3 mb-4">
         <div>
-          <h2 className="finova-title h5 mb-2">Guia inicial</h2>
+          <h2 className="finova-title h5 mb-2">{t("home.onboardingTitle")}</h2>
           <p className="finova-subtitle mb-0">
             {completedCount === items.length
-              ? "Tudo pronto. Sua base inicial ja esta montada."
-              : "Siga estes passos para transformar a Home em um ponto de apoio real no dia a dia."}
+              ? t("home.onboardingCompletedDescription")
+              : t("home.onboardingDescription")}
           </p>
         </div>
 
         <div className="finova-actions-row">
           <span className="finova-badge-primary">
-            {completedCount}/{items.length} concluidos
+            {t("home.onboardingProgress", {
+              current: completedCount,
+              total: items.length,
+            })}
           </span>
           <button
             type="button"
@@ -174,7 +174,7 @@ function OnboardingChecklistCard({
             disabled={isSaving}
             onClick={onHide}
           >
-            Ocultar guia
+            {t("home.onboardingHide")}
           </button>
         </div>
       </div>
@@ -186,7 +186,7 @@ function OnboardingChecklistCard({
               <div className="d-flex justify-content-between align-items-start gap-3 mb-2">
                 <h3 className="finova-title h6 mb-0">{item.label}</h3>
                 <span className={item.done ? "finova-badge-income" : "finova-badge-neutral"}>
-                  {item.done ? "Feito" : "Pendente"}
+                  {item.done ? t("home.onboardingDone") : t("home.onboardingPending")}
                 </span>
               </div>
               <p className="finova-subtitle small mb-0">{item.description}</p>
@@ -224,34 +224,32 @@ function ShortcutTile({ title, description, to }) {
 }
 
 function GoalsPreview({ goalsCount, goalsRiskCount }) {
+  const { t } = useI18n();
+
   return (
     <HomeWidgetCard
-      title="Metas do mes"
-      description="Um resumo rapido para saber se o planejamento ja esta armado."
+      title={t("home.goalsTitle")}
+      description={t("home.goalsDescription")}
     >
       <div className="row g-3 mb-3">
         <div className="col-12 col-md-6">
           <div className="finova-card-soft p-3 h-100">
-            <div className="finova-subtitle small mb-1">Metas configuradas</div>
+            <div className="finova-subtitle small mb-1">{t("home.goalsConfiguredLabel")}</div>
             <div className="finova-title h4 mb-1">{goalsCount}</div>
-            <div className="finova-subtitle small mb-0">
-              Entre meta geral e limites por categoria.
-            </div>
+            <div className="finova-subtitle small mb-0">{t("home.goalsConfiguredHelp")}</div>
           </div>
         </div>
         <div className="col-12 col-md-6">
           <div className="finova-card-soft p-3 h-100">
-            <div className="finova-subtitle small mb-1">Metas em atencao</div>
+            <div className="finova-subtitle small mb-1">{t("home.goalsRiskLabel")}</div>
             <div className="finova-title h4 mb-1">{goalsRiskCount}</div>
-            <div className="finova-subtitle small mb-0">
-              Metas no limite ou ja ultrapassadas no mes atual.
-            </div>
+            <div className="finova-subtitle small mb-0">{t("home.goalsRiskHelp")}</div>
           </div>
         </div>
       </div>
 
       <Link to="/analises" className="btn finova-btn-light">
-        Abrir analises
+        {t("home.openAnalyses")}
       </Link>
     </HomeWidgetCard>
   );
@@ -262,15 +260,13 @@ function HistoryPreview({ logs, isLoading }) {
 
   return (
     <HomeWidgetCard
-      title="Historico recente"
-      description="As ultimas acoes mais relevantes da sua conta, sem a parte tecnica."
+      title={t("home.historyTitle")}
+      description={t("home.historyDescription")}
     >
       {isLoading ? (
         <p className="finova-subtitle mb-0">{t("history.loading")}</p>
       ) : logs.length === 0 ? (
-        <p className="finova-subtitle mb-0">
-          Assim que voce usar o sistema, as principais acoes aparecem aqui.
-        </p>
+        <p className="finova-subtitle mb-0">{t("home.historyEmpty")}</p>
       ) : (
         <div className="d-grid gap-2">
           {logs.map((log) => (
@@ -291,7 +287,7 @@ function HistoryPreview({ logs, isLoading }) {
 
       <div className="mt-3">
         <Link to="/historico" className="btn finova-btn-light">
-          Ver historico completo
+          {t("home.openHistory")}
         </Link>
       </div>
     </HomeWidgetCard>
@@ -613,12 +609,10 @@ export default function Home() {
 
         {visibleWidgetCount === 0 ? (
           <div className="finova-card p-4 text-center">
-            <h2 className="finova-title h5 mb-2">Sua Home esta vazia</h2>
-            <p className="finova-subtitle mb-3">
-              Reative pelo menos um bloco para transformar esta pagina em um ponto de apoio util.
-            </p>
+            <h2 className="finova-title h5 mb-2">{t("home.emptyTitle")}</h2>
+            <p className="finova-subtitle mb-3">{t("home.emptyDescription")}</p>
             <button type="button" className="btn finova-btn-primary" onClick={handleResetWidgets}>
-              Restaurar blocos padrao
+              {t("home.restoreWidgets")}
             </button>
           </div>
         ) : null}
@@ -648,28 +642,30 @@ export default function Home() {
         {widgets.summary ? (
           <div className="finova-card p-4">
             <div className="mb-3">
-              <h2 className="finova-title h5 mb-1">Resumo financeiro</h2>
+              <h2 className="finova-title h5 mb-1">{t("home.summaryTitle")}</h2>
               <p className="finova-subtitle mb-0">
-                Uma leitura rapida do recorte {selectedPeriodLabel.toLowerCase()}.
+                {t("home.summaryDescription", {
+                  period: selectedPeriodLabel.toLowerCase(),
+                })}
               </p>
             </div>
 
             {isLoading ? (
-              <p className="finova-subtitle mb-0">Carregando resumo...</p>
+              <p className="finova-subtitle mb-0">{t("home.summaryLoading")}</p>
             ) : (
               <div className="row g-3">
                 <SummaryCard
-                  label="Receitas"
+                  label={t("transactions.incomePlural")}
                   value={formatBRLFromCents(summary.income)}
                   tone="income"
                 />
                 <SummaryCard
-                  label="Despesas"
+                  label={t("transactions.expensePlural")}
                   value={formatBRLFromCents(summary.expense)}
                   tone="expense"
                 />
                 <SummaryCard
-                  label="Saldo"
+                  label={t("publicDashboard.balanceLabel")}
                   value={formatBRLFromCents(summary.balance)}
                   tone="default"
                 />
@@ -680,28 +676,28 @@ export default function Home() {
 
         {widgets.shortcuts ? (
           <HomeWidgetCard
-            title="Atalhos principais"
-            description="Cada area ganhou uma pagina propria. Deixe aqui os caminhos que voce mais usa."
+            title={t("home.shortcutsTitle")}
+            description={t("home.shortcutsDescription")}
           >
             <div className="row g-3">
               <ShortcutTile
-                title="Graficos"
-                description="Acompanhe graficos e resumo geral do periodo."
+                title={t("navbar.charts")}
+                description={t("home.shortcutChartsDescription")}
                 to="/graficos"
               />
               <ShortcutTile
-                title="Analises"
-                description="Reuna insights, comparativos e metas em uma unica area."
+                title={t("navbar.analyses")}
+                description={t("home.shortcutAnalysesDescription")}
                 to="/analises"
               />
               <ShortcutTile
-                title="Transacoes"
-                description="Consulte lancamentos, filtros e importacoes em um so lugar."
+                title={t("navbar.transactions")}
+                description={t("home.shortcutTransactionsDescription")}
                 to="/transacoes"
               />
               <ShortcutTile
-                title="Contas"
-                description="Gerencie bancos, cartoes e contas manuais cadastradas."
+                title={t("navbar.accounts")}
+                description={t("home.shortcutAccountsDescription")}
                 to="/contas"
               />
             </div>
@@ -712,15 +708,13 @@ export default function Home() {
           {widgets.insights ? (
             <div className="col-12 col-xxl-6">
               <HomeWidgetCard
-                title="Insights em destaque"
-                description="Um recorte rapido do que mais chama atencao agora."
+                title={t("home.insightsTitle")}
+                description={t("home.insightsDescription")}
               >
                 {isLoading ? (
-                  <p className="finova-subtitle mb-0">Carregando insights...</p>
+                  <p className="finova-subtitle mb-0">{t("home.insightsLoading")}</p>
                 ) : automaticInsights.length === 0 && prescriptiveInsights.length === 0 ? (
-                  <p className="finova-subtitle mb-0">
-                    Adicione mais movimentacoes para ativar os insights da Home.
-                  </p>
+                  <p className="finova-subtitle mb-0">{t("home.insightsEmpty")}</p>
                 ) : (
                   <>
                     <div className="row g-3">
@@ -737,7 +731,7 @@ export default function Home() {
 
                     <div className="mt-3">
                       <Link to="/analises" className="btn finova-btn-light">
-                        Abrir analises completas
+                        {t("home.openFullAnalyses")}
                       </Link>
                     </div>
                   </>
@@ -749,30 +743,30 @@ export default function Home() {
           {widgets.comparisons ? (
             <div className="col-12 col-xxl-6">
               <HomeWidgetCard
-                title="Comparativo rapido"
-                description="Um resumo do mes atual contra o mes anterior."
+                title={t("home.comparisonTitle")}
+                description={t("home.comparisonDescription")}
               >
                 {isLoading ? (
-                  <p className="finova-subtitle mb-0">Carregando comparativo...</p>
+                  <p className="finova-subtitle mb-0">{t("home.comparisonLoading")}</p>
                 ) : (
                   <>
                     <div className="row g-3 mb-3">
                       <ComparisonCard
-                        label="Receitas"
+                        label={t("transactions.incomePlural")}
                         currentValue={comparison.current.income}
                         previousValue={comparison.previous.income}
                         currentRangeLabel={comparison.currentRangeLabel}
                         previousRangeLabel={comparison.previousRangeLabel}
                       />
                       <ComparisonCard
-                        label="Despesas"
+                        label={t("transactions.expensePlural")}
                         currentValue={comparison.current.expense}
                         previousValue={comparison.previous.expense}
                         currentRangeLabel={comparison.currentRangeLabel}
                         previousRangeLabel={comparison.previousRangeLabel}
                       />
                       <ComparisonCard
-                        label="Saldo"
+                        label={t("publicDashboard.balanceLabel")}
                         currentValue={comparison.current.balance}
                         previousValue={comparison.previous.balance}
                         currentRangeLabel={comparison.currentRangeLabel}
@@ -782,13 +776,13 @@ export default function Home() {
 
                     <div className="row g-3">
                       <CategoryInsightCard
-                        title="Categoria que mais pesou"
+                        title={t("home.comparisonHeaviestCategory")}
                         category={comparison.categoryLeaders.biggestIncrease.category}
                         value={comparison.categoryLeaders.biggestIncrease.value}
                         tone="up"
                       />
                       <CategoryInsightCard
-                        title="Categoria que mais aliviou"
+                        title={t("home.comparisonLightestCategory")}
                         category={comparison.categoryLeaders.biggestDrop.category}
                         value={comparison.categoryLeaders.biggestDrop.value}
                         tone="down"
@@ -797,7 +791,7 @@ export default function Home() {
 
                     <div className="mt-3">
                       <Link to="/analises" className="btn finova-btn-light">
-                        Abrir analises completas
+                        {t("home.openFullAnalyses")}
                       </Link>
                     </div>
                   </>

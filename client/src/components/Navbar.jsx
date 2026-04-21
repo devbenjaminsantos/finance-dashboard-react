@@ -36,7 +36,7 @@ export default function Navbar() {
 
   return (
     <nav
-      className="navbar navbar-expand-xl border-bottom"
+      className="navbar navbar-expand-xl border-bottom finova-navbar"
       style={{ background: "var(--nav-surface)", borderColor: "var(--nav-border)" }}
     >
       <div className="container">

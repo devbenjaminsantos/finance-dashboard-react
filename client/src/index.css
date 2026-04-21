@@ -350,6 +350,21 @@ a {
 }
 
 @media (max-width: 1199.98px) {
+  .finova-navbar .container {
+    row-gap: 0.75rem;
+  }
+
+  .finova-navbar .navbar-collapse {
+    width: 100%;
+    margin-top: 0.5rem;
+    padding: 0.9rem;
+    border-radius: var(--radius-lg);
+    background: rgba(7, 16, 29, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 18px 36px rgba(2, 6, 23, 0.22);
+    backdrop-filter: blur(10px);
+  }
+
   .finova-navbar-actions {
     gap: 0.5rem;
   }
@@ -366,10 +381,21 @@ a {
     max-width: none;
   }
 
+  .finova-navbar-link {
+    min-height: 42px;
+    padding-left: 0.95rem !important;
+    padding-right: 0.95rem !important;
+  }
+
   .finova-navbar-account-area {
     display: grid;
     gap: 0.45rem;
     margin-left: 0;
+  }
+
+  .finova-navbar-user,
+  .finova-navbar-logout {
+    width: 100%;
   }
 
   .finova-navbar-logout {
@@ -507,6 +533,14 @@ a {
     margin-bottom: 1.25rem;
   }
 
+  .finova-page-header-copy {
+    flex-basis: 100%;
+  }
+
+  .finova-page-header-copy .finova-title {
+    font-size: clamp(1.55rem, 7vw, 1.95rem);
+  }
+
   .finova-page-header-side {
     width: 100%;
   }
@@ -518,6 +552,59 @@ a {
 
   .finova-page-header-actions .btn {
     flex: 1 1 180px;
+  }
+
+  .finova-page-note {
+    padding: 0.8rem 0.9rem;
+    font-size: 0.95rem;
+    line-height: 1.45;
+  }
+
+  .finova-actions-row {
+    width: 100%;
+  }
+
+  .finova-actions-row .btn {
+    flex: 1 1 180px;
+  }
+
+  .finova-navbar-actions {
+    gap: 0.4rem;
+  }
+
+  .finova-theme-toggle,
+  .finova-language-select,
+  .finova-navbar-toggler {
+    min-height: 38px;
+  }
+
+  .finova-theme-toggle {
+    min-width: 38px;
+  }
+
+  .finova-language-select {
+    min-width: 68px;
+    width: 68px;
+    padding-left: 0.55rem;
+    padding-right: 1.7rem;
+  }
+
+  .finova-navbar .navbar-brand {
+    min-width: 0;
+    margin-right: 0.6rem;
+  }
+
+  .finova-navbar .navbar-collapse {
+    padding: 0.8rem;
+  }
+
+  .finova-navbar-links {
+    padding-top: 0.35rem;
+  }
+
+  .finova-card,
+  .finova-card-soft {
+    border-radius: 14px;
   }
 }
 
@@ -710,6 +797,21 @@ a {
 
 .finova-brand-mark-navbar .finova-brand-caption {
   color: rgba(255, 255, 255, 0.72);
+}
+
+@media (max-width: 575.98px) {
+  .finova-brand-mark-navbar {
+    gap: 0.6rem;
+  }
+
+  .finova-brand-mark-navbar .finova-brand-logo {
+    width: 30px;
+    height: 30px;
+  }
+
+  .finova-brand-mark-navbar .finova-brand-wordmark {
+    font-size: 0.98rem;
+  }
 }
 
 .finova-brand-mark-hero {

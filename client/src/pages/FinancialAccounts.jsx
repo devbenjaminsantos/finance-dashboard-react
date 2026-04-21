@@ -298,33 +298,37 @@ export default function FinancialAccounts() {
       </div>
 
       <div className="d-grid gap-4">
+        <div className="finova-page-note">
+          {t("pages.accountsPageNote")}
+        </div>
+
         <div className="finova-card p-4">
           <div className="row g-3">
-            <div className="col-12 col-md-6 col-xl-3">
+            <div className="col-12 col-md-6 col-xl">
               <div className="finova-card-soft p-3 h-100">
                 <div className="finova-subtitle small mb-1">{t("accounts.summaryRegistered")}</div>
                 <div className="finova-title h4 mb-0">{summary.total}</div>
               </div>
             </div>
-            <div className="col-12 col-md-6 col-xl-3">
+            <div className="col-12 col-md-6 col-xl">
               <div className="finova-card-soft p-3 h-100">
                 <div className="finova-subtitle small mb-1">{t("accounts.summaryConnected")}</div>
                 <div className="finova-title h4 mb-0">{summary.connected}</div>
               </div>
             </div>
-            <div className="col-12 col-md-6 col-xl-3">
+            <div className="col-12 col-md-6 col-xl">
               <div className="finova-card-soft p-3 h-100">
                 <div className="finova-subtitle small mb-1">{t("accounts.summaryPending")}</div>
                 <div className="finova-title h4 mb-0">{summary.pending}</div>
               </div>
             </div>
-            <div className="col-12 col-md-6 col-xl-3">
+            <div className="col-12 col-md-6 col-xl">
               <div className="finova-card-soft p-3 h-100">
                 <div className="finova-subtitle small mb-1">{t("accounts.summarySynced")}</div>
                 <div className="finova-title h4 mb-0">{summary.synced}</div>
               </div>
             </div>
-            <div className="col-12 col-md-6 col-xl-3">
+            <div className="col-12 col-md-6 col-xl">
               <div className="finova-card-soft p-3 h-100">
                 <div className="finova-subtitle small mb-1">{t("accounts.summaryCreditCards")}</div>
                 <div className="finova-title h4 mb-0">{summary.creditCards}</div>

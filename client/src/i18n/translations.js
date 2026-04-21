@@ -44,6 +44,7 @@ export const translations = {
       home: "Home",
       charts: "Graficos",
       transactions: "Transacoes",
+      analyses: "Analises",
       insights: "Insights",
       comparisons: "Comparativos",
       goals: "Metas",
@@ -208,6 +209,11 @@ export const translations = {
       removeTransactionConfirm: "Remover esta transacao?",
       removeInstallmentGroupConfirm:
         "Remover toda esta compra parcelada e todas as parcelas ja lancadas?",
+      analysesTitle: "Analises",
+      analysesSubtitle:
+        "Reuna insights, comparativos e metas em uma area unica para interpretar o momento financeiro e decidir os proximos ajustes.",
+      analysesPeriod: "Periodo",
+      analysesRange: "Janela comparativa",
       insightsTitle: "Insights",
       insightsSubtitle:
         "Veja padroes, sinais de atencao e proximos passos sugeridos com base nas suas movimentacoes.",
@@ -365,6 +371,7 @@ export const translations = {
       home: "Home",
       charts: "Charts",
       transactions: "Transactions",
+      analyses: "Analyses",
       insights: "Insights",
       comparisons: "Comparisons",
       goals: "Goals",
@@ -528,6 +535,11 @@ export const translations = {
       removeTransactionConfirm: "Remove this transaction?",
       removeInstallmentGroupConfirm:
         "Remove this entire installment purchase and all posted installments?",
+      analysesTitle: "Analyses",
+      analysesSubtitle:
+        "Bring together insights, comparisons, and goals in one area to interpret your current financial picture and decide the next adjustments.",
+      analysesPeriod: "Period",
+      analysesRange: "Comparison window",
       insightsTitle: "Insights",
       insightsSubtitle:
         "See patterns, warning signs, and suggested next steps based on your activity.",

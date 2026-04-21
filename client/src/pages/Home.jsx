@@ -285,8 +285,8 @@ function GoalsPreview({ goalsCount, goalsRiskCount }) {
         </div>
       </div>
 
-      <Link to="/metas" className="btn finova-btn-light">
-        Abrir metas
+      <Link to="/analises" className="btn finova-btn-light">
+        Abrir analises
       </Link>
     </HomeWidgetCard>
   );
@@ -723,19 +723,19 @@ export default function Home() {
                 to="/graficos"
               />
               <ShortcutTile
-                title="Insights"
-                description="Leia sinais automaticos e recomendacoes do periodo."
-                to="/insights"
+                title="Analises"
+                description="Reuna insights, comparativos e metas em uma unica area."
+                to="/analises"
               />
               <ShortcutTile
-                title="Comparativos"
-                description="Veja como os ultimos recortes se comportaram."
-                to="/comparativos"
+                title="Transacoes"
+                description="Consulte lancamentos, filtros e importacoes em um so lugar."
+                to="/transacoes"
               />
               <ShortcutTile
-                title="Metas"
-                description="Organize limites gerais e por categoria."
-                to="/metas"
+                title="Contas"
+                description="Gerencie bancos, cartoes e contas manuais cadastradas."
+                to="/contas"
               />
             </div>
           </HomeWidgetCard>
@@ -769,8 +769,8 @@ export default function Home() {
                     </div>
 
                     <div className="mt-3">
-                      <Link to="/insights" className="btn finova-btn-light">
-                        Abrir insights completos
+                      <Link to="/analises" className="btn finova-btn-light">
+                        Abrir analises completas
                       </Link>
                     </div>
                   </>
@@ -829,8 +829,8 @@ export default function Home() {
                     </div>
 
                     <div className="mt-3">
-                      <Link to="/comparativos" className="btn finova-btn-light">
-                        Abrir comparativos completos
+                      <Link to="/analises" className="btn finova-btn-light">
+                        Abrir analises completas
                       </Link>
                     </div>
                   </>

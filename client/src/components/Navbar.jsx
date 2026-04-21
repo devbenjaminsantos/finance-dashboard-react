@@ -98,14 +98,8 @@ export default function Navbar() {
                 <NavLink className={linkClass} to="/transacoes">
                   {t("navbar.transactions")}
                 </NavLink>
-                <NavLink className={linkClass} to="/insights">
-                  {t("navbar.insights")}
-                </NavLink>
-                <NavLink className={linkClass} to="/comparativos">
-                  {t("navbar.comparisons")}
-                </NavLink>
-                <NavLink className={linkClass} to="/metas">
-                  {t("navbar.goals")}
+                <NavLink className={linkClass} to="/analises">
+                  {t("navbar.analyses")}
                 </NavLink>
                 <NavLink className={linkClass} to="/contas">
                   {t("navbar.accounts")}

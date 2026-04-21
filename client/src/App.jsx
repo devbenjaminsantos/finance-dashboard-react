@@ -8,14 +8,12 @@ import {
   syncSessionFromStorageEvent,
   touchSessionActivity,
 } from "./lib/api/auth";
+import Analyses from "./pages/Analyses";
 import AuditLogs from "./pages/AuditLogs";
-import Comparisons from "./pages/Comparisons";
 import Dashboard from "./pages/Dashboard";
 import FinancialAccounts from "./pages/FinancialAccounts";
 import ForgotPassword from "./pages/ForgotPassword";
-import Goals from "./pages/Goals";
 import Home from "./pages/Home";
-import Insights from "./pages/Insights";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import PublicDashboard from "./pages/PublicDashboard";
@@ -93,31 +91,16 @@ export default function App() {
             />
 
             <Route
-              path="/insights"
+              path="/analises"
               element={
                 <ProtectedRoute>
-                  <Insights />
+                  <Analyses />
                 </ProtectedRoute>
               }
             />
-
-            <Route
-              path="/comparativos"
-              element={
-                <ProtectedRoute>
-                  <Comparisons />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/metas"
-              element={
-                <ProtectedRoute>
-                  <Goals />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/insights" element={<Navigate to="/analises" replace />} />
+            <Route path="/comparativos" element={<Navigate to="/analises" replace />} />
+            <Route path="/metas" element={<Navigate to="/analises" replace />} />
 
             <Route
               path="/contas"

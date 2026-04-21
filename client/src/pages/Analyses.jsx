@@ -38,6 +38,31 @@ function formatMonthLabel(month, locale) {
   }).format(new Date(year, monthNumber - 1, 1));
 }
 
+function AnalysisOverviewCard({ eyebrow, title, description, badgeClass = "finova-badge-primary", badge }) {
+  return (
+    <div className="col-12 col-lg-4">
+      <div className="finova-card-soft p-3 h-100">
+        <div className="d-flex justify-content-between align-items-start gap-3 mb-2">
+          <div className="finova-subtitle small">{eyebrow}</div>
+          {badge ? <span className={badgeClass}>{badge}</span> : null}
+        </div>
+        <div className="finova-title h6 mb-2">{title}</div>
+        <p className="finova-subtitle mb-0">{description}</p>
+      </div>
+    </div>
+  );
+}
+
+function AnalysisSectionHeader({ eyebrow, title, description }) {
+  return (
+    <div className="mb-3">
+      <div className="finova-subtitle small text-uppercase mb-1">{eyebrow}</div>
+      <h2 className="finova-title h5 mb-1">{title}</h2>
+      <p className="finova-subtitle mb-0">{description}</p>
+    </div>
+  );
+}
+
 export default function Analyses() {
   const { locale, t, formatCurrencyFromCents } = useI18n();
   const { isLoading, transactions } = useTransactions();
@@ -121,6 +146,20 @@ export default function Analyses() {
       }),
     [scopedTransactions, comparisonRange]
   );
+
+  const totalInsightCount = automaticInsights.length + prescriptiveInsights.length;
+  const highlightBadgeClass =
+    summary.balance < 0
+      ? "finova-badge-expense"
+      : totalInsightCount > 0
+        ? "finova-badge-primary"
+        : "finova-badge-income";
+  const highlightBadgeLabel =
+    summary.balance < 0
+      ? "Atencao"
+      : totalInsightCount > 0
+        ? `${totalInsightCount} sinais`
+        : "Estavel";
 
   const confidenceBadgeClass =
     forecast.confidence.tone === "income"
@@ -230,29 +269,60 @@ export default function Analyses() {
       ) : (
         <>
           <div className="row g-3 mb-4">
-            <SummaryCard
-              label="Receitas"
-              value={formatCurrencyFromCents(summary.income)}
-              tone="income"
+            <AnalysisOverviewCard
+              eyebrow="Momento atual"
+              title={selectedPeriodLabel}
+              description={`A leitura atual considera ${filteredTransactions.length} movimentacao${filteredTransactions.length === 1 ? "" : "es"} no recorte selecionado.`}
+              badgeClass={highlightBadgeClass}
+              badge={highlightBadgeLabel}
             />
-            <SummaryCard
-              label="Despesas"
-              value={formatCurrencyFromCents(summary.expense)}
-              tone="expense"
+            <AnalysisOverviewCard
+              eyebrow="Comparacao"
+              title={selectedComparisonRangeLabel}
+              description={`A janela atual sera comparada com os ${selectedComparisonRangeLabel.toLowerCase()} anteriores para identificar mudancas de ritmo.`}
+              badgeClass="finova-badge-neutral"
+              badge="Tendencia"
             />
-            <SummaryCard
-              label="Saldo"
-              value={formatCurrencyFromCents(summary.balance)}
-              tone="default"
+            <AnalysisOverviewCard
+              eyebrow="Projecao"
+              title={
+                forecast.hasEnoughData
+                  ? `Confianca ${forecast.confidence.label.toLowerCase()}`
+                  : "Historico insuficiente"
+              }
+              description={
+                forecast.hasEnoughData
+                  ? "A previsao dos proximos meses ja pode apoiar ajustes de metas e prioridades."
+                  : "Adicione mais meses de movimentacao para destravar a leitura preditiva."
+              }
+              badgeClass={confidenceBadgeClass}
+              badge={forecast.hasEnoughData ? forecast.confidence.label : "Aguardando base"}
             />
           </div>
 
           <div className="finova-card p-4 mb-4">
-            <div className="mb-3">
-              <h2 className="finova-title h5 mb-1">Insights do periodo</h2>
-              <p className="finova-subtitle mb-0">
-                Sinais automaticos e recomendacoes objetivas para o recorte selecionado.
-              </p>
+            <AnalysisSectionHeader
+              eyebrow="Leitura automatica"
+              title="Insights do periodo"
+              description="Sinais automaticos e recomendacoes objetivas para o recorte selecionado."
+            />
+
+            <div className="row g-3 mb-4">
+              <SummaryCard
+                label="Receitas"
+                value={formatCurrencyFromCents(summary.income)}
+                tone="income"
+              />
+              <SummaryCard
+                label="Despesas"
+                value={formatCurrencyFromCents(summary.expense)}
+                tone="expense"
+              />
+              <SummaryCard
+                label="Saldo"
+                value={formatCurrencyFromCents(summary.balance)}
+                tone="default"
+              />
             </div>
 
             {automaticInsights.length === 0 && prescriptiveInsights.length === 0 ? (
@@ -288,12 +358,11 @@ export default function Analyses() {
           </div>
 
           <div className="finova-card p-4 mb-4">
-            <div className="mb-3">
-              <h2 className="finova-title h5 mb-1">Comparativos</h2>
-              <p className="finova-subtitle mb-0">
-                Entenda o que mudou entre a janela atual e a anterior, com previsao dos proximos meses.
-              </p>
-            </div>
+            <AnalysisSectionHeader
+              eyebrow="Mudanca de ritmo"
+              title="Comparativos"
+              description="Entenda o que mudou entre a janela atual e a anterior, com previsao dos proximos meses."
+            />
 
             <div className="row g-3 mb-3">
               <ComparisonCard
@@ -435,12 +504,11 @@ export default function Analyses() {
           </div>
 
           <div className="finova-card p-4">
-            <div className="mb-3">
-              <h2 className="finova-title h5 mb-1">Metas do mes</h2>
-              <p className="finova-subtitle mb-0">
-                Revise o orcamento mensal geral e por categoria sem sair da mesma area de analise.
-              </p>
-            </div>
+            <AnalysisSectionHeader
+              eyebrow="Planejamento mensal"
+              title="Metas do mes"
+              description="Revise o orcamento mensal geral e por categoria sem sair da mesma area de analise."
+            />
 
             <BudgetGoalsSection transactions={scopedTransactions} />
           </div>

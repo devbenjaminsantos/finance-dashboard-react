@@ -113,7 +113,12 @@ export default function Navbar() {
                 </NavLink>
 
                 <div className="finova-navbar-account-area">
-                  <span className="text-white-50 small finova-navbar-user">{user?.name}</span>
+                  <span
+                    className="text-white-50 small finova-navbar-user"
+                    title={user?.name || t("common.brandName")}
+                  >
+                    {user?.name || t("common.brandName")}
+                  </span>
 
                   <button className="btn finova-btn-light btn-sm finova-navbar-logout" onClick={handleLogout}>
                     {t("navbar.logout")}

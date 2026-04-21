@@ -279,6 +279,7 @@ a {
   padding: 0.25rem 0.85rem;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.14);
+  font-weight: 600;
   max-width: 190px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -290,6 +291,8 @@ a {
   align-items: center;
   gap: 0.85rem;
   margin-left: 0.8rem;
+  padding-left: 0.8rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .finova-navbar-link {
@@ -391,6 +394,8 @@ a {
     display: grid;
     gap: 0.45rem;
     margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
   }
 
   .finova-navbar-user,
@@ -974,7 +979,12 @@ a {
 .finova-actions-row {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.75rem;
+}
+
+.finova-actions-row .btn {
+  white-space: nowrap;
 }
 
 .finova-actions-row.finova-actions-row-end {
@@ -988,6 +998,7 @@ a {
   border: 1px solid var(--border);
   color: color-mix(in srgb, var(--text-muted) 82%, var(--text) 18%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  line-height: 1.55;
 }
 
 .finova-public-dashboard-meta {
@@ -1062,6 +1073,11 @@ a {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: linear-gradient(180deg, var(--surface-elevated) 0%, var(--surface) 100%);
+}
+
+.finova-table .finova-actions-row {
+  justify-content: flex-end;
+  gap: 0.5rem;
 }
 
 .alert {

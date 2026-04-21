@@ -115,6 +115,22 @@ namespace FinanceDashboard.Api.Controllers
             InstallmentPlan? installmentPlan = null;
             RecurringRule? recurringRule = null;
 
+            if (dto.FinancialAccountId.HasValue)
+            {
+                var accountExists = await _context.FinancialAccounts.AnyAsync(account =>
+                    account.Id == dto.FinancialAccountId.Value &&
+                    account.UserId == userId);
+
+                if (!accountExists)
+                {
+                    return BadRequest(new ProblemDetails
+                    {
+                        Title = "Conta financeira invalida para este usuario.",
+                        Status = StatusCodes.Status400BadRequest
+                    });
+                }
+            }
+
             if (creationPlan[0].InstallmentGroupId is not null)
             {
                 installmentPlan = new InstallmentPlan
@@ -279,6 +295,7 @@ namespace FinanceDashboard.Api.Controllers
             transaction.AmountCents = dto.AmountCents;
             transaction.Date = dto.Date.Date;
             transaction.Type = dto.Type.Trim().ToLowerInvariant();
+            transaction.FinancialAccountId = dto.FinancialAccountId;
             await ReplaceTagsAsync(transaction, dto.TagNames, userId);
 
             await _context.SaveChangesAsync();
@@ -527,6 +544,7 @@ namespace FinanceDashboard.Api.Controllers
                 AmountCents = dto.AmountCents,
                 Date = date,
                 Type = dto.Type.Trim().ToLowerInvariant(),
+                FinancialAccountId = dto.FinancialAccountId,
                 Source = source,
                 SourceReference = dto is TransactionImportItemRequest importItem
                     ? importItem.SourceReference?.Trim()

@@ -218,7 +218,9 @@ describe("TransactionImportModal", () => {
     await fireEvent.change(input, { target: { files: [file] } });
 
     expect(await screen.findByText("Revisar categoria")).toBeInTheDocument();
-    expect(await screen.findByText(/ainda pedem revisão manual/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText((content) => content.includes("ainda pedem revisão manual"))
+    ).toBeInTheDocument();
   });
 
   it("replaces the description in bulk for selected rows", async () => {
@@ -256,5 +258,61 @@ describe("TransactionImportModal", () => {
 
     const replaced = screen.getAllByText("Compra cartão final 1234");
     expect(replaced.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("sends the selected financial account for imported rows", async () => {
+    const file = new File(
+      [
+        `Data;Descricao;Valor
+14/04/2026;Mercado;-120,00`,
+      ],
+      "extrato.csv",
+      { type: "text/csv" }
+    );
+
+    const onImport = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <TransactionImportModal
+        isOpen={true}
+        onClose={vi.fn()}
+        onImport={onImport}
+        existingTransactions={[]}
+        accounts={[
+          {
+            id: 7,
+            label: "Conta principal • final 1234",
+          },
+        ]}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText("Conta de destino"), {
+      target: { value: "7" },
+    });
+
+    const input = document.querySelector('input[type="file"]');
+    expect(input).not.toBeNull();
+    await fireEvent.change(input, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(screen.getByText("Mercado")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /Confirmar importação/i }));
+
+    await waitFor(() => {
+      expect(onImport).toHaveBeenCalledWith(
+        expect.objectContaining({
+          importFormat: "csv",
+          transactions: [
+            expect.objectContaining({
+              description: "Mercado",
+              financialAccountId: 7,
+            }),
+          ],
+        })
+      );
+    });
   });
 });

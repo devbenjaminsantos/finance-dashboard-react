@@ -20,10 +20,15 @@ vi.mock("../lib/api/auditLogs", () => ({
   getAuditLogs: vi.fn(),
 }));
 
+vi.mock("../lib/api/financialAccounts", () => ({
+  getFinancialAccounts: vi.fn(),
+}));
+
 import { useTransactions } from "../features/transactions/useTransactions";
 import { getStoredUser, updateOnboardingPreferenceRequest } from "../lib/api/auth";
 import { getAuditLogs } from "../lib/api/auditLogs";
 import { getBudgetGoals } from "../lib/api/budgetGoals";
+import { getFinancialAccounts } from "../lib/api/financialAccounts";
 
 describe("Home page", () => {
   function renderHome() {
@@ -71,6 +76,14 @@ describe("Home page", () => {
     });
 
     getBudgetGoals.mockResolvedValue([{ id: 1, category: null, amountCents: 200000 }]);
+    getFinancialAccounts.mockResolvedValue([
+      {
+        id: 1,
+        institutionName: "Nubank",
+        accountName: "Conta principal",
+        accountMask: "1234",
+      },
+    ]);
     getAuditLogs.mockResolvedValue([
       {
         id: 1,
@@ -88,6 +101,7 @@ describe("Home page", () => {
     const historyMatches = await screen.findAllByText("Historico recente");
     expect(historyMatches.length).toBeGreaterThan(0);
     expect(screen.getAllByText("Resumo financeiro").length).toBeGreaterThan(0);
+    expect(screen.getByText("Saldo global em todas as contas")).toBeInTheDocument();
   });
 
   it("persists widget visibility when a block is disabled", async () => {

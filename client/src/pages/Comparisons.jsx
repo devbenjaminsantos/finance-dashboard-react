@@ -12,6 +12,11 @@ import {
   summarizeTransactions,
 } from "../features/dashboard/dashboardAnalytics";
 import { useTransactions } from "../features/transactions/useTransactions";
+import {
+  filterTransactionsByFinancialAccount,
+  getFinancialAccountScopeLabel,
+} from "../lib/financialAccounts/scope";
+import { useFinancialAccountOptions } from "../lib/financialAccounts/useFinancialAccountOptions";
 
 function formatMonthLabel(month, locale) {
   const [year, monthNumber] = String(month || "").split("-").map(Number);
@@ -30,6 +35,12 @@ export default function Comparisons() {
   const { locale, t, formatCurrencyFromCents } = useI18n();
   const { isLoading, transactions } = useTransactions();
   const [comparisonRange, setComparisonRange] = useState(3);
+  const [accountFilter, setAccountFilter] = useState("all");
+  const accounts = useFinancialAccountOptions();
+  const scopedTransactions = useMemo(
+    () => filterTransactionsByFinancialAccount(transactions, accountFilter),
+    [transactions, accountFilter]
+  );
 
   const selectedComparisonRangeLabel = useMemo(
     () =>
@@ -38,16 +49,21 @@ export default function Comparisons() {
     [comparisonRange]
   );
 
+  const selectedAccountLabel = useMemo(
+    () => getFinancialAccountScopeLabel(accountFilter, accounts),
+    [accountFilter, accounts]
+  );
+
   const comparison = useMemo(() => {
     const currentMonths = getRelativeMonthsISO(0, comparisonRange);
     const previousMonths = getRelativeMonthsISO(comparisonRange, comparisonRange);
     const currentSet = new Set(currentMonths);
     const previousSet = new Set(previousMonths);
 
-    const currentTransactions = transactions.filter((transaction) =>
+    const currentTransactions = scopedTransactions.filter((transaction) =>
       currentSet.has((transaction.date || "").slice(0, 7))
     );
-    const previousTransactions = transactions.filter((transaction) =>
+    const previousTransactions = scopedTransactions.filter((transaction) =>
       previousSet.has((transaction.date || "").slice(0, 7))
     );
 
@@ -58,15 +74,15 @@ export default function Comparisons() {
       previous: summarizeTransactions(previousTransactions),
       categoryLeaders: getCategoryLeaders(currentTransactions, previousTransactions),
     };
-  }, [transactions, comparisonRange, selectedComparisonRangeLabel]);
+  }, [scopedTransactions, comparisonRange, selectedComparisonRangeLabel]);
 
   const forecast = useMemo(
     () =>
-      getForecastSnapshot(transactions, {
+      getForecastSnapshot(scopedTransactions, {
         historyMonths: Math.max(3, comparisonRange),
         horizon: 3,
       }),
-    [transactions, comparisonRange]
+    [scopedTransactions, comparisonRange]
   );
 
   const confidenceBadgeClass =
@@ -82,21 +98,43 @@ export default function Comparisons() {
         <div className="finova-page-header-copy">
           <h1 className="finova-title">{t("pages.comparisonsTitle")}</h1>
           <p className="finova-subtitle mb-0">{t("pages.comparisonsSubtitle")}</p>
+          <p className="finova-subtitle small mt-2 mb-0">{selectedAccountLabel}</p>
         </div>
 
         <div className="finova-page-header-side">
-          <label className="form-label text-dark fw-medium">{t("pages.comparisonsRange")}</label>
-          <select
-            className="form-select finova-select"
-            value={comparisonRange}
-            onChange={(event) => setComparisonRange(Number(event.target.value))}
-          >
-            {COMPARISON_RANGE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <div className="d-grid gap-2">
+            <div>
+              <label className="form-label text-dark fw-medium">{t("pages.comparisonsRange")}</label>
+              <select
+                className="form-select finova-select"
+                value={comparisonRange}
+                onChange={(event) => setComparisonRange(Number(event.target.value))}
+              >
+                {COMPARISON_RANGE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="form-label text-dark fw-medium">Conta exibida</label>
+              <select
+                className="form-select finova-select"
+                value={accountFilter}
+                onChange={(event) => setAccountFilter(event.target.value)}
+              >
+                <option value="all">Todas as contas (saldo global)</option>
+                <option value="unassigned">Sem conta vinculada</option>
+                {accounts.map((account) => (
+                  <option key={account.id} value={String(account.id)}>
+                    {account.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 

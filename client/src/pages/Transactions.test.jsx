@@ -17,9 +17,14 @@ vi.mock("../lib/export/pdf", () => ({
   exportTransactionsToPdf: (...args) => mockExportPdf(...args),
 }));
 
+vi.mock("../lib/api/financialAccounts", () => ({
+  getFinancialAccounts: vi.fn(),
+}));
+
 vi.mock("../lib/storage/jsonStorage", () => ({
   loadJSON: vi.fn(() => ({
     q: "",
+    accountFilter: "all",
     tagFilter: "all",
     typeFilter: "all",
     categoryFilter: "all",
@@ -55,6 +60,7 @@ vi.mock("../features/transactions/components/TransactionImportModal", () => ({
 }));
 
 import { useTransactions } from "../features/transactions/useTransactions";
+import { getFinancialAccounts } from "../lib/api/financialAccounts";
 
 const transactionsFixture = [
   {
@@ -67,6 +73,7 @@ const transactionsFixture = [
     type: "expense",
     source: "manual",
     isRecurring: false,
+    financialAccountId: 1,
   },
   {
     id: 2,
@@ -82,6 +89,7 @@ const transactionsFixture = [
     source: "import_csv",
     importedAtUtc: "2026-04-16T10:30:00Z",
     isRecurring: false,
+    financialAccountId: 2,
   },
   {
     id: 3,
@@ -97,6 +105,7 @@ const transactionsFixture = [
     source: "import_csv",
     importedAtUtc: "2026-04-16T10:30:00Z",
     isRecurring: false,
+    financialAccountId: 2,
   },
   {
     id: 4,
@@ -112,6 +121,7 @@ const transactionsFixture = [
     source: "import_csv",
     importedAtUtc: "2026-04-16T10:30:00Z",
     isRecurring: false,
+    financialAccountId: 2,
   },
 ];
 
@@ -154,6 +164,21 @@ describe("Transactions page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
+    getFinancialAccounts.mockResolvedValue([
+      {
+        id: 1,
+        institutionName: "Nubank",
+        accountName: "Conta principal",
+        accountMask: "1234",
+      },
+      {
+        id: 2,
+        institutionName: "Inter",
+        accountName: "Cartao virtual",
+        accountMask: "7788",
+      },
+    ]);
+
     useTransactions.mockReturnValue({
       transactions: transactionsFixture,
       installmentPlans: installmentPlansFixture,
@@ -188,6 +213,18 @@ describe("Transactions page", () => {
 
     expect(screen.getAllByText("Notebook").length).toBeGreaterThan(0);
     expect(screen.queryByRole("cell", { name: "Mercado" })).not.toBeInTheDocument();
+  });
+
+  it("filters transactions by selected account", async () => {
+    render(<Transactions />);
+
+    fireEvent.change(await screen.findByLabelText("Conta"), {
+      target: { value: "1" },
+    });
+
+    expect(screen.getByText("Mercado")).toBeInTheDocument();
+    expect(screen.queryByRole("cell", { name: "Notebook" })).not.toBeInTheDocument();
+    expect(screen.getByText("Conta: Conta principal • final 1234")).toBeInTheDocument();
   });
 
   it("exports the currently filtered rows to CSV", () => {

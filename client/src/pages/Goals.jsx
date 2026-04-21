@@ -1,10 +1,26 @@
+import { useMemo, useState } from "react";
 import BudgetGoalsSection from "../features/dashboard/BudgetGoalsSection";
 import { useTransactions } from "../features/transactions/useTransactions";
+import {
+  filterTransactionsByFinancialAccount,
+  getFinancialAccountScopeLabel,
+} from "../lib/financialAccounts/scope";
+import { useFinancialAccountOptions } from "../lib/financialAccounts/useFinancialAccountOptions";
 import { useI18n } from "../i18n/LanguageProvider";
 
 export default function Goals() {
   const { t } = useI18n();
   const { isLoading, transactions } = useTransactions();
+  const [accountFilter, setAccountFilter] = useState("all");
+  const accounts = useFinancialAccountOptions();
+  const filteredTransactions = useMemo(
+    () => filterTransactionsByFinancialAccount(transactions, accountFilter),
+    [transactions, accountFilter]
+  );
+  const selectedAccountLabel = useMemo(
+    () => getFinancialAccountScopeLabel(accountFilter, accounts),
+    [accountFilter, accounts]
+  );
 
   return (
     <section className="finova-section-space">
@@ -12,6 +28,24 @@ export default function Goals() {
         <div className="finova-page-header-copy">
           <h1 className="finova-title">{t("pages.goalsTitle")}</h1>
           <p className="finova-subtitle mb-0">{t("pages.goalsSubtitle")}</p>
+          <p className="finova-subtitle small mt-2 mb-0">{selectedAccountLabel}</p>
+        </div>
+
+        <div className="finova-page-header-side">
+          <label className="form-label text-dark fw-medium">Conta exibida</label>
+          <select
+            className="form-select finova-select"
+            value={accountFilter}
+            onChange={(event) => setAccountFilter(event.target.value)}
+          >
+            <option value="all">Todas as contas (saldo global)</option>
+            <option value="unassigned">Sem conta vinculada</option>
+            {accounts.map((account) => (
+              <option key={account.id} value={String(account.id)}>
+                {account.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -55,7 +89,7 @@ export default function Goals() {
           <p className="finova-subtitle mb-0">Carregando metas...</p>
         </div>
       ) : (
-        <BudgetGoalsSection transactions={transactions} />
+        <BudgetGoalsSection transactions={filteredTransactions} />
       )}
     </section>
   );

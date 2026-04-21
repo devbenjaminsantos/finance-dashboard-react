@@ -58,6 +58,7 @@ export default function TransactionModal({
   onClose,
   onSubmit,
   initial,
+  accounts = [],
 }) {
   const isEdit = mode === "edit";
 
@@ -66,6 +67,7 @@ export default function TransactionModal({
   const [type, setType] = useState("expense");
   const [category, setCategory] = useState(getTransactionCategories("expense")[0]);
   const [amount, setAmount] = useState("");
+  const [financialAccountId, setFinancialAccountId] = useState("all");
   const [tagNamesInput, setTagNamesInput] = useState("");
   const [isInstallment, setIsInstallment] = useState(false);
   const [installmentCount, setInstallmentCount] = useState("2");
@@ -96,6 +98,9 @@ export default function TransactionModal({
       setType(nextType);
       setCategory(initial.category || nextCategories[0]);
       setAmount(centsToInput(initial.amountCents));
+      setFinancialAccountId(
+        initial.financialAccountId != null ? String(initial.financialAccountId) : "all"
+      );
       setTagNamesInput(formatTagNamesForInput(initial.tagNames));
       setIsInstallment(Boolean(initial.installmentCount && initial.installmentCount > 1));
       setInstallmentCount(String(initial.installmentCount || 2));
@@ -109,6 +114,7 @@ export default function TransactionModal({
       setType("expense");
       setCategory(getTransactionCategories("expense")[0]);
       setAmount("");
+      setFinancialAccountId("all");
       setTagNamesInput("");
       setIsInstallment(false);
       setInstallmentCount("2");
@@ -211,6 +217,7 @@ export default function TransactionModal({
         type,
         category,
         amountCents,
+        financialAccountId: financialAccountId === "all" ? null : Number(financialAccountId),
         tagNames: parseTagNames(tagNamesInput),
         isRecurring,
         installmentCount: isInstallment ? parsedInstallmentCount : 1,
@@ -332,6 +339,25 @@ export default function TransactionModal({
                   {categories.map((item) => (
                     <option key={item} value={item}>
                       {item}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="col-12 col-md-4">
+                <label className="form-label text-dark fw-medium" htmlFor="transaction-account">
+                  Conta
+                </label>
+                <select
+                  id="transaction-account"
+                  className="form-select finova-select"
+                  value={financialAccountId}
+                  onChange={(event) => setFinancialAccountId(event.target.value)}
+                >
+                  <option value="all">Sem conta vinculada</option>
+                  {accounts.map((account) => (
+                    <option key={account.id} value={String(account.id)}>
+                      {account.label}
                     </option>
                   ))}
                 </select>

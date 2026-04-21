@@ -31,6 +31,12 @@ describe("TransactionModal", () => {
         onClose={vi.fn()}
         onSubmit={onSubmit}
         initial={null}
+        accounts={[
+          {
+            id: 7,
+            label: "Nubank - Conta principal - final 1234",
+          },
+        ]}
       />
     );
 
@@ -42,6 +48,9 @@ describe("TransactionModal", () => {
     });
     fireEvent.change(screen.getByLabelText("Tags"), {
       target: { value: "casa, fixa, casa" },
+    });
+    fireEvent.change(screen.getByLabelText("Conta"), {
+      target: { value: "7" },
     });
     fireEvent.click(screen.getByLabelText(/Recorr/i));
     fireEvent.change(screen.getByLabelText(/Repetir/i), {
@@ -55,6 +64,7 @@ describe("TransactionModal", () => {
         expect.objectContaining({
           description: "Condominio",
           amountCents: 45000,
+          financialAccountId: 7,
           tagNames: ["casa", "fixa"],
           isRecurring: true,
           installmentCount: 1,

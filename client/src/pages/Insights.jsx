@@ -7,23 +7,37 @@ import {
   PERIOD_OPTIONS,
 } from "../features/dashboard/dashboardAnalytics";
 import { useTransactions } from "../features/transactions/useTransactions";
+import {
+  filterTransactionsByFinancialAccount,
+  getFinancialAccountScopeLabel,
+} from "../lib/financialAccounts/scope";
+import { useFinancialAccountOptions } from "../lib/financialAccounts/useFinancialAccountOptions";
 import { useI18n } from "../i18n/LanguageProvider";
 
 export default function Insights() {
   const { t } = useI18n();
   const { isLoading, transactions } = useTransactions();
   const [period, setPeriod] = useState("current-month");
+  const [accountFilter, setAccountFilter] = useState("all");
+  const accounts = useFinancialAccountOptions();
 
   const filteredTransactions = useMemo(() => {
+    const scopedTransactions = filterTransactionsByFinancialAccount(transactions, accountFilter);
+
     if (period === "all") {
-      return transactions;
+      return scopedTransactions;
     }
 
     const allowedMonths = new Set(getMonthsForPeriod(period));
-    return transactions.filter((transaction) =>
+    return scopedTransactions.filter((transaction) =>
       allowedMonths.has((transaction.date || "").slice(0, 7))
     );
-  }, [transactions, period]);
+  }, [transactions, period, accountFilter]);
+
+  const selectedAccountLabel = useMemo(
+    () => getFinancialAccountScopeLabel(accountFilter, accounts),
+    [accountFilter, accounts]
+  );
 
   const automaticInsights = useMemo(
     () => getAutomaticInsights(filteredTransactions),
@@ -41,21 +55,43 @@ export default function Insights() {
         <div className="finova-page-header-copy">
           <h1 className="finova-title">{t("pages.insightsTitle")}</h1>
           <p className="finova-subtitle mb-0">{t("pages.insightsSubtitle")}</p>
+          <p className="finova-subtitle small mt-2 mb-0">{selectedAccountLabel}</p>
         </div>
 
         <div className="finova-page-header-side">
-          <label className="form-label text-dark fw-medium">{t("pages.insightsPeriod")}</label>
-          <select
-            className="form-select finova-select"
-            value={period}
-            onChange={(event) => setPeriod(event.target.value)}
-          >
-            {PERIOD_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <div className="d-grid gap-2">
+            <div>
+              <label className="form-label text-dark fw-medium">{t("pages.insightsPeriod")}</label>
+              <select
+                className="form-select finova-select"
+                value={period}
+                onChange={(event) => setPeriod(event.target.value)}
+              >
+                {PERIOD_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="form-label text-dark fw-medium">Conta exibida</label>
+              <select
+                className="form-select finova-select"
+                value={accountFilter}
+                onChange={(event) => setAccountFilter(event.target.value)}
+              >
+                <option value="all">Todas as contas (saldo global)</option>
+                <option value="unassigned">Sem conta vinculada</option>
+                {accounts.map((account) => (
+                  <option key={account.id} value={String(account.id)}>
+                    {account.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 

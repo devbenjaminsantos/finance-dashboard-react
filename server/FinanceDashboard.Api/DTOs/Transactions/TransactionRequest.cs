@@ -22,6 +22,8 @@ namespace FinanceDashboard.Api.DTOs
         [RegularExpression("^(income|expense)$")]
         public string Type { get; set; } = string.Empty;
 
+        public int? FinancialAccountId { get; set; }
+
         public List<string> TagNames { get; set; } = new();
 
         public bool IsRecurring { get; set; }

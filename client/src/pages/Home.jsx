@@ -30,6 +30,11 @@ import {
 } from "../lib/api/auth";
 import { getAuditLogs } from "../lib/api/auditLogs";
 import { getBudgetGoals } from "../lib/api/budgetGoals";
+import {
+  filterTransactionsByFinancialAccount,
+  getFinancialAccountScopeLabel,
+} from "../lib/financialAccounts/scope";
+import { useFinancialAccountOptions } from "../lib/financialAccounts/useFinancialAccountOptions";
 import { formatBRLFromCents } from "../lib/format/currency";
 import {
   DEFAULT_HOME_WIDGETS,
@@ -327,8 +332,10 @@ function HistoryPreview({ logs, isLoading }) {
 export default function Home() {
   const { t } = useI18n();
   const { isLoading, transactions } = useTransactions();
+  const accounts = useFinancialAccountOptions();
   const [user, setUser] = useState(() => getStoredUser());
   const [period, setPeriod] = useState("current-month");
+  const [accountFilter, setAccountFilter] = useState("all");
   const [widgets, setWidgets] = useState(() => loadHomeWidgets(getStoredUser()));
   const [isApplyingOnboarding, setIsApplyingOnboarding] = useState(false);
   const [goals, setGoals] = useState([]);
@@ -432,21 +439,28 @@ export default function Home() {
   }, [user]);
 
   const filteredTransactions = useMemo(() => {
+    const scopedTransactions = filterTransactionsByFinancialAccount(transactions, accountFilter);
+
     if (period === "all") {
-      return transactions;
+      return scopedTransactions;
     }
 
     const allowedMonths = new Set(getMonthsForPeriod(period));
-    return transactions.filter((transaction) =>
+    return scopedTransactions.filter((transaction) =>
       allowedMonths.has((transaction.date || "").slice(0, 7))
     );
-  }, [transactions, period]);
+  }, [transactions, period, accountFilter]);
+
+  const scopedTransactions = useMemo(
+    () => filterTransactionsByFinancialAccount(transactions, accountFilter),
+    [transactions, accountFilter]
+  );
 
   const summary = useMemo(() => summarizeTransactions(filteredTransactions), [filteredTransactions]);
 
   const recurringTransactionsCount = useMemo(
-    () => transactions.filter((transaction) => transaction.isRecurring).length,
-    [transactions]
+    () => scopedTransactions.filter((transaction) => transaction.isRecurring).length,
+    [scopedTransactions]
   );
 
   const goalsCount = goals.length;
@@ -457,9 +471,13 @@ export default function Home() {
         transaction.type === "expense" &&
         (transaction.date || "").slice(0, 7) === currentMonthISO()
     );
+    const scopedCurrentMonthTransactions = filterTransactionsByFinancialAccount(
+      currentMonthTransactions,
+      accountFilter
+    );
 
     return goals.filter((goal) => {
-      const spent = currentMonthTransactions
+      const spent = scopedCurrentMonthTransactions
         .filter((transaction) =>
           goal.category ? transaction.category === goal.category : true
         )
@@ -467,12 +485,40 @@ export default function Home() {
 
       return spent >= goal.amountCents;
     }).length;
-  }, [goals, transactions]);
+  }, [goals, transactions, accountFilter]);
 
   const onboardingCompleted = useMemo(
-    () => transactions.length > 0 && recurringTransactionsCount > 0 && goalsCount > 0,
-    [transactions.length, recurringTransactionsCount, goalsCount]
+    () => scopedTransactions.length > 0 && recurringTransactionsCount > 0 && goalsCount > 0,
+    [scopedTransactions.length, recurringTransactionsCount, goalsCount]
   );
+
+  const selectedAccountLabel = useMemo(
+    () => getFinancialAccountScopeLabel(accountFilter, accounts),
+    [accountFilter, accounts]
+  );
+
+  const comparison = useMemo(() => {
+    const range = COMPARISON_RANGE_OPTIONS[0].value;
+    const currentMonths = getRelativeMonthsISO(0, range);
+    const previousMonths = getRelativeMonthsISO(range, range);
+    const currentSet = new Set(currentMonths);
+    const previousSet = new Set(previousMonths);
+
+    const currentTransactions = scopedTransactions.filter((transaction) =>
+      currentSet.has((transaction.date || "").slice(0, 7))
+    );
+    const previousTransactions = scopedTransactions.filter((transaction) =>
+      previousSet.has((transaction.date || "").slice(0, 7))
+    );
+
+    return {
+      current: summarizeTransactions(currentTransactions),
+      previous: summarizeTransactions(previousTransactions),
+      categoryLeaders: getCategoryLeaders(currentTransactions, previousTransactions),
+      currentRangeLabel: "Mes atual",
+      previousRangeLabel: "Mes anterior",
+    };
+  }, [scopedTransactions]);
 
   const selectedPeriodLabel = useMemo(
     () => PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? "Mes atual",
@@ -488,29 +534,6 @@ export default function Home() {
     () => getPrescriptiveInsights(filteredTransactions).slice(0, 1),
     [filteredTransactions]
   );
-
-  const comparison = useMemo(() => {
-    const range = COMPARISON_RANGE_OPTIONS[0].value;
-    const currentMonths = getRelativeMonthsISO(0, range);
-    const previousMonths = getRelativeMonthsISO(range, range);
-    const currentSet = new Set(currentMonths);
-    const previousSet = new Set(previousMonths);
-
-    const currentTransactions = transactions.filter((transaction) =>
-      currentSet.has((transaction.date || "").slice(0, 7))
-    );
-    const previousTransactions = transactions.filter((transaction) =>
-      previousSet.has((transaction.date || "").slice(0, 7))
-    );
-
-    return {
-      current: summarizeTransactions(currentTransactions),
-      previous: summarizeTransactions(previousTransactions),
-      categoryLeaders: getCategoryLeaders(currentTransactions, previousTransactions),
-      currentRangeLabel: "Mes atual",
-      previousRangeLabel: "Mes anterior",
-    };
-  }, [transactions]);
 
   async function handleOnboardingChoice(onboardingOptIn) {
     setIsApplyingOnboarding(true);
@@ -574,21 +597,43 @@ export default function Home() {
         <div className="finova-page-header-copy">
           <h1 className="finova-title">{t("pages.homeTitle")}</h1>
           <p className="finova-subtitle mb-0">{t("pages.homeSubtitle")}</p>
+          <p className="finova-subtitle small mt-2 mb-0">{selectedAccountLabel}</p>
         </div>
 
         <div className="finova-page-header-side">
-          <label className="form-label text-dark fw-medium">{t("pages.homePeriod")}</label>
-          <select
-            className="form-select finova-select"
-            value={period}
-            onChange={(event) => setPeriod(event.target.value)}
-          >
-            {PERIOD_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <div className="d-grid gap-2">
+            <div>
+              <label className="form-label text-dark fw-medium">{t("pages.homePeriod")}</label>
+              <select
+                className="form-select finova-select"
+                value={period}
+                onChange={(event) => setPeriod(event.target.value)}
+              >
+                {PERIOD_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="form-label text-dark fw-medium">Conta exibida</label>
+              <select
+                className="form-select finova-select"
+                value={accountFilter}
+                onChange={(event) => setAccountFilter(event.target.value)}
+              >
+                <option value="all">Todas as contas (saldo global)</option>
+                <option value="unassigned">Sem conta vinculada</option>
+                {accounts.map((account) => (
+                  <option key={account.id} value={String(account.id)}>
+                    {account.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -621,7 +666,7 @@ export default function Home() {
             />
           ) : (
             <OnboardingChecklistCard
-              transactionsCount={transactions.length}
+              transactionsCount={scopedTransactions.length}
               recurringCount={recurringTransactionsCount}
               goalsCount={goalsCount}
               isSaving={isApplyingOnboarding}

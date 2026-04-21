@@ -11,7 +11,12 @@ vi.mock("../features/dashboard/DashboardCharts", () => ({
   default: () => <div>Graficos mockados</div>,
 }));
 
+vi.mock("../lib/api/financialAccounts", () => ({
+  getFinancialAccounts: vi.fn(),
+}));
+
 import { useTransactions } from "../features/transactions/useTransactions";
+import { getFinancialAccounts } from "../lib/api/financialAccounts";
 
 describe("Graficos page", () => {
   function renderDashboard() {
@@ -24,6 +29,14 @@ describe("Graficos page", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    getFinancialAccounts.mockResolvedValue([
+      {
+        id: 1,
+        institutionName: "Nubank",
+        accountName: "Conta principal",
+        accountMask: "1234",
+      },
+    ]);
   });
 
   it("shows a financial summary and charts when there are transactions", () => {
@@ -38,6 +51,7 @@ describe("Graficos page", () => {
           date: "2026-04-05",
           type: "income",
           isRecurring: true,
+          financialAccountId: 1,
         },
         {
           id: 2,
@@ -47,6 +61,7 @@ describe("Graficos page", () => {
           date: "2026-04-10",
           type: "expense",
           isRecurring: false,
+          financialAccountId: 1,
         },
       ],
     });
@@ -56,6 +71,7 @@ describe("Graficos page", () => {
     expect(screen.getByText("Graficos")).toBeInTheDocument();
     expect(screen.getByText("Graficos do periodo")).toBeInTheDocument();
     expect(screen.getByText("Graficos mockados")).toBeInTheDocument();
+    expect(screen.getByText("Saldo global em todas as contas")).toBeInTheDocument();
   });
 
   it("shows an empty state when the selected period has no transactions", () => {

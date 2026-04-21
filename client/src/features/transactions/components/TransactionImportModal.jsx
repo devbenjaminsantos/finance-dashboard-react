@@ -19,6 +19,7 @@ export default function TransactionImportModal({
   onClose,
   onImport,
   existingTransactions = [],
+  accounts = [],
 }) {
   const fileInputRef = useRef(null);
   const [fileName, setFileName] = useState("");
@@ -34,6 +35,7 @@ export default function TransactionImportModal({
   const [bulkCategory, setBulkCategory] = useState("");
   const [bulkDescriptionPrefix, setBulkDescriptionPrefix] = useState("");
   const [bulkDescriptionReplace, setBulkDescriptionReplace] = useState("");
+  const [financialAccountId, setFinancialAccountId] = useState("all");
 
   useEffect(() => {
     if (!isOpen) {
@@ -53,6 +55,7 @@ export default function TransactionImportModal({
     setBulkCategory("");
     setBulkDescriptionPrefix("");
     setBulkDescriptionReplace("");
+    setFinancialAccountId("all");
   }, [isOpen]);
 
   useEffect(() => {
@@ -118,6 +121,16 @@ export default function TransactionImportModal({
     () => reconciledPreview.filter((_, index) => selectedIndexes.has(index)),
     [reconciledPreview, selectedIndexes]
   );
+  const selectedAccountLabel = useMemo(() => {
+    if (financialAccountId === "all") {
+      return "Sem conta vinculada";
+    }
+
+    return (
+      accounts.find((account) => String(account.id) === financialAccountId)?.label ||
+      "Conta selecionada"
+    );
+  }, [accounts, financialAccountId]);
 
   const summary = useMemo(() => {
     return reconciledPreview.reduce(
@@ -423,7 +436,10 @@ export default function TransactionImportModal({
 
     try {
       await onImport({
-        transactions: selectedTransactions,
+        transactions: selectedTransactions.map((transaction) => ({
+          ...transaction,
+          financialAccountId: financialAccountId === "all" ? null : Number(financialAccountId),
+        })),
         importFormat,
       });
       onClose();
@@ -492,6 +508,42 @@ export default function TransactionImportModal({
           </div>
 
           <div className="modal-body px-4 pb-4 pt-3">
+            <div className="finova-card-soft p-3 mb-4">
+              <div className="row g-3 align-items-end">
+                <div className="col-12 col-lg-8">
+                  <label className="form-label text-dark fw-medium" htmlFor="transaction-import-account">
+                    Conta de destino
+                  </label>
+                  <select
+                    id="transaction-import-account"
+                    className="form-select finova-select"
+                    value={financialAccountId}
+                    onChange={(event) => setFinancialAccountId(event.target.value)}
+                    disabled={isSubmitting}
+                  >
+                    <option value="all">Sem conta vinculada</option>
+                    {accounts.map((account) => (
+                      <option key={account.id} value={String(account.id)}>
+                        {account.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-12 col-lg-4">
+                  <p className="form-text mb-0">
+                    Todas as transacoes selecionadas serao importadas para esta conta.
+                  </p>
+                </div>
+
+                <div className="col-12">
+                  <div className="small text-muted">
+                    <strong>Destino atual:</strong> {selectedAccountLabel}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="finova-card-soft p-3 mb-4">
               <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
                 <div>

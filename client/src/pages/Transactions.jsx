@@ -5,15 +5,20 @@ import TransactionModal from "../features/transactions/components/TransactionMod
 import TransactionsFilters from "../features/transactions/components/TransactionsFilters";
 import TransactionsTable from "../features/transactions/components/TransactionsTable";
 import { useTransactions } from "../features/transactions/useTransactions";
+import { getFinancialAccounts } from "../lib/api/financialAccounts";
 import { getTransactionCategories } from "../lib/constants/transactionCategories";
 import { downloadCsv } from "../lib/export/csv";
 import { exportTransactionsToPdf } from "../lib/export/pdf";
+import { formatFinancialAccountLabel } from "../lib/financialAccounts/presentation";
 import { loadJSON, saveJSON } from "../lib/storage/jsonStorage";
 import { useI18n } from "../i18n/LanguageProvider";
 
 const FILTERS_KEY = "fd_tx_filters_v1";
 
-function applyTransactionFilters(list, { q, tagFilter, typeFilter, categoryFilter, month, sortBy }) {
+function applyTransactionFilters(
+  list,
+  { q, accountFilter, tagFilter, typeFilter, categoryFilter, month, sortBy }
+) {
   let next = [...list];
 
   if (q.trim()) {
@@ -27,6 +32,12 @@ function applyTransactionFilters(list, { q, tagFilter, typeFilter, categoryFilte
 
   if (tagFilter !== "all") {
     next = next.filter((transaction) => (transaction.tagNames || []).includes(tagFilter));
+  }
+
+  if (accountFilter === "unassigned") {
+    next = next.filter((transaction) => transaction.financialAccountId == null);
+  } else if (accountFilter !== "all") {
+    next = next.filter((transaction) => String(transaction.financialAccountId) === accountFilter);
   }
 
   if (typeFilter !== "all") {
@@ -79,6 +90,7 @@ export default function Transactions() {
     () =>
       loadJSON(FILTERS_KEY, {
         q: "",
+        accountFilter: "all",
         tagFilter: "all",
         typeFilter: "all",
         categoryFilter: "all",
@@ -89,6 +101,7 @@ export default function Transactions() {
   );
 
   const [q, setQ] = useState(() => saved.q);
+  const [accountFilter, setAccountFilter] = useState(() => saved.accountFilter ?? "all");
   const [tagFilter, setTagFilter] = useState(() => saved.tagFilter ?? "all");
   const [typeFilter, setTypeFilter] = useState(() => saved.typeFilter);
   const [categoryFilter, setCategoryFilter] = useState(() => saved.categoryFilter);
@@ -102,10 +115,40 @@ export default function Transactions() {
   const [isMutating, setIsMutating] = useState(false);
   const [importFeedback, setImportFeedback] = useState("");
   const [highlightImportedSince, setHighlightImportedSince] = useState("");
+  const [accounts, setAccounts] = useState([]);
 
   useEffect(() => {
-    saveJSON(FILTERS_KEY, { q, tagFilter, typeFilter, categoryFilter, month, sortBy });
-  }, [q, tagFilter, typeFilter, categoryFilter, month, sortBy]);
+    saveJSON(FILTERS_KEY, { q, accountFilter, tagFilter, typeFilter, categoryFilter, month, sortBy });
+  }, [q, accountFilter, tagFilter, typeFilter, categoryFilter, month, sortBy]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadAccounts() {
+      try {
+        const data = await getFinancialAccounts();
+
+        if (active) {
+          setAccounts(
+            (Array.isArray(data) ? data : []).map((account) => ({
+              ...account,
+              label: formatFinancialAccountLabel(account),
+            }))
+          );
+        }
+      } catch {
+        if (active) {
+          setAccounts([]);
+        }
+      }
+    }
+
+    loadAccounts();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const categories = useMemo(() => {
     const baseCategories =
@@ -140,6 +183,13 @@ export default function Transactions() {
     return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [transactions]);
 
+  const accountLabelsById = useMemo(() => {
+    return accounts.reduce((map, account) => {
+      map[String(account.id)] = account.label;
+      return map;
+    }, {});
+  }, [accounts]);
+
   useEffect(() => {
     if (categoryFilter !== "all" && !categories.includes(categoryFilter)) {
       setCategoryFilter("all");
@@ -156,13 +206,26 @@ export default function Transactions() {
     () =>
       applyTransactionFilters(transactions, {
         q,
+        accountFilter,
         tagFilter,
         typeFilter,
         categoryFilter,
         month,
         sortBy,
       }),
-    [transactions, q, tagFilter, typeFilter, categoryFilter, month, sortBy]
+    [transactions, q, accountFilter, tagFilter, typeFilter, categoryFilter, month, sortBy]
+  );
+
+  const filteredWithAccountLabels = useMemo(
+    () =>
+      filtered.map((transaction) => ({
+        ...transaction,
+        financialAccountLabel:
+          transaction.financialAccountId != null
+            ? accountLabelsById[String(transaction.financialAccountId)] || "Conta selecionada"
+            : "Sem conta vinculada",
+      })),
+    [filtered, accountLabelsById]
   );
 
   const installmentGroups = useMemo(() => {
@@ -400,6 +463,7 @@ export default function Transactions() {
 
   function resetFilters() {
     setQ("");
+    setAccountFilter("all");
     setTagFilter("all");
     setTypeFilter("all");
     setCategoryFilter("all");
@@ -408,6 +472,7 @@ export default function Transactions() {
 
     saveJSON(FILTERS_KEY, {
       q: "",
+      accountFilter: "all",
       tagFilter: "all",
       typeFilter: "all",
       categoryFilter: "all",
@@ -497,6 +562,7 @@ export default function Transactions() {
         onClose={closeModal}
         onSubmit={handleSubmit}
         initial={selected}
+        accounts={accounts}
       />
 
       <InstallmentGroupModal
@@ -511,11 +577,14 @@ export default function Transactions() {
         onClose={closeImport}
         onImport={handleImportSubmit}
         existingTransactions={transactions}
+        accounts={accounts}
       />
 
       <TransactionsFilters
         q={q}
         setQ={setQ}
+        accountFilter={accountFilter}
+        setAccountFilter={setAccountFilter}
         tagFilter={tagFilter}
         setTagFilter={setTagFilter}
         typeFilter={typeFilter}
@@ -528,6 +597,7 @@ export default function Transactions() {
         setSortBy={setSortBy}
         categories={categories}
         tags={tags}
+        accounts={accounts}
         onReset={resetFilters}
       />
 
@@ -837,7 +907,7 @@ export default function Transactions() {
         ) : null}
 
         <TransactionsTable
-          transactions={filtered}
+          transactions={filteredWithAccountLabels}
           totalTransactionsCount={transactions.length}
           onEdit={openEdit}
           onRemove={handleRemove}

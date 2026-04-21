@@ -7,32 +7,15 @@ vi.mock("../lib/api/financialAccounts", () => ({
   getFinancialAccounts: vi.fn(),
   createFinancialAccount: vi.fn(),
   syncFinancialAccount: vi.fn(),
-  createFinancialAccountConnectToken: vi.fn(),
-  linkFinancialAccountItem: vi.fn(),
 }));
 
 vi.mock("../features/transactions/useTransactions", () => ({
   useTransactions: vi.fn(),
 }));
 
-vi.mock("react-pluggy-connect", () => ({
-  PluggyConnect: ({ onSuccess, onClose }) => (
-    <div>
-      <button type="button" onClick={() => onSuccess({ item: { id: "pluggy-item-1", connector: { name: "Nubank" } } })}>
-        Simular sucesso Pluggy
-      </button>
-      <button type="button" onClick={onClose}>
-        Fechar Pluggy
-      </button>
-    </div>
-  ),
-}));
-
 import {
   createFinancialAccount,
-  createFinancialAccountConnectToken,
   getFinancialAccounts,
-  linkFinancialAccountItem,
   syncFinancialAccount,
 } from "../lib/api/financialAccounts";
 import { useTransactions } from "../features/transactions/useTransactions";
@@ -57,39 +40,39 @@ describe("FinancialAccounts page", () => {
       {
         id: 1,
         accountType: "bank_account",
-        provider: "pluggy",
+        provider: "manual",
         institutionName: "Nubank",
         institutionCode: null,
         accountName: "Conta principal",
         accountMask: "1234",
         externalAccountId: null,
-        providerItemId: null,
         status: "pending",
         lastSyncedAtUtc: null,
       },
     ]);
   });
 
-  it("loads and displays registered accounts", async () => {
+  it("loads and displays registered manual accounts", async () => {
     renderPage();
 
     expect(await screen.findByText("Nubank")).toBeInTheDocument();
     expect(screen.getByText("Conta principal")).toBeInTheDocument();
     expect(screen.getAllByText("Conta bancaria").length).toBeGreaterThan(0);
     expect(screen.getByText("Pendente")).toBeInTheDocument();
+    expect(screen.getByText("Manual por enquanto")).toBeInTheDocument();
+    expect(screen.getByText("Conta principal • final 1234")).toBeInTheDocument();
   });
 
-  it("creates a new financial account", async () => {
+  it("creates a new manual financial account", async () => {
     createFinancialAccount.mockResolvedValue({
       id: 2,
-      accountType: "bank_account",
-      provider: "pluggy",
+      accountType: "wallet",
+      provider: "manual",
       institutionName: "Banco Inter",
       institutionCode: null,
       accountName: "Reserva",
       accountMask: "4321",
       externalAccountId: null,
-      providerItemId: null,
       status: "pending",
       lastSyncedAtUtc: null,
     });
@@ -111,7 +94,7 @@ describe("FinancialAccounts page", () => {
     await waitFor(() => {
       expect(createFinancialAccount).toHaveBeenCalledWith({
         accountType: "bank_account",
-        provider: "pluggy",
+        provider: "manual",
         institutionName: "Banco Inter",
         institutionCode: null,
         accountName: "Reserva",
@@ -121,6 +104,9 @@ describe("FinancialAccounts page", () => {
     });
 
     expect(await screen.findByText("Banco Inter")).toBeInTheDocument();
+    expect(
+      screen.getByText("Conta financeira adicionada para uso manual e futuras importacoes.")
+    ).toBeInTheDocument();
   });
 
   it("synchronizes an account and refreshes transactions", async () => {
@@ -143,13 +129,12 @@ describe("FinancialAccounts page", () => {
         {
           id: 1,
           accountType: "bank_account",
-          provider: "pluggy",
+          provider: "manual",
           institutionName: "Nubank",
           institutionCode: null,
           accountName: "Conta principal",
           accountMask: "1234",
           externalAccountId: null,
-          providerItemId: "pluggy-item-1",
           status: "pending",
           lastSyncedAtUtc: null,
         },
@@ -158,13 +143,12 @@ describe("FinancialAccounts page", () => {
         {
           id: 1,
           accountType: "bank_account",
-          provider: "pluggy",
+          provider: "manual",
           institutionName: "Nubank",
           institutionCode: null,
           accountName: "Conta principal",
           accountMask: "1234",
           externalAccountId: null,
-          providerItemId: "pluggy-item-1",
           status: "connected",
           lastSyncedAtUtc: "2026-04-16T18:30:00Z",
         },
@@ -184,47 +168,5 @@ describe("FinancialAccounts page", () => {
     });
 
     expect(await screen.findByText("Conectada")).toBeInTheDocument();
-  });
-
-  it("connects a pluggy account and links the returned item", async () => {
-    createFinancialAccountConnectToken.mockResolvedValue({
-      connectToken: "connect-token-1",
-    });
-
-    linkFinancialAccountItem.mockResolvedValue({
-      id: 1,
-      accountType: "bank_account",
-      provider: "pluggy",
-      institutionName: "Nubank",
-      institutionCode: null,
-      accountName: "Conta principal",
-      accountMask: "1234",
-      externalAccountId: null,
-      providerItemId: "pluggy-item-1",
-      status: "connected",
-      lastSyncedAtUtc: null,
-    });
-
-    renderPage();
-    await screen.findByText("Nubank");
-
-    fireEvent.click(screen.getByRole("button", { name: "Conectar com Pluggy" }));
-
-    await waitFor(() => {
-      expect(createFinancialAccountConnectToken).toHaveBeenCalledWith(1);
-    });
-
-    fireEvent.click(await screen.findByRole("button", { name: "Simular sucesso Pluggy" }));
-
-    await waitFor(() => {
-      expect(linkFinancialAccountItem).toHaveBeenCalledWith(1, {
-        itemId: "pluggy-item-1",
-        institutionName: "Nubank",
-        accountName: "Conta principal",
-        accountMask: "1234",
-      });
-    });
-
-    expect(await screen.findByText("Conta vinculada ao Pluggy com sucesso. Agora a sincronizacao automatica ja pode ser usada.")).toBeInTheDocument();
   });
 });

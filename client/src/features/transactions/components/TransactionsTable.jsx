@@ -170,6 +170,9 @@ export default function TransactionsTable({
                           })}
                         </div>
                       ) : null}
+                      <div className="small text-muted mt-2">
+                        Conta: {transaction.financialAccountLabel || "Sem conta vinculada"}
+                      </div>
                       {isRecentlyImported ? (
                         <div className="small mt-2">
                           <span className="finova-badge-warning">{t("transactions.newInImport")}</span>

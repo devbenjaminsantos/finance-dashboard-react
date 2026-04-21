@@ -3,6 +3,8 @@ import { useI18n } from "../../../i18n/LanguageProvider";
 export default function TransactionsFilters({
   q,
   setQ,
+  accountFilter,
+  setAccountFilter,
   tagFilter,
   setTagFilter,
   typeFilter,
@@ -15,6 +17,7 @@ export default function TransactionsFilters({
   setSortBy,
   categories,
   tags,
+  accounts,
   onReset,
 }) {
   const { t } = useI18n();
@@ -37,6 +40,26 @@ export default function TransactionsFilters({
         </div>
 
         <div className="col-6 col-lg-2">
+          <label className="form-label text-dark fw-medium" htmlFor="transactions-account-filter">
+            Conta
+          </label>
+          <select
+            id="transactions-account-filter"
+            className="form-select finova-select"
+            value={accountFilter}
+            onChange={(event) => setAccountFilter(event.target.value)}
+          >
+            <option value="all">Todas as contas</option>
+            <option value="unassigned">Sem conta vinculada</option>
+            {accounts.map((account) => (
+              <option key={account.id} value={String(account.id)}>
+                {account.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="col-6 col-lg-2">
           <label className="form-label text-dark fw-medium" htmlFor="transactions-type-filter">
             {t("common.type")}
           </label>
@@ -52,7 +75,7 @@ export default function TransactionsFilters({
           </select>
         </div>
 
-        <div className="col-6 col-lg-2">
+        <div className="col-6 col-lg-1">
           <label className="form-label text-dark fw-medium" htmlFor="transactions-category-filter">
             {t("common.category")}
           </label>
@@ -71,7 +94,7 @@ export default function TransactionsFilters({
           </select>
         </div>
 
-        <div className="col-6 col-lg-2">
+        <div className="col-6 col-lg-1">
           <label className="form-label text-dark fw-medium" htmlFor="transactions-tag-filter">
             {t("common.tags")}
           </label>

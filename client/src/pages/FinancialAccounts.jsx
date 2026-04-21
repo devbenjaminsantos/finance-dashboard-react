@@ -9,36 +9,35 @@ import {
   updateFinancialAccount,
 } from "../lib/api/financialAccounts";
 import { formatFinancialAccountLabel } from "../lib/financialAccounts/presentation";
-import { formatDateTimeBR } from "../lib/format/date";
 
 const PROVIDER_OPTIONS = [
   {
     value: "manual",
-    label: "Manual",
-    description: "Conta pensada para importacao por arquivo e conciliacao assistida.",
+    labelKey: "accounts.providerManual",
+    descriptionKey: "accounts.providerManualDescription",
   },
 ];
 
 const ACCOUNT_TYPE_OPTIONS = [
   {
     value: "bank_account",
-    label: "Conta bancaria",
-    description: "Conta corrente, conta digital ou conta principal do dia a dia.",
+    labelKey: "accounts.accountTypeBank",
+    descriptionKey: "accounts.accountTypeBankDescription",
   },
   {
     value: "wallet",
-    label: "Carteira",
-    description: "Carteira digital, saldo separado ou conta de uso pontual.",
+    labelKey: "accounts.accountTypeWallet",
+    descriptionKey: "accounts.accountTypeWalletDescription",
   },
   {
     value: "cash",
-    label: "Dinheiro fisico",
-    description: "Valores em especie para controle fora do banco.",
+    labelKey: "accounts.accountTypeCash",
+    descriptionKey: "accounts.accountTypeCashDescription",
   },
   {
     value: "credit_card",
-    label: "Cartao de credito",
-    description: "Conta voltada para compras no credito e futuros parcelamentos.",
+    labelKey: "accounts.accountTypeCreditCard",
+    descriptionKey: "accounts.accountTypeCreditCardDescription",
   },
 ];
 
@@ -52,36 +51,37 @@ const INITIAL_FORM = {
   externalAccountId: "",
 };
 
-function getStatusMeta(status) {
+function getStatusMeta(status, t) {
   switch ((status || "").toLowerCase()) {
     case "connected":
-      return { label: "Conectada", className: "finova-badge-income" };
+      return { label: t("accounts.statusConnected"), className: "finova-badge-income" };
     case "error":
-      return { label: "Com erro", className: "finova-badge-danger" };
+      return { label: t("accounts.statusError"), className: "finova-badge-danger" };
     case "disconnected":
-      return { label: "Desconectada", className: "finova-badge-neutral" };
+      return { label: t("accounts.statusDisconnected"), className: "finova-badge-neutral" };
     case "pending":
     default:
-      return { label: "Pendente", className: "finova-badge-warning" };
+      return { label: t("accounts.statusPending"), className: "finova-badge-warning" };
   }
 }
 
-function getAccountTypeMeta(accountType) {
+function getAccountTypeMeta(accountType, t) {
   switch ((accountType || "").toLowerCase()) {
     case "wallet":
-      return { label: "Carteira", className: "finova-badge-primary" };
+      return { label: t("accounts.accountTypeWallet"), className: "finova-badge-primary" };
     case "cash":
-      return { label: "Dinheiro", className: "finova-badge-warning" };
+      return { label: t("accounts.accountTypeCashBadge"), className: "finova-badge-warning" };
     case "credit_card":
-      return { label: "Cartao de credito", className: "finova-badge-danger" };
+      return { label: t("accounts.accountTypeCreditCard"), className: "finova-badge-danger" };
     case "bank_account":
     default:
-      return { label: "Conta bancaria", className: "finova-badge-income" };
+      return { label: t("accounts.accountTypeBank"), className: "finova-badge-income" };
   }
 }
 
-function formatProviderLabel(provider) {
-  return PROVIDER_OPTIONS.find((option) => option.value === provider)?.label ?? provider;
+function formatProviderLabel(provider, t) {
+  const option = PROVIDER_OPTIONS.find((item) => item.value === provider);
+  return option ? t(option.labelKey) : provider;
 }
 
 function sortAccounts(list) {
@@ -96,7 +96,7 @@ function sortAccounts(list) {
 }
 
 export default function FinancialAccounts() {
-  const { t } = useI18n();
+  const { t, formatDateTime } = useI18n();
   const { loadAll: reloadTransactions } = useTransactions();
   const [accounts, setAccounts] = useState([]);
   const [form, setForm] = useState(INITIAL_FORM);
@@ -116,7 +116,7 @@ export default function FinancialAccounts() {
       setAccounts(sortAccounts(Array.isArray(data) ? data : []));
     } catch (err) {
       setAccounts([]);
-      setError(err.message || "Nao foi possivel carregar as contas financeiras.");
+      setError(err.message || t("accounts.loadError"));
     } finally {
       setIsLoading(false);
     }
@@ -175,12 +175,12 @@ export default function FinancialAccounts() {
     setSuccess("");
 
     if (!form.institutionName.trim()) {
-      setError("Informe a instituicao financeira.");
+      setError(t("accounts.validationInstitution"));
       return;
     }
 
     if (!form.accountName.trim()) {
-      setError("Informe um nome para identificar a conta.");
+      setError(t("accounts.validationAccountName"));
       return;
     }
 
@@ -202,11 +202,11 @@ export default function FinancialAccounts() {
         setAccounts((current) =>
           sortAccounts(current.map((account) => (account.id === editingAccountId ? updated : account)))
         );
-        setSuccess("Conta financeira atualizada com sucesso.");
+        setSuccess(t("accounts.updateSuccess"));
       } else {
         const created = await createFinancialAccount(payload);
         setAccounts((current) => sortAccounts([...current, created]));
-        setSuccess("Conta financeira adicionada para uso manual e futuras importacoes.");
+        setSuccess(t("accounts.createSuccess"));
       }
 
       setEditingAccountId(null);
@@ -215,8 +215,8 @@ export default function FinancialAccounts() {
       setError(
         err.message ||
           (editingAccountId
-            ? "Nao foi possivel atualizar a conta financeira."
-            : "Nao foi possivel adicionar a conta financeira.")
+            ? t("accounts.updateError")
+            : t("accounts.createError"))
       );
     } finally {
       setIsSubmitting(false);
@@ -234,10 +234,13 @@ export default function FinancialAccounts() {
       await reloadTransactions();
       setSuccess(
         result?.message ||
-          `Sincronizacao executada para ${account.institutionName} - ${account.accountName}.`
+          t("accounts.syncSuccessFallback", {
+            institution: account.institutionName,
+            account: account.accountName,
+          })
       );
     } catch (err) {
-      setError(err.message || "Nao foi possivel sincronizar esta conta.");
+      setError(err.message || t("accounts.syncError"));
     } finally {
       setSyncingAccountId(null);
     }
@@ -246,8 +249,15 @@ export default function FinancialAccounts() {
   async function handleRemove(account) {
     const message =
       account.linkedTransactionsCount > 0
-        ? `Remover ${account.institutionName} - ${account.accountName}? As ${account.linkedTransactionsCount} transacoes vinculadas continuarao no sistema, mas ficarao sem conta associada.`
-        : `Remover ${account.institutionName} - ${account.accountName}?`;
+        ? t("accounts.removeConfirmWithTransactions", {
+            institution: account.institutionName,
+            account: account.accountName,
+            count: account.linkedTransactionsCount,
+          })
+        : t("accounts.removeConfirm", {
+            institution: account.institutionName,
+            account: account.accountName,
+          });
 
     if (!window.confirm(message)) {
       return;
@@ -268,11 +278,11 @@ export default function FinancialAccounts() {
 
       setSuccess(
         account.linkedTransactionsCount > 0
-          ? "Conta removida. As transacoes foram preservadas e seguiram sem vinculacao."
-          : "Conta removida com sucesso."
+          ? t("accounts.removeSuccessWithTransactions")
+          : t("accounts.removeSuccess")
       );
     } catch (err) {
-      setError(err.message || "Nao foi possivel remover esta conta.");
+      setError(err.message || t("accounts.removeError"));
     } finally {
       setRemovingAccountId(null);
     }
@@ -292,31 +302,31 @@ export default function FinancialAccounts() {
           <div className="row g-3">
             <div className="col-12 col-md-6 col-xl-3">
               <div className="finova-card-soft p-3 h-100">
-                <div className="finova-subtitle small mb-1">Contas cadastradas</div>
+                <div className="finova-subtitle small mb-1">{t("accounts.summaryRegistered")}</div>
                 <div className="finova-title h4 mb-0">{summary.total}</div>
               </div>
             </div>
             <div className="col-12 col-md-6 col-xl-3">
               <div className="finova-card-soft p-3 h-100">
-                <div className="finova-subtitle small mb-1">Contas conectadas</div>
+                <div className="finova-subtitle small mb-1">{t("accounts.summaryConnected")}</div>
                 <div className="finova-title h4 mb-0">{summary.connected}</div>
               </div>
             </div>
             <div className="col-12 col-md-6 col-xl-3">
               <div className="finova-card-soft p-3 h-100">
-                <div className="finova-subtitle small mb-1">Aguardando acao</div>
+                <div className="finova-subtitle small mb-1">{t("accounts.summaryPending")}</div>
                 <div className="finova-title h4 mb-0">{summary.pending}</div>
               </div>
             </div>
             <div className="col-12 col-md-6 col-xl-3">
               <div className="finova-card-soft p-3 h-100">
-                <div className="finova-subtitle small mb-1">Com historico de sync</div>
+                <div className="finova-subtitle small mb-1">{t("accounts.summarySynced")}</div>
                 <div className="finova-title h4 mb-0">{summary.synced}</div>
               </div>
             </div>
             <div className="col-12 col-md-6 col-xl-3">
               <div className="finova-card-soft p-3 h-100">
-                <div className="finova-subtitle small mb-1">Cartoes de credito</div>
+                <div className="finova-subtitle small mb-1">{t("accounts.summaryCreditCards")}</div>
                 <div className="finova-title h4 mb-0">{summary.creditCards}</div>
               </div>
             </div>
@@ -328,19 +338,19 @@ export default function FinancialAccounts() {
             <div className="finova-card p-4 h-100">
               <div className="mb-3">
                 <h2 className="finova-title h5 mb-1">
-                  {editingAccountId ? "Editar conta" : "Adicionar conta"}
+                  {editingAccountId ? t("accounts.editTitle") : t("accounts.addTitle")}
                 </h2>
                 <p className="finova-subtitle mb-0">
                   {editingAccountId
-                    ? "Atualize os dados da conta selecionada sem perder o historico ja vinculado."
-                    : "Cadastre contas e cartoes manualmente enquanto a integracao de Open Finance aguarda liberacao."}
+                    ? t("accounts.editSubtitle")
+                    : t("accounts.addSubtitle")}
                 </p>
               </div>
 
               <form className="row g-3" onSubmit={handleSubmit}>
                 <div className="col-12">
                   <label className="form-label text-dark fw-medium" htmlFor="financial-account-type">
-                    Tipo da conta
+                    {t("accounts.fieldAccountType")}
                   </label>
                   <select
                     id="financial-account-type"
@@ -351,18 +361,21 @@ export default function FinancialAccounts() {
                   >
                     {ACCOUNT_TYPE_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
-                        {option.label}
+                        {t(option.labelKey)}
                       </option>
                     ))}
                   </select>
                   <div className="form-text">
-                    {ACCOUNT_TYPE_OPTIONS.find((option) => option.value === form.accountType)?.description}
+                    {t(
+                      ACCOUNT_TYPE_OPTIONS.find((option) => option.value === form.accountType)
+                        ?.descriptionKey
+                    )}
                   </div>
                 </div>
 
                 <div className="col-12">
                   <label className="form-label text-dark fw-medium" htmlFor="financial-provider">
-                    Provedor
+                    {t("accounts.fieldProvider")}
                   </label>
                   <select
                     id="financial-provider"
@@ -373,12 +386,15 @@ export default function FinancialAccounts() {
                   >
                     {PROVIDER_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
-                        {option.label}
+                        {t(option.labelKey)}
                       </option>
                     ))}
                   </select>
                   <div className="form-text">
-                    {PROVIDER_OPTIONS.find((option) => option.value === form.provider)?.description}
+                    {t(
+                      PROVIDER_OPTIONS.find((option) => option.value === form.provider)
+                        ?.descriptionKey
+                    )}
                   </div>
                 </div>
 
@@ -387,7 +403,7 @@ export default function FinancialAccounts() {
                     className="form-label text-dark fw-medium"
                     htmlFor="financial-institution-name"
                   >
-                    Instituicao
+                    {t("accounts.fieldInstitution")}
                   </label>
                   <input
                     id="financial-institution-name"
@@ -395,7 +411,7 @@ export default function FinancialAccounts() {
                     className="form-control finova-input"
                     value={form.institutionName}
                     onChange={(event) => updateField("institutionName", event.target.value)}
-                    placeholder="Ex.: Nubank, Itau, Banco do Brasil"
+                    placeholder={t("accounts.placeholderInstitution")}
                     disabled={isSubmitting}
                   />
                 </div>
@@ -405,7 +421,7 @@ export default function FinancialAccounts() {
                     className="form-label text-dark fw-medium"
                     htmlFor="financial-institution-code"
                   >
-                    Codigo da instituicao
+                    {t("accounts.fieldInstitutionCode")}
                   </label>
                   <input
                     id="financial-institution-code"
@@ -413,14 +429,14 @@ export default function FinancialAccounts() {
                     className="form-control finova-input"
                     value={form.institutionCode}
                     onChange={(event) => updateField("institutionCode", event.target.value)}
-                    placeholder="Opcional"
+                    placeholder={t("accounts.placeholderOptional")}
                     disabled={isSubmitting}
                   />
                 </div>
 
                 <div className="col-12 col-md-6">
                   <label className="form-label text-dark fw-medium" htmlFor="financial-account-name">
-                    Nome da conta
+                    {t("accounts.fieldAccountName")}
                   </label>
                   <input
                     id="financial-account-name"
@@ -428,14 +444,14 @@ export default function FinancialAccounts() {
                     className="form-control finova-input"
                     value={form.accountName}
                     onChange={(event) => updateField("accountName", event.target.value)}
-                    placeholder="Ex.: Conta principal, Cartao, Reserva"
+                    placeholder={t("accounts.placeholderAccountName")}
                     disabled={isSubmitting}
                   />
                 </div>
 
                 <div className="col-12 col-md-3">
                   <label className="form-label text-dark fw-medium" htmlFor="financial-account-mask">
-                    Mascara
+                    {t("accounts.fieldMask")}
                   </label>
                   <input
                     id="financial-account-mask"
@@ -443,7 +459,7 @@ export default function FinancialAccounts() {
                     className="form-control finova-input"
                     value={form.accountMask}
                     onChange={(event) => updateField("accountMask", event.target.value)}
-                    placeholder="1234"
+                    placeholder={t("accounts.placeholderMask")}
                     disabled={isSubmitting}
                   />
                 </div>
@@ -453,7 +469,7 @@ export default function FinancialAccounts() {
                     className="form-label text-dark fw-medium"
                     htmlFor="financial-account-external-id"
                   >
-                    ID externo
+                    {t("accounts.fieldExternalId")}
                   </label>
                   <input
                     id="financial-account-external-id"
@@ -461,7 +477,7 @@ export default function FinancialAccounts() {
                     className="form-control finova-input"
                     value={form.externalAccountId}
                     onChange={(event) => updateField("externalAccountId", event.target.value)}
-                    placeholder="Opcional"
+                    placeholder={t("accounts.placeholderOptional")}
                     disabled={isSubmitting}
                   />
                 </div>
@@ -491,17 +507,17 @@ export default function FinancialAccounts() {
                         onClick={handleCancelEdit}
                         disabled={isSubmitting}
                       >
-                        Cancelar edicao
+                        {t("accounts.cancelEdit")}
                       </button>
                     ) : null}
                     <button type="submit" className="btn finova-btn-primary px-4" disabled={isSubmitting}>
                       {isSubmitting
                         ? editingAccountId
-                          ? "Salvando conta..."
-                          : "Adicionando conta..."
+                          ? t("accounts.saving")
+                          : t("accounts.creating")
                         : editingAccountId
-                          ? "Salvar alteracoes"
-                          : "Adicionar conta"}
+                          ? t("accounts.saveChanges")
+                          : t("accounts.addButton")}
                     </button>
                   </div>
                 </div>
@@ -513,51 +529,42 @@ export default function FinancialAccounts() {
             <div className="finova-card p-4 h-100">
               <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-3">
                 <div>
-                  <h2 className="finova-title h5 mb-1">Contas cadastradas</h2>
-                  <p className="finova-subtitle mb-0">
-                    As contas ficam separadas por instituicao e nome, prontas para leitura por conta, saldo global e futuras importacoes.
-                  </p>
+                  <h2 className="finova-title h5 mb-1">{t("accounts.listTitle")}</h2>
+                  <p className="finova-subtitle mb-0">{t("accounts.listSubtitle")}</p>
                 </div>
 
                 <button type="button" className="btn finova-btn-light" onClick={loadAccounts} disabled={isLoading}>
-                  {isLoading ? "Atualizando..." : "Atualizar lista"}
+                  {isLoading ? t("accounts.refreshing") : t("accounts.refresh")}
                 </button>
               </div>
 
               <div className="finova-card-soft p-3 mb-3">
                 <div className="d-flex flex-column flex-lg-row justify-content-between gap-3">
                   <div>
-                    <div className="finova-title h6 mb-1">Open Finance em espera</div>
-                    <p className="finova-subtitle mb-0">
-                      Enquanto a liberacao externa nao chega, o Finova segue com contas manuais e organizacao por carteira, banco e cartao.
-                    </p>
+                    <div className="finova-title h6 mb-1">{t("accounts.openFinanceTitle")}</div>
+                    <p className="finova-subtitle mb-0">{t("accounts.openFinanceSubtitle")}</p>
                   </div>
-                  <span className="finova-badge-warning align-self-start">Manual por enquanto</span>
+                  <span className="finova-badge-warning align-self-start">{t("accounts.manualBadge")}</span>
                 </div>
               </div>
 
-              <div className="finova-page-note mb-3">
-                Remover uma conta nao apaga suas transacoes. Os lancamentos continuam no sistema e
-                apenas deixam de ficar vinculados a essa conta.
-              </div>
+              <div className="finova-page-note mb-3">{t("accounts.removeNote")}</div>
 
               {isLoading ? (
                 <div className="d-flex align-items-center gap-3">
                   <div className="spinner-border spinner-border-sm text-primary" />
-                  <p className="finova-subtitle mb-0">Carregando contas financeiras...</p>
+                  <p className="finova-subtitle mb-0">{t("accounts.loading")}</p>
                 </div>
               ) : accounts.length === 0 ? (
                 <div className="finova-card-soft p-4 text-center">
-                  <h3 className="finova-title h6 mb-2">Nenhuma conta cadastrada</h3>
-                  <p className="finova-subtitle mb-0">
-                    Assim que voce cadastrar a primeira conta, ela passa a aparecer aqui com status, historico de sync e acoes de conexao.
-                  </p>
+                  <h3 className="finova-title h6 mb-2">{t("accounts.emptyTitle")}</h3>
+                  <p className="finova-subtitle mb-0">{t("accounts.emptySubtitle")}</p>
                 </div>
               ) : (
                 <div className="d-grid gap-3">
                   {accounts.map((account) => {
-                    const statusMeta = getStatusMeta(account.status);
-                    const accountTypeMeta = getAccountTypeMeta(account.accountType);
+                    const statusMeta = getStatusMeta(account.status, t);
+                    const accountTypeMeta = getAccountTypeMeta(account.accountType, t);
                     const isSyncing = syncingAccountId === account.id;
                     const isRemoving = removingAccountId === account.id;
                     const canSync = account.provider === "manual";
@@ -571,7 +578,7 @@ export default function FinancialAccounts() {
                               <span className={statusMeta.className}>{statusMeta.label}</span>
                               <span className={accountTypeMeta.className}>{accountTypeMeta.label}</span>
                               <span className="finova-badge-neutral">
-                                {formatProviderLabel(account.provider)}
+                                {formatProviderLabel(account.provider, t)}
                               </span>
                             </div>
 
@@ -581,32 +588,33 @@ export default function FinancialAccounts() {
 
                             <div className="finova-financial-account-meta">
                               <span>
-                                <strong>Conta:</strong> {account.accountName}
+                                <strong>{t("accounts.metaAccount")}:</strong> {account.accountName}
                               </span>
                               <span>
-                                <strong>Tipo:</strong> {accountTypeMeta.label}
+                                <strong>{t("accounts.metaType")}:</strong> {accountTypeMeta.label}
                               </span>
                               {account.accountMask ? (
                                 <span>
-                                  <strong>Final:</strong> {account.accountMask}
+                                  <strong>{t("accounts.metaEnding")}:</strong> {account.accountMask}
                                 </span>
                               ) : null}
                               <span>
-                                <strong>Transacoes:</strong> {account.linkedTransactionsCount ?? 0}
+                                <strong>{t("accounts.metaTransactions")}:</strong>{" "}
+                                {account.linkedTransactionsCount ?? 0}
                               </span>
                               <span>
-                                <strong>Ultimo sync:</strong>{" "}
+                                <strong>{t("accounts.metaLastSync")}:</strong>{" "}
                                 {account.lastSyncedAtUtc
-                                  ? formatDateTimeBR(account.lastSyncedAtUtc)
-                                  : "Ainda nao sincronizada"}
+                                  ? formatDateTime(account.lastSyncedAtUtc)
+                                  : t("accounts.neverSynced")}
                               </span>
                             </div>
 
                             {account.linkedTransactionsCount > 0 ? (
                               <div className="finova-page-note mt-3">
-                                Esta conta possui {account.linkedTransactionsCount} transacao(oes)
-                                vinculada(s). Se voce remover a conta, os lancamentos serao
-                                preservados e continuarao no historico sem vinculacao.
+                                {t("accounts.linkedTransactionsWarning", {
+                                  count: account.linkedTransactionsCount,
+                                })}
                               </div>
                             ) : null}
                           </div>
@@ -618,7 +626,7 @@ export default function FinancialAccounts() {
                               onClick={() => handleStartEdit(account)}
                               disabled={isSyncing || isRemoving}
                             >
-                              Editar
+                              {t("accounts.editButton")}
                             </button>
                             <button
                               type="button"
@@ -626,7 +634,7 @@ export default function FinancialAccounts() {
                               onClick={() => handleSync(account)}
                               disabled={isSyncing || isRemoving || !canSync}
                             >
-                              {isSyncing ? "Sincronizando..." : "Sincronizar"}
+                              {isSyncing ? t("accounts.syncing") : t("accounts.sync")}
                             </button>
                             <button
                               type="button"
@@ -634,7 +642,7 @@ export default function FinancialAccounts() {
                               onClick={() => handleRemove(account)}
                               disabled={isSyncing || isRemoving}
                             >
-                              {isRemoving ? "Removendo..." : "Remover"}
+                              {isRemoving ? t("accounts.removing") : t("accounts.remove")}
                             </button>
                           </div>
                         </div>

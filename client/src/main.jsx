@@ -6,6 +6,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App.jsx";
+import "./i18n/i18n.js";
 import { LanguageProvider } from "./i18n/LanguageProvider.jsx";
 import { ThemeProvider } from "./theme/ThemeProvider.jsx";
 

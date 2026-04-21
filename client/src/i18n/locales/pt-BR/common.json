@@ -1,0 +1,11 @@
+{
+  "email": "E-mail",
+  "password": "Senha",
+  "name": "Nome",
+  "preferredNamePlaceholder": "Como voce prefere ser chamado",
+  "preferredNameHelp": "Use o nome pelo qual voce gostaria de ser chamado no app.",
+  "showPassword": "Mostrar",
+  "hidePassword": "Ocultar",
+  "loading": "Carregando...",
+  "languageLabel": "Idioma"
+}

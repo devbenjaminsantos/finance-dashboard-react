@@ -1,21 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import i18n, { STORAGE_KEY } from "./i18n";
 import { DEFAULT_LANGUAGE, LANGUAGE_OPTIONS, translations } from "./translations";
-
-const STORAGE_KEY = "finova-language";
-
-function resolveInitialLanguage() {
-  const savedLanguage = localStorage.getItem(STORAGE_KEY);
-  if (translations[savedLanguage]) {
-    return savedLanguage;
-  }
-
-  const browserLanguage = navigator.language;
-  if (translations[browserLanguage]) {
-    return browserLanguage;
-  }
-
-  return DEFAULT_LANGUAGE;
-}
 
 function getPathValue(target, path) {
   return path.split(".").reduce((current, part) => current?.[part], target);
@@ -32,25 +18,44 @@ function interpolate(template, params) {
   );
 }
 
-function createI18nValue(language) {
-  const dictionary = translations[language] || translations[DEFAULT_LANGUAGE];
+function getNamespaceResources(language, namespace) {
+  return i18n.getResourceBundle(language, namespace);
+}
 
+function translateWithFallback(language, path, params) {
+  const [namespace, ...keyParts] = path.split(".");
+  const key = keyParts.join(".");
+  const namespaceResources = namespace ? getNamespaceResources(language, namespace) : null;
+
+  if (namespace && key && getPathValue(namespaceResources, key) !== undefined) {
+    return i18n.t(`${namespace}:${key}`, {
+      lng: language,
+      returnObjects: true,
+      ...params,
+    });
+  }
+
+  const dictionary = translations[language] || translations[DEFAULT_LANGUAGE];
+  const fallbackValue =
+    getPathValue(dictionary, path) ??
+    getPathValue(translations[DEFAULT_LANGUAGE], path) ??
+    path;
+
+  if (Array.isArray(fallbackValue)) {
+    return fallbackValue;
+  }
+
+  return interpolate(fallbackValue, params);
+}
+
+function createI18nValue(language) {
   return {
     language,
     locale: language,
     languages: LANGUAGE_OPTIONS,
     setLanguage() {},
     t(path, params) {
-      const value =
-        getPathValue(dictionary, path) ??
-        getPathValue(translations[DEFAULT_LANGUAGE], path) ??
-        path;
-
-      if (Array.isArray(value)) {
-        return value;
-      }
-
-      return interpolate(value, params);
+      return translateWithFallback(language, path, params);
     },
     formatCurrencyFromCents(cents, currency = "BRL") {
       const value = (Number(cents) || 0) / 100;
@@ -101,12 +106,30 @@ const defaultValue = createI18nValue(DEFAULT_LANGUAGE);
 const LanguageContext = createContext(defaultValue);
 
 export function LanguageProvider({ children }) {
-  const [language, setLanguage] = useState(resolveInitialLanguage);
+  const { i18n: i18nInstance } = useTranslation();
+  const [language, setLanguageState] = useState(i18n.language || DEFAULT_LANGUAGE);
 
   useEffect(() => {
     document.documentElement.lang = language;
     localStorage.setItem(STORAGE_KEY, language);
   }, [language]);
+
+  useEffect(() => {
+    function handleLanguageChanged(nextLanguage) {
+      setLanguageState(nextLanguage || DEFAULT_LANGUAGE);
+    }
+
+    i18nInstance.on("languageChanged", handleLanguageChanged);
+
+    return () => {
+      i18nInstance.off("languageChanged", handleLanguageChanged);
+    };
+  }, [i18nInstance]);
+
+  function setLanguage(nextLanguage) {
+    i18nInstance.changeLanguage(nextLanguage);
+    setLanguageState(nextLanguage);
+  }
 
   const value = useMemo(() => {
     const baseValue = createI18nValue(language);

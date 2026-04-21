@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getTransactionCategories } from "../../../lib/constants/transactionCategories";
 import { parseMoneyToCents } from "../../../lib/format/currency";
+import { useI18n } from "../../../i18n/LanguageProvider";
 
 function todayISO() {
   const date = new Date();
@@ -60,6 +61,7 @@ export default function TransactionModal({
   initial,
   accounts = [],
 }) {
+  const { t } = useI18n();
   const isEdit = mode === "edit";
 
   const [date, setDate] = useState(todayISO());
@@ -77,10 +79,7 @@ export default function TransactionModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const descriptionInputRef = useRef(null);
 
-  const title = useMemo(
-    () => (isEdit ? "Editar transação" : "Nova transação"),
-    [isEdit]
-  );
+  const title = isEdit ? t("transactions.modalEditTitle") : t("transactions.modalCreateTitle");
   const categories = useMemo(() => getTransactionCategories(type), [type]);
   const minimumRecurrenceEndDate = useMemo(() => addMonthsISO(date, 1), [date]);
 
@@ -163,19 +162,19 @@ export default function TransactionModal({
     const amountCents = parseMoneyToCents(amount);
 
     if (!description.trim()) {
-      setError("Informe uma descrição.");
+      setError(t("transactions.validationDescription"));
       setIsSubmitting(false);
       return;
     }
 
     if (!date) {
-      setError("Informe uma data.");
+      setError(t("transactions.validationDate"));
       setIsSubmitting(false);
       return;
     }
 
     if (!Number.isFinite(amountCents) || amountCents <= 0) {
-      setError("Informe um valor válido (ex: 150,00).");
+      setError(t("transactions.validationAmount"));
       setIsSubmitting(false);
       return;
     }
@@ -184,13 +183,13 @@ export default function TransactionModal({
 
     if (isInstallment) {
       if (type !== "expense") {
-        setError("Parcelamento esta disponivel apenas para despesas nesta etapa.");
+        setError(t("transactions.validationInstallmentType"));
         setIsSubmitting(false);
         return;
       }
 
       if (parsedInstallmentCount < 2) {
-        setError("Informe pelo menos 2 parcelas para uma compra parcelada.");
+        setError(t("transactions.validationInstallmentCount"));
         setIsSubmitting(false);
         return;
       }
@@ -198,13 +197,13 @@ export default function TransactionModal({
 
     if (isRecurring) {
       if (!recurrenceEndDate) {
-        setError("Informe até quando a recorrência mensal deve ser gerada.");
+        setError(t("transactions.validationRecurrenceEnd"));
         setIsSubmitting(false);
         return;
       }
 
       if (minimumRecurrenceEndDate && recurrenceEndDate < minimumRecurrenceEndDate) {
-        setError("A recorrência mensal precisa alcançar pelo menos o próximo mês.");
+        setError(t("transactions.validationRecurrenceMinimum"));
         setIsSubmitting(false);
         return;
       }
@@ -226,7 +225,7 @@ export default function TransactionModal({
 
       onClose();
     } catch (requestError) {
-      setError(requestError.message || "Não foi possível salvar a transação.");
+      setError(requestError.message || t("transactions.saveError"));
     } finally {
       setIsSubmitting(false);
     }
@@ -253,17 +252,15 @@ export default function TransactionModal({
           <div className="modal-header border-0 pb-0 px-4 pt-4">
             <div>
               <h2 className="finova-title h4 mb-1">{title}</h2>
-              <p className="finova-subtitle small mb-0">
-                Preencha os dados da movimentação financeira.
-              </p>
+              <p className="finova-subtitle small mb-0">{t("transactions.modalSubtitle")}</p>
             </div>
 
             <button
               type="button"
               className="btn-close"
-              aria-label="Fechar"
-              title="Fechar"
-              data-tooltip="Fechar"
+              aria-label={t("transactions.close")}
+              title={t("transactions.close")}
+              data-tooltip={t("transactions.close")}
               onClick={onClose}
             />
           </div>
@@ -272,7 +269,7 @@ export default function TransactionModal({
             <form onSubmit={handleSubmit} className="row g-3">
               <div className="col-12 col-md-4">
                 <label className="form-label text-dark fw-medium" htmlFor="transaction-date">
-                  Data
+                  {t("common.date")}
                 </label>
                 <input
                   id="transaction-date"
@@ -288,7 +285,7 @@ export default function TransactionModal({
                   className="form-label text-dark fw-medium"
                   htmlFor="transaction-description"
                 >
-                  Descrição
+                  {t("common.description")}
                 </label>
                 <input
                   id="transaction-description"
@@ -297,13 +294,13 @@ export default function TransactionModal({
                   className="form-control finova-input"
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
-                  placeholder="Ex: Mercado do mês"
+                  placeholder={t("transactions.placeholderDescription")}
                 />
               </div>
 
               <div className="col-12 col-md-4">
                 <label className="form-label text-dark fw-medium" htmlFor="transaction-type">
-                  Tipo
+                  {t("common.type")}
                 </label>
                 <select
                   id="transaction-type"
@@ -321,14 +318,14 @@ export default function TransactionModal({
                     }
                   }}
                 >
-                  <option value="expense">Despesa</option>
-                  <option value="income">Receita</option>
+                  <option value="expense">{t("transactions.expense")}</option>
+                  <option value="income">{t("transactions.income")}</option>
                 </select>
               </div>
 
               <div className="col-12 col-md-4">
                 <label className="form-label text-dark fw-medium" htmlFor="transaction-category">
-                  Categoria
+                  {t("common.category")}
                 </label>
                 <select
                   id="transaction-category"
@@ -346,7 +343,7 @@ export default function TransactionModal({
 
               <div className="col-12 col-md-4">
                 <label className="form-label text-dark fw-medium" htmlFor="transaction-account">
-                  Conta
+                  {t("accounts.metaAccount")}
                 </label>
                 <select
                   id="transaction-account"
@@ -354,7 +351,7 @@ export default function TransactionModal({
                   value={financialAccountId}
                   onChange={(event) => setFinancialAccountId(event.target.value)}
                 >
-                  <option value="all">Sem conta vinculada</option>
+                  <option value="all">{t("transactions.unlinkedAccount")}</option>
                   {accounts.map((account) => (
                     <option key={account.id} value={String(account.id)}>
                       {account.label}
@@ -365,7 +362,7 @@ export default function TransactionModal({
 
               <div className="col-12 col-md-4">
                 <label className="form-label text-dark fw-medium" htmlFor="transaction-amount">
-                  Valor
+                  {t("common.value")}
                 </label>
                 <input
                   id="transaction-amount"
@@ -373,14 +370,14 @@ export default function TransactionModal({
                   className="form-control finova-input"
                   value={amount}
                   onChange={(event) => setAmount(event.target.value)}
-                  placeholder="150,00"
+                  placeholder={t("transactions.placeholderAmount")}
                   inputMode="decimal"
                 />
               </div>
 
               <div className="col-12">
                 <label className="form-label text-dark fw-medium" htmlFor="transaction-tags">
-                  Tags
+                  {t("common.tags")}
                 </label>
                 <input
                   id="transaction-tags"
@@ -388,11 +385,9 @@ export default function TransactionModal({
                   className="form-control finova-input"
                   value={tagNamesInput}
                   onChange={(event) => setTagNamesInput(event.target.value)}
-                  placeholder="Ex: viagem, reembolsavel, trabalho"
+                  placeholder={t("transactions.placeholderTags")}
                 />
-                <p className="form-text mb-0">
-                  Separe por virgula para agrupar temas livres que fazem sentido para voce.
-                </p>
+                <p className="form-text mb-0">{t("transactions.tagsHelp")}</p>
               </div>
 
               {!isEdit ? (
@@ -419,12 +414,10 @@ export default function TransactionModal({
                           className="form-check-label text-dark fw-medium"
                           htmlFor="transaction-installment"
                         >
-                          Compra parcelada
+                          {t("transactions.installmentToggle")}
                         </label>
                       </div>
-                      <p className="form-text mb-0">
-                        Use para compras no credito ou pagamentos divididos ao longo dos proximos meses.
-                      </p>
+                      <p className="form-text mb-0">{t("transactions.installmentHelp")}</p>
                     </div>
                   ) : null}
 
@@ -434,7 +427,7 @@ export default function TransactionModal({
                         className="form-label text-dark fw-medium"
                         htmlFor="transaction-installment-count"
                       >
-                        Quantidade de parcelas
+                        {t("transactions.installmentCountLabel")}
                       </label>
                       <input
                         id="transaction-installment-count"
@@ -445,9 +438,7 @@ export default function TransactionModal({
                         value={installmentCount}
                         onChange={(event) => setInstallmentCount(event.target.value)}
                       />
-                      <p className="form-text mb-0">
-                        O sistema vai criar uma parcela por mes, mantendo o mesmo dia base.
-                      </p>
+                      <p className="form-text mb-0">{t("transactions.installmentCountHelp")}</p>
                     </div>
                   ) : null}
 
@@ -477,12 +468,10 @@ export default function TransactionModal({
                         className="form-check-label text-dark fw-medium"
                         htmlFor="transaction-recurring"
                       >
-                        Recorrência mensal
+                        {t("transactions.recurringToggle")}
                       </label>
                     </div>
-                    <p className="form-text mb-0">
-                      Use para salário, aluguel, condomínio, assinaturas e outros lançamentos fixos.
-                    </p>
+                    <p className="form-text mb-0">{t("transactions.recurringHelp")}</p>
                   </div>
 
                   {isRecurring ? (
@@ -491,7 +480,7 @@ export default function TransactionModal({
                         className="form-label text-dark fw-medium"
                         htmlFor="transaction-recurrence-end-date"
                       >
-                        Repetir até
+                        {t("transactions.recurrenceEndLabel")}
                       </label>
                       <input
                         id="transaction-recurrence-end-date"
@@ -501,17 +490,14 @@ export default function TransactionModal({
                         min={minimumRecurrenceEndDate}
                         onChange={(event) => setRecurrenceEndDate(event.target.value)}
                       />
-                      <p className="form-text mb-0">
-                        A série será gerada de mês em mês, mantendo o dia base informado.
-                      </p>
+                      <p className="form-text mb-0">{t("transactions.recurrenceEndHelp")}</p>
                     </div>
                   ) : null}
                 </>
               ) : initial?.isRecurring ? (
                 <div className="col-12">
                   <div className="alert alert-info py-2 mb-0">
-                    Este lançamento faz parte de uma série mensal. Nesta versão, a edição afeta
-                    apenas esta ocorrência.
+                    {t("transactions.editRecurringInfo")}
                   </div>
                 </div>
               ) : null}
@@ -530,7 +516,7 @@ export default function TransactionModal({
                     onClick={onClose}
                     disabled={isSubmitting}
                   >
-                    Cancelar
+                    {t("common.cancel")}
                   </button>
 
                   <button
@@ -539,10 +525,10 @@ export default function TransactionModal({
                     disabled={isSubmitting}
                   >
                     {isSubmitting
-                      ? "Salvando..."
+                      ? t("transactions.saving")
                       : isEdit
-                        ? "Salvar alterações"
-                        : "Adicionar transação"}
+                        ? t("transactions.saveChanges")
+                        : t("transactions.addButton")}
                   </button>
                 </div>
               </div>

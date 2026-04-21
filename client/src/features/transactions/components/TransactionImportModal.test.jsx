@@ -148,12 +148,17 @@ describe("TransactionImportModal", () => {
       expect(screen.getByText("Mercado")).toBeInTheDocument();
     });
 
+    const healthOption = screen
+      .getAllByRole("option")
+      .find((option) => option.textContent?.toLowerCase().includes("sa"));
+    expect(healthOption).toBeDefined();
+
     fireEvent.change(screen.getByLabelText("Aplicar categoria"), {
-      target: { value: "Saúde" },
+      target: { value: healthOption?.getAttribute("value") ?? "" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Aplicar cat." }));
 
-    const categorySelects = screen.getAllByDisplayValue("Saúde");
+    const categorySelects = screen.getAllByDisplayValue(healthOption?.textContent ?? "");
     expect(categorySelects.length).toBeGreaterThanOrEqual(2);
   });
 
@@ -219,7 +224,7 @@ describe("TransactionImportModal", () => {
 
     expect(await screen.findByText("Revisar categoria")).toBeInTheDocument();
     expect(
-      await screen.findByText((content) => content.includes("ainda pedem revisão manual"))
+      await screen.findByText((content) => content.includes("ainda pedem revisao manual"))
     ).toBeInTheDocument();
   });
 
@@ -251,12 +256,12 @@ describe("TransactionImportModal", () => {
       expect(screen.getByText("Mercado")).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByLabelText("Substituir descrição"), {
-      target: { value: "Compra cartão final 1234" },
+    fireEvent.change(screen.getByLabelText("Substituir descricao"), {
+      target: { value: "Compra cartao final 1234" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Substituir" }));
 
-    const replaced = screen.getAllByText("Compra cartão final 1234");
+    const replaced = screen.getAllByText("Compra cartao final 1234");
     expect(replaced.length).toBeGreaterThanOrEqual(2);
   });
 
@@ -281,7 +286,7 @@ describe("TransactionImportModal", () => {
         accounts={[
           {
             id: 7,
-            label: "Conta principal • final 1234",
+            label: "Conta principal - final 1234",
           },
         ]}
       />
@@ -299,7 +304,7 @@ describe("TransactionImportModal", () => {
       expect(screen.getByText("Mercado")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /Confirmar importação/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Confirmar importacao/i }));
 
     await waitFor(() => {
       expect(onImport).toHaveBeenCalledWith(

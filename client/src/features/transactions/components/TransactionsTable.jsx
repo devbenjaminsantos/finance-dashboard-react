@@ -171,7 +171,8 @@ export default function TransactionsTable({
                         </div>
                       ) : null}
                       <div className="small text-muted mt-2">
-                        Conta: {transaction.financialAccountLabel || "Sem conta vinculada"}
+                        {t("transactions.accountLabel")}:{" "}
+                        {transaction.financialAccountLabel || t("transactions.unlinkedAccount")}
                       </div>
                       {isRecentlyImported ? (
                         <div className="small mt-2">

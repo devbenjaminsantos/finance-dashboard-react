@@ -6,13 +6,7 @@ import {
   detectImportDuplicates,
 } from "../../../lib/import/transactionDuplicates";
 import { parseTransactionsImport } from "../../../lib/import/transactionsImport";
-
-const PREVIEW_FILTERS = [
-  { key: "all", label: "Todas" },
-  { key: "new", label: "Novas" },
-  { key: "duplicates", label: "Duplicatas" },
-  { key: "selected", label: "Selecionadas" },
-];
+import { useI18n } from "../../../i18n/LanguageProvider";
 
 export default function TransactionImportModal({
   isOpen,
@@ -21,6 +15,7 @@ export default function TransactionImportModal({
   existingTransactions = [],
   accounts = [],
 }) {
+  const { t } = useI18n();
   const fileInputRef = useRef(null);
   const [fileName, setFileName] = useState("");
   const [importFormat, setImportFormat] = useState("");
@@ -123,14 +118,23 @@ export default function TransactionImportModal({
   );
   const selectedAccountLabel = useMemo(() => {
     if (financialAccountId === "all") {
-      return "Sem conta vinculada";
+      return t("transactions.unlinkedAccount");
     }
 
     return (
       accounts.find((account) => String(account.id) === financialAccountId)?.label ||
-      "Conta selecionada"
+      t("transactions.selectedAccountFallback")
     );
-  }, [accounts, financialAccountId]);
+  }, [accounts, financialAccountId, t]);
+  const previewFilters = useMemo(
+    () => [
+      { key: "all", label: t("transactions.importPreviewAll") },
+      { key: "new", label: t("transactions.importPreviewNew") },
+      { key: "duplicates", label: t("transactions.importPreviewDuplicates") },
+      { key: "selected", label: t("transactions.importPreviewSelected") },
+    ],
+    [t]
+  );
 
   const summary = useMemo(() => {
     return reconciledPreview.reduce(
@@ -202,6 +206,89 @@ export default function TransactionImportModal({
     () => (selectedType ? getTransactionCategories(selectedType) : []),
     [selectedType]
   );
+  const handleFileSelection = async (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    setError("");
+    setFeedback("");
+
+    try {
+      const content = await file.text();
+      const { format, transactions } = parseTransactionsImport(content, file.name);
+      const reconciled = detectImportDuplicates(transactions, existingTransactions);
+
+      setFileName(file.name);
+      setImportFormat(format);
+      setPreview(transactions);
+      setSelectedIndexes(buildDefaultImportSelection(reconciled));
+      setFeedback(t("transactions.importReadSuccess", { count: transactions.length }));
+    } catch (requestError) {
+      setFileName(file.name);
+      setImportFormat("");
+      setPreview([]);
+      setSelectedIndexes(new Set());
+      setError(requestError.message || t("transactions.importReadError"));
+    }
+  };
+
+  const handleImportAction = async () => {
+    if (selectedTransactions.length === 0) {
+      setError(t("transactions.importSelectAtLeastOne"));
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError("");
+
+    try {
+      await onImport({
+        transactions: selectedTransactions.map((transaction) => ({
+          ...transaction,
+          financialAccountId: financialAccountId === "all" ? null : Number(financialAccountId),
+        })),
+        importFormat,
+      });
+      onClose();
+    } catch (requestError) {
+      setError(requestError.message || t("transactions.importCompleteError"));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  function renderDuplicateStatusLocalized(transaction) {
+    if (!transaction.isPossibleDuplicate) {
+      return <span className="finova-badge-primary">{t("transactions.importStatusNew")}</span>;
+    }
+
+    if (transaction.duplicateSource === "existing") {
+      return (
+        <span className="finova-badge-neutral">{t("transactions.importStatusExisting")}</span>
+      );
+    }
+
+    if (transaction.duplicateSource === "import") {
+      return (
+        <span className="finova-badge-neutral">{t("transactions.importStatusInFile")}</span>
+      );
+    }
+
+    if (transaction.duplicateSource === "existing_and_import") {
+      return (
+        <span className="finova-badge-neutral">
+          {t("transactions.importStatusExistingAndFile")}
+        </span>
+      );
+    }
+
+    return (
+      <span className="finova-badge-neutral">{t("transactions.importStatusPossibleDuplicate")}</span>
+    );
+  }
 
   async function handleFileChange(event) {
     const file = event.target.files?.[0];
@@ -473,6 +560,539 @@ export default function TransactionImportModal({
   if (!isOpen) {
     return null;
   }
+
+  return (
+    <div
+      className="modal d-block finova-modal-backdrop"
+      tabIndex="-1"
+      role="dialog"
+      aria-modal="true"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !isSubmitting) {
+          onClose();
+        }
+      }}
+    >
+      <div className="modal-dialog modal-dialog-centered modal-xl">
+        <div className="modal-content border-0" style={{ borderRadius: "16px" }}>
+          <div className="modal-header border-0 pb-0 px-4 pt-4">
+            <div>
+              <h2 className="finova-title h4 mb-1">{t("transactions.importTitle")}</h2>
+              <p className="finova-subtitle small mb-0">{t("transactions.importSubtitle")}</p>
+            </div>
+
+            <button
+              type="button"
+              className="btn-close"
+              aria-label={t("transactions.close")}
+              title={t("transactions.close")}
+              data-tooltip={t("transactions.close")}
+              onClick={onClose}
+            />
+          </div>
+
+          <div className="modal-body px-4 pb-4 pt-3">
+            <div className="finova-card-soft p-3 mb-4">
+              <div className="row g-3 align-items-end">
+                <div className="col-12 col-lg-8">
+                  <label
+                    className="form-label text-dark fw-medium"
+                    htmlFor="transaction-import-account"
+                  >
+                    {t("transactions.importDestinationAccount")}
+                  </label>
+                  <select
+                    id="transaction-import-account"
+                    className="form-select finova-select"
+                    value={financialAccountId}
+                    onChange={(event) => setFinancialAccountId(event.target.value)}
+                    disabled={isSubmitting}
+                  >
+                    <option value="all">{t("transactions.unlinkedAccount")}</option>
+                    {accounts.map((account) => (
+                      <option key={account.id} value={String(account.id)}>
+                        {account.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-12 col-lg-4">
+                  <p className="form-text mb-0">{t("transactions.importDestinationHelp")}</p>
+                </div>
+
+                <div className="col-12">
+                  <div className="small text-muted">
+                    <strong>{t("transactions.importCurrentDestination")}:</strong>{" "}
+                    {selectedAccountLabel}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="finova-card-soft p-3 mb-4">
+              <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                <div>
+                  <div className="finova-title h6 mb-1">{t("transactions.importFileTitle")}</div>
+                  <p className="finova-subtitle mb-0">{t("transactions.importFileSubtitle")}</p>
+                </div>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv,.ofx,text/csv,application/x-ofx"
+                  className="form-control finova-input"
+                  onChange={handleFileSelection}
+                />
+              </div>
+            </div>
+
+            {fileName ? (
+              <div className="mb-3 d-flex flex-wrap gap-2">
+                <span className="finova-badge-neutral">{fileName}</span>
+                {importFormat ? (
+                  <span className="finova-badge-primary text-uppercase">{importFormat}</span>
+                ) : null}
+              </div>
+            ) : null}
+
+            {error ? <div className="alert alert-danger py-2">{error}</div> : null}
+            {feedback ? <div className="alert alert-success py-2">{feedback}</div> : null}
+
+            {reconciledPreview.length > 0 ? (
+              <>
+                <div className="d-flex justify-content-between align-items-center gap-3 mb-3">
+                  <div>
+                    <h3 className="finova-title h5 mb-1">{t("transactions.importPreviewTitle")}</h3>
+                    <p className="finova-subtitle mb-0">
+                      {t("transactions.importPreviewSubtitle")}
+                    </p>
+                    {summary.lowConfidenceCount > 0 ? (
+                      <div className="small text-muted mt-2">
+                        {t("transactions.importLowConfidenceSummary", {
+                          count: summary.lowConfidenceCount,
+                        })}
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className="d-flex flex-column align-items-end gap-2">
+                    <span className="finova-badge-primary">
+                      {t("transactions.importSelectedCount", { count: summary.selectedCount })}
+                    </span>
+                    <span className="finova-badge-neutral">
+                      {t("transactions.importSelectedTotal", {
+                        amount: formatBRLFromCents(summary.selectedAmount),
+                      })}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="row g-3 mb-3">
+                  <div className="col-12 col-md-3">
+                    <div className="finova-card-soft p-3 h-100">
+                      <div className="finova-subtitle small mb-1">
+                        {t("transactions.importIncomeCount")}
+                      </div>
+                      <div className="finova-title h5 mb-0">{summary.incomeCount}</div>
+                    </div>
+                  </div>
+                  <div className="col-12 col-md-3">
+                    <div className="finova-card-soft p-3 h-100">
+                      <div className="finova-subtitle small mb-1">
+                        {t("transactions.importExpenseCount")}
+                      </div>
+                      <div className="finova-title h5 mb-0">{summary.expenseCount}</div>
+                    </div>
+                  </div>
+                  <div className="col-12 col-md-3">
+                    <div className="finova-card-soft p-3 h-100">
+                      <div className="finova-subtitle small mb-1">
+                        {t("transactions.importExistingDuplicates")}
+                      </div>
+                      <div className="finova-title h5 mb-0">{summary.existingDuplicateCount}</div>
+                    </div>
+                  </div>
+                  <div className="col-12 col-md-3">
+                    <div className="finova-card-soft p-3 h-100">
+                      <div className="finova-subtitle small mb-1">
+                        {t("transactions.importFileDuplicates")}
+                      </div>
+                      <div className="finova-title h5 mb-0">{summary.importDuplicateCount}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="finova-actions-row mb-3">
+                  <button
+                    type="button"
+                    className="btn finova-btn-light"
+                    onClick={selectOnlyNewRows}
+                    disabled={isSubmitting || reconciledPreview.length === 0}
+                  >
+                    {t("transactions.importSelectOnlyNew")}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn finova-btn-light"
+                    onClick={deselectSuggestedDuplicates}
+                    disabled={isSubmitting || summary.duplicateCount === 0}
+                  >
+                    {t("transactions.importDeselectSuggestedDuplicates")}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn finova-btn-light"
+                    onClick={selectAllRows}
+                    disabled={isSubmitting || reconciledPreview.length === 0}
+                  >
+                    {t("transactions.importSelectAll")}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn finova-btn-light"
+                    onClick={removeSelectedRows}
+                    disabled={isSubmitting || summary.selectedCount === 0}
+                  >
+                    {t("transactions.importRemoveSelected")}
+                  </button>
+                </div>
+
+                <div className="finova-card-soft p-3 mb-3">
+                  <div className="row g-3 align-items-end">
+                    <div className="col-12 col-xl-4">
+                      <label
+                        className="form-label text-dark fw-medium"
+                        htmlFor="import-preview-search"
+                      >
+                        {t("transactions.importSearchLabel")}
+                      </label>
+                      <input
+                        id="import-preview-search"
+                        type="text"
+                        className="form-control finova-input"
+                        placeholder={t("transactions.importSearchPlaceholder")}
+                        value={previewSearch}
+                        onChange={(event) => setPreviewSearch(event.target.value)}
+                        disabled={isSubmitting}
+                      />
+                    </div>
+
+                    <div className="col-12 col-xl-8">
+                      <label className="form-label text-dark fw-medium">
+                        {t("transactions.importFilterRows")}
+                      </label>
+                      <div className="finova-segmented-actions">
+                        {previewFilters.map((filter) => (
+                          <button
+                            key={filter.key}
+                            type="button"
+                            className={
+                              previewFilter === filter.key
+                                ? "btn finova-btn-primary"
+                                : "btn finova-btn-light"
+                            }
+                            onClick={() => setPreviewFilter(filter.key)}
+                            disabled={isSubmitting}
+                          >
+                            {filter.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="finova-card-soft p-3 mb-3">
+                  <div className="d-flex flex-column gap-3">
+                    <div>
+                      <div className="finova-title h6 mb-1">{t("transactions.importBulkTitle")}</div>
+                      <p className="finova-subtitle mb-0">{t("transactions.importBulkSubtitle")}</p>
+                      {summary.lowConfidenceSelectedCount > 0 ? (
+                        <div className="small text-muted mt-2">
+                          {t("transactions.importBulkLowConfidence", {
+                            count: summary.lowConfidenceSelectedCount,
+                          })}
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div className="row g-3 align-items-end">
+                      <div className="col-12 col-lg-6">
+                        <label
+                          className="form-label text-dark fw-medium"
+                          htmlFor="bulk-import-description-prefix"
+                        >
+                          {t("transactions.importBulkPrefixLabel")}
+                        </label>
+                        <input
+                          id="bulk-import-description-prefix"
+                          type="text"
+                          className="form-control finova-input"
+                          placeholder={t("transactions.importBulkPrefixPlaceholder")}
+                          value={bulkDescriptionPrefix}
+                          onChange={(event) => setBulkDescriptionPrefix(event.target.value)}
+                          disabled={isSubmitting}
+                        />
+                      </div>
+
+                      <div className="col-12 col-lg-2">
+                        <button
+                          type="button"
+                          className="btn finova-btn-light w-100"
+                          onClick={applyBulkDescriptionPrefix}
+                          disabled={
+                            isSubmitting ||
+                            !bulkDescriptionPrefix.trim() ||
+                            summary.selectedCount === 0
+                          }
+                        >
+                          {t("transactions.importBulkApplyText")}
+                        </button>
+                      </div>
+
+                      <div className="col-12 col-lg-6">
+                        <label
+                          className="form-label text-dark fw-medium"
+                          htmlFor="bulk-import-description-replace"
+                        >
+                          {t("transactions.importBulkReplaceLabel")}
+                        </label>
+                        <input
+                          id="bulk-import-description-replace"
+                          type="text"
+                          className="form-control finova-input"
+                          placeholder={t("transactions.importBulkReplacePlaceholder")}
+                          value={bulkDescriptionReplace}
+                          onChange={(event) => setBulkDescriptionReplace(event.target.value)}
+                          disabled={isSubmitting}
+                        />
+                      </div>
+
+                      <div className="col-12 col-lg-2">
+                        <button
+                          type="button"
+                          className="btn finova-btn-light w-100"
+                          onClick={applyBulkDescriptionReplace}
+                          disabled={
+                            isSubmitting ||
+                            !bulkDescriptionReplace.trim() ||
+                            summary.selectedCount === 0
+                          }
+                        >
+                          {t("transactions.importBulkReplace")}
+                        </button>
+                      </div>
+
+                      <div className="col-12 col-lg-4">
+                        <label className="form-label text-dark fw-medium" htmlFor="bulk-import-type">
+                          {t("transactions.importBulkTypeLabel")}
+                        </label>
+                        <select
+                          id="bulk-import-type"
+                          className="form-select finova-select"
+                          value={bulkType}
+                          onChange={(event) => setBulkType(event.target.value)}
+                          disabled={isSubmitting}
+                        >
+                          <option value="">{t("transactions.importBulkSelect")}</option>
+                          <option value="expense">{t("transactions.expense")}</option>
+                          <option value="income">{t("transactions.income")}</option>
+                        </select>
+                      </div>
+
+                      <div className="col-12 col-lg-2">
+                        <button
+                          type="button"
+                          className="btn finova-btn-light w-100"
+                          onClick={applyBulkType}
+                          disabled={isSubmitting || !bulkType || summary.selectedCount === 0}
+                        >
+                          {t("transactions.importBulkApplyType")}
+                        </button>
+                      </div>
+
+                      <div className="col-12 col-lg-4">
+                        <label
+                          className="form-label text-dark fw-medium"
+                          htmlFor="bulk-import-category"
+                        >
+                          {t("transactions.importBulkCategoryLabel")}
+                        </label>
+                        <select
+                          id="bulk-import-category"
+                          className="form-select finova-select"
+                          value={bulkCategory}
+                          onChange={(event) => setBulkCategory(event.target.value)}
+                          disabled={isSubmitting || summary.selectedCount === 0 || !selectedType}
+                        >
+                          <option value="">
+                            {selectedType
+                              ? t("transactions.importBulkSelect")
+                              : t("transactions.importBulkSelectSameType")}
+                          </option>
+                          {bulkCategoryOptions.map((category) => (
+                            <option key={category} value={category}>
+                              {category}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="col-12 col-lg-2">
+                        <button
+                          type="button"
+                          className="btn finova-btn-light w-100"
+                          onClick={applyBulkCategory}
+                          disabled={
+                            isSubmitting ||
+                            !bulkCategory ||
+                            summary.selectedCount === 0 ||
+                            !selectedType
+                          }
+                        >
+                          {t("transactions.importBulkApplyCategory")}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="table-responsive">
+                  <table className="table finova-table align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th style={{ width: "72px" }}>Importar</th>
+                        <th>{t("common.date")}</th>
+                        <th>{t("common.description")}</th>
+                        <th>{t("common.category")}</th>
+                        <th>{t("common.type")}</th>
+                        <th>{t("transactions.importTableStatus")}</th>
+                        <th className="text-end">{t("common.value")}</th>
+                        <th className="text-end">{t("transactions.importTableAction")}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {previewRows.map(({ transaction, originalIndex }) => {
+                        const isSelected = selectedIndexes.has(originalIndex);
+
+                        return (
+                          <tr key={`${transaction.date}-${transaction.description}-${originalIndex}`}>
+                            <td>
+                              <input
+                                type="checkbox"
+                                className="form-check-input"
+                                checked={isSelected}
+                                onChange={() => toggleSelection(originalIndex)}
+                                aria-label={t("transactions.importSelectRow", {
+                                  description: transaction.description,
+                                })}
+                              />
+                            </td>
+                            <td>{transaction.date}</td>
+                            <td>
+                              <div>{transaction.description}</div>
+                              <div className="mt-1 d-flex flex-wrap gap-2">
+                                {transaction.categoryConfidence === "low" ? (
+                                  <span className="finova-badge-warning">
+                                    {t("transactions.importReviewCategory")}
+                                  </span>
+                                ) : null}
+                              </div>
+                              {transaction.duplicateReason ? (
+                                <div className="small text-muted">{transaction.duplicateReason}</div>
+                              ) : null}
+                            </td>
+                            <td>
+                              <select
+                                className="form-select form-select-sm finova-select"
+                                value={transaction.category}
+                                onChange={(event) =>
+                                  updateTransactionCategory(originalIndex, event.target.value)
+                                }
+                                disabled={isSubmitting}
+                              >
+                                {getTransactionCategories(transaction.type).map((category) => (
+                                  <option key={category} value={category}>
+                                    {category}
+                                  </option>
+                                ))}
+                              </select>
+                            </td>
+                            <td>
+                              <select
+                                className="form-select form-select-sm finova-select"
+                                value={transaction.type}
+                                onChange={(event) =>
+                                  updateTransactionType(originalIndex, event.target.value)
+                                }
+                                disabled={isSubmitting}
+                              >
+                                <option value="expense">{t("transactions.expense")}</option>
+                                <option value="income">{t("transactions.income")}</option>
+                              </select>
+                            </td>
+                            <td>{renderDuplicateStatusLocalized(transaction)}</td>
+                            <td className="text-end fw-semibold">
+                              {formatBRLFromCents(transaction.amountCents)}
+                            </td>
+                            <td className="text-end">
+                              <button
+                                type="button"
+                                className="btn btn-sm finova-btn-light"
+                                onClick={() => removePreviewRow(originalIndex)}
+                                disabled={isSubmitting}
+                              >
+                                {t("transactions.remove")}
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {previewRows.length === 0 ? (
+                  <div className="finova-page-note mt-3">
+                    {t("transactions.importNoRowsForFilter")}
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <div className="finova-card-soft p-4">
+                <h3 className="finova-title h6 mb-2">{t("transactions.importNoRowsTitle")}</h3>
+                <p className="finova-subtitle mb-0">{t("transactions.importNoRowsSubtitle")}</p>
+              </div>
+            )}
+
+            <div className="finova-actions-row finova-actions-row-end pt-4">
+              <button
+                type="button"
+                className="btn finova-btn-light px-4"
+                onClick={onClose}
+                disabled={isSubmitting}
+              >
+                {t("common.cancel")}
+              </button>
+              <button
+                type="button"
+                className="btn finova-btn-primary px-4"
+                onClick={handleImportAction}
+                disabled={isSubmitting || selectedTransactions.length === 0}
+              >
+                {isSubmitting
+                  ? t("transactions.importing")
+                  : t("transactions.confirmImport", {
+                      count: selectedTransactions.length,
+                    })}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div

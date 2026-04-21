@@ -222,10 +222,11 @@ export default function Transactions() {
         ...transaction,
         financialAccountLabel:
           transaction.financialAccountId != null
-            ? accountLabelsById[String(transaction.financialAccountId)] || "Conta selecionada"
-            : "Sem conta vinculada",
+            ? accountLabelsById[String(transaction.financialAccountId)] ||
+              t("transactions.selectedAccountFallback")
+            : t("transactions.unlinkedAccount"),
       })),
-    [filtered, accountLabelsById]
+    [filtered, accountLabelsById, t]
   );
 
   const installmentGroups = useMemo(() => {
@@ -518,8 +519,13 @@ export default function Transactions() {
       filename: `finova-transacoes-${monthLabel}.pdf`,
       title: t("pages.transactionsTitle"),
       subtitle: month
-        ? `Periodo filtrado: ${month} | ${filtered.length} registro(s)`
-        : `Todos os periodos | ${filtered.length} registro(s)`,
+        ? t("transactions.exportSubtitleFiltered", {
+            month,
+            count: filtered.length,
+          })
+        : t("transactions.exportSubtitleAll", {
+            count: filtered.length,
+          }),
       columns: [
         t("common.date"),
         t("common.description"),

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import HomeCustomizationCard from "../components/HomeCustomizationCard";
 import PasswordToggleButton from "../components/PasswordToggleButton";
 import { useI18n } from "../i18n/LanguageProvider";
 import {
@@ -11,6 +12,11 @@ import {
   updatePublicDashboardSettings,
 } from "../lib/api/publicDashboard";
 import { isPasswordStrong } from "../lib/auth/passwordPolicy";
+import {
+  DEFAULT_HOME_WIDGETS,
+  loadHomeWidgets,
+  saveHomeWidgets,
+} from "../lib/home/homePreferences";
 
 export default function Profile() {
   const { t, formatDateTime } = useI18n();
@@ -36,6 +42,8 @@ export default function Profile() {
     enabled: false,
     publicUrl: "",
   });
+  const [profileUser, setProfileUser] = useState(null);
+  const [homeWidgets, setHomeWidgets] = useState(() => loadHomeWidgets());
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [publicDashboardMessage, setPublicDashboardMessage] = useState("");
@@ -57,6 +65,8 @@ export default function Profile() {
           monthlyReportEmailsEnabled: user.monthlyReportEmailsEnabled ?? false,
           monthlyReportDay: user.monthlyReportDay ?? 1,
         }));
+        setProfileUser(user);
+        setHomeWidgets(loadHomeWidgets(user));
         setNotificationDeliveries(Array.isArray(deliveries) ? deliveries : []);
         setPublicDashboard({
           enabled: publicDashboardSettings?.enabled ?? false,
@@ -77,6 +87,19 @@ export default function Profile() {
     setError("");
     setSuccess("");
     setPublicDashboardMessage("");
+  }
+
+  function handleToggleHomeWidget(widgetKey) {
+    const nextWidgets = saveHomeWidgets(profileUser, {
+      ...homeWidgets,
+      [widgetKey]: !homeWidgets[widgetKey],
+    });
+    setHomeWidgets(nextWidgets);
+  }
+
+  function handleResetHomeWidgets() {
+    const nextWidgets = saveHomeWidgets(profileUser, DEFAULT_HOME_WIDGETS);
+    setHomeWidgets(nextWidgets);
   }
 
   async function handleSubmit(event) {
@@ -193,154 +216,163 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="finova-card p-4 p-md-5" style={{ maxWidth: 760 }}>
-        {isLoading ? (
-          <div className="d-flex align-items-center gap-3">
-            <div className="spinner-border spinner-border-sm text-primary" />
-            <p className="finova-subtitle mb-0">{t("profile.loading")}</p>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="row g-3">
-            <div className="col-12 col-md-6">
-              <label className="form-label text-dark fw-medium">{t("common.name")}</label>
-              <input
-                type="text"
-                className="form-control finova-input"
-                value={form.name}
-                onChange={(e) => updateField("name", e.target.value)}
-                placeholder={t("common.preferredNamePlaceholder")}
-                disabled={isSubmitting}
-                required
-              />
-              <div className="form-text">{t("common.preferredNameHelp")}</div>
+      <div className="finova-page-stack">
+        <div className="finova-card p-4 p-md-5" style={{ maxWidth: 760 }}>
+          {isLoading ? (
+            <div className="d-flex align-items-center gap-3">
+              <div className="spinner-border spinner-border-sm text-primary" />
+              <p className="finova-subtitle mb-0">{t("profile.loading")}</p>
             </div>
-
-            <div className="col-12 col-md-6">
-              <label className="form-label text-dark fw-medium">{t("common.email")}</label>
-              <input
-                type="email"
-                className="form-control finova-input"
-                value={form.email}
-                disabled
-                readOnly
-              />
-            </div>
-
-            <div className="col-12">
-              <div className="finova-card border-0 bg-body-tertiary p-3 p-md-4">
-                <div className="d-flex flex-column flex-md-row align-items-md-start justify-content-between gap-3">
-                  <div>
-                    <h2 className="finova-title h5 mb-1">{t("profile.emailAlertsTitle")}</h2>
-                    <p className="finova-subtitle small mb-0">
-                      {t("profile.emailAlertsSubtitle")}
-                    </p>
-                  </div>
-
-                  <div className="form-check form-switch m-0">
-                    <input
-                      id="emailGoalAlertsEnabled"
-                      type="checkbox"
-                      className="form-check-input"
-                      checked={form.emailGoalAlertsEnabled}
-                      onChange={(e) => updateField("emailGoalAlertsEnabled", e.target.checked)}
-                      disabled={isSubmitting}
-                    />
-                    <label
-                      className="form-check-label text-dark fw-medium"
-                      htmlFor="emailGoalAlertsEnabled"
-                    >
-                      {form.emailGoalAlertsEnabled
-                        ? t("profile.emailAlertsEnabled")
-                        : t("profile.emailAlertsDisabled")}
-                    </label>
-                  </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="row g-3">
+              <div className="col-12">
+                <div className="finova-profile-section-heading">
+                  <h2 className="finova-title h5 mb-1">{t("profile.accountSectionTitle")}</h2>
+                  <p className="finova-subtitle small mb-0">{t("profile.accountSectionSubtitle")}</p>
                 </div>
+              </div>
 
-                <div className="row g-3 mt-1">
-                  <div className="col-12 col-md-6">
-                    <label
-                      className="form-label text-dark fw-medium"
-                      htmlFor="goalAlertThresholdPercent"
-                    >
-                      {t("profile.emailAlertsThresholdLabel")}
-                    </label>
-                    <select
-                      id="goalAlertThresholdPercent"
-                      className="form-select finova-input"
-                      value={String(form.goalAlertThresholdPercent)}
-                      onChange={(e) =>
-                        updateField("goalAlertThresholdPercent", Number(e.target.value))
-                      }
-                      disabled={isSubmitting || !form.emailGoalAlertsEnabled}
-                    >
-                      {[50, 60, 70, 80, 90, 100].map((value) => (
-                        <option key={value} value={value}>
-                          {t("profile.emailAlertsThresholdOption", { percent: value })}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="form-text">{t("profile.emailAlertsThresholdHelp")}</div>
+              <div className="col-12 col-md-6">
+                <label className="form-label text-dark fw-medium">{t("common.name")}</label>
+                <input
+                  type="text"
+                  className="form-control finova-input"
+                  value={form.name}
+                  onChange={(e) => updateField("name", e.target.value)}
+                  placeholder={t("common.preferredNamePlaceholder")}
+                  disabled={isSubmitting}
+                  required
+                />
+                <div className="form-text">{t("common.preferredNameHelp")}</div>
+              </div>
+
+              <div className="col-12 col-md-6">
+                <label className="form-label text-dark fw-medium">{t("common.email")}</label>
+                <input
+                  type="email"
+                  className="form-control finova-input"
+                  value={form.email}
+                  disabled
+                  readOnly
+                />
+              </div>
+
+              <div className="col-12">
+                <div className="finova-card finova-profile-subsection border-0 p-3 p-md-4">
+                  <div className="d-flex flex-column flex-md-row align-items-md-start justify-content-between gap-3">
+                    <div>
+                      <h2 className="finova-title h5 mb-1">{t("profile.emailAlertsTitle")}</h2>
+                      <p className="finova-subtitle small mb-0">
+                        {t("profile.emailAlertsSubtitle")}
+                      </p>
+                    </div>
+
+                    <div className="form-check form-switch m-0">
+                      <input
+                        id="emailGoalAlertsEnabled"
+                        type="checkbox"
+                        className="form-check-input"
+                        checked={form.emailGoalAlertsEnabled}
+                        onChange={(e) => updateField("emailGoalAlertsEnabled", e.target.checked)}
+                        disabled={isSubmitting}
+                      />
+                      <label
+                        className="form-check-label text-dark fw-medium"
+                        htmlFor="emailGoalAlertsEnabled"
+                      >
+                        {form.emailGoalAlertsEnabled
+                          ? t("profile.emailAlertsEnabled")
+                          : t("profile.emailAlertsDisabled")}
+                      </label>
+                    </div>
                   </div>
 
-                  <div className="col-12">
-                    <div className="border-top pt-3">
-                      <div className="d-flex flex-column flex-md-row align-items-md-start justify-content-between gap-3">
-                        <div>
-                          <h3 className="finova-title h6 mb-1">
-                            {t("profile.monthlyReportTitle")}
-                          </h3>
-                          <p className="finova-subtitle small mb-0">
-                            {t("profile.monthlyReportSubtitle")}
-                          </p>
+                  <div className="row g-3 mt-1">
+                    <div className="col-12 col-md-6">
+                      <label
+                        className="form-label text-dark fw-medium"
+                        htmlFor="goalAlertThresholdPercent"
+                      >
+                        {t("profile.emailAlertsThresholdLabel")}
+                      </label>
+                      <select
+                        id="goalAlertThresholdPercent"
+                        className="form-select finova-input"
+                        value={String(form.goalAlertThresholdPercent)}
+                        onChange={(e) =>
+                          updateField("goalAlertThresholdPercent", Number(e.target.value))
+                        }
+                        disabled={isSubmitting || !form.emailGoalAlertsEnabled}
+                      >
+                        {[50, 60, 70, 80, 90, 100].map((value) => (
+                          <option key={value} value={value}>
+                            {t("profile.emailAlertsThresholdOption", { percent: value })}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="form-text">{t("profile.emailAlertsThresholdHelp")}</div>
+                    </div>
+
+                    <div className="col-12">
+                      <div className="border-top pt-3">
+                        <div className="d-flex flex-column flex-md-row align-items-md-start justify-content-between gap-3">
+                          <div>
+                            <h3 className="finova-title h6 mb-1">
+                              {t("profile.monthlyReportTitle")}
+                            </h3>
+                            <p className="finova-subtitle small mb-0">
+                              {t("profile.monthlyReportSubtitle")}
+                            </p>
+                          </div>
+
+                          <div className="form-check form-switch m-0">
+                            <input
+                              id="monthlyReportEmailsEnabled"
+                              type="checkbox"
+                              className="form-check-input"
+                              checked={form.monthlyReportEmailsEnabled}
+                              onChange={(e) =>
+                                updateField("monthlyReportEmailsEnabled", e.target.checked)
+                              }
+                              disabled={isSubmitting}
+                            />
+                            <label
+                              className="form-check-label text-dark fw-medium"
+                              htmlFor="monthlyReportEmailsEnabled"
+                            >
+                              {form.monthlyReportEmailsEnabled
+                                ? t("profile.monthlyReportEnabled")
+                                : t("profile.monthlyReportDisabled")}
+                            </label>
+                          </div>
                         </div>
 
-                        <div className="form-check form-switch m-0">
-                          <input
-                            id="monthlyReportEmailsEnabled"
-                            type="checkbox"
-                            className="form-check-input"
-                            checked={form.monthlyReportEmailsEnabled}
-                            onChange={(e) =>
-                              updateField("monthlyReportEmailsEnabled", e.target.checked)
-                            }
-                            disabled={isSubmitting}
-                          />
-                          <label
-                            className="form-check-label text-dark fw-medium"
-                            htmlFor="monthlyReportEmailsEnabled"
-                          >
-                            {form.monthlyReportEmailsEnabled
-                              ? t("profile.monthlyReportEnabled")
-                              : t("profile.monthlyReportDisabled")}
-                          </label>
-                        </div>
-                      </div>
-
-                      <div className="row g-3 mt-1">
-                        <div className="col-12 col-md-6">
-                          <label
-                            className="form-label text-dark fw-medium"
-                            htmlFor="monthlyReportDay"
-                          >
-                            {t("profile.monthlyReportDayLabel")}
-                          </label>
-                          <select
-                            id="monthlyReportDay"
-                            className="form-select finova-input"
-                            value={String(form.monthlyReportDay)}
-                            onChange={(e) =>
-                              updateField("monthlyReportDay", Number(e.target.value))
-                            }
-                            disabled={isSubmitting || !form.monthlyReportEmailsEnabled}
-                          >
-                            {Array.from({ length: 28 }, (_, index) => index + 1).map((value) => (
-                              <option key={value} value={value}>
-                                {t("profile.monthlyReportDayOption", { day: value })}
-                              </option>
-                            ))}
-                          </select>
-                          <div className="form-text">
-                            {t("profile.monthlyReportDayHelp")}
+                        <div className="row g-3 mt-1">
+                          <div className="col-12 col-md-6">
+                            <label
+                              className="form-label text-dark fw-medium"
+                              htmlFor="monthlyReportDay"
+                            >
+                              {t("profile.monthlyReportDayLabel")}
+                            </label>
+                            <select
+                              id="monthlyReportDay"
+                              className="form-select finova-input"
+                              value={String(form.monthlyReportDay)}
+                              onChange={(e) =>
+                                updateField("monthlyReportDay", Number(e.target.value))
+                              }
+                              disabled={isSubmitting || !form.monthlyReportEmailsEnabled}
+                            >
+                              {Array.from({ length: 28 }, (_, index) => index + 1).map((value) => (
+                                <option key={value} value={value}>
+                                  {t("profile.monthlyReportDayOption", { day: value })}
+                                </option>
+                              ))}
+                            </select>
+                            <div className="form-text">
+                              {t("profile.monthlyReportDayHelp")}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -348,208 +380,222 @@ export default function Profile() {
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="col-12">
-              <hr className="my-2" />
-              <h2 className="finova-title h5 mb-1">{t("profile.changePasswordTitle")}</h2>
-              <p className="finova-subtitle small mb-0">{t("profile.changePasswordSubtitle")}</p>
-            </div>
-
-            <div className="col-12 col-md-4">
-              <label className="form-label text-dark fw-medium">{t("common.currentPassword")}</label>
-              <div className="input-group">
-                <input
-                  type={isCurrentPasswordVisible ? "text" : "password"}
-                  className="form-control finova-input"
-                  value={form.currentPassword}
-                  onChange={(e) => updateField("currentPassword", e.target.value)}
-                  disabled={isSubmitting}
-                />
-                <PasswordToggleButton
-                  isVisible={isCurrentPasswordVisible}
-                  onToggle={() => setIsCurrentPasswordVisible((current) => !current)}
-                  disabled={isSubmitting}
-                />
-              </div>
-            </div>
-
-            <div className="col-12 col-md-4">
-              <label className="form-label text-dark fw-medium">{t("common.newPassword")}</label>
-              <div className="input-group">
-                <input
-                  type={isNewPasswordVisible ? "text" : "password"}
-                  className="form-control finova-input"
-                  value={form.newPassword}
-                  onChange={(e) => updateField("newPassword", e.target.value)}
-                  disabled={isSubmitting}
-                />
-                <PasswordToggleButton
-                  isVisible={isNewPasswordVisible}
-                  onToggle={() => setIsNewPasswordVisible((current) => !current)}
-                  disabled={isSubmitting}
-                />
-              </div>
-              <div className="form-text">{t("passwordPolicy.message")}</div>
-            </div>
-
-            <div className="col-12 col-md-4">
-              <label className="form-label text-dark fw-medium">{t("common.confirmPassword")}</label>
-              <div className="input-group">
-                <input
-                  type={isConfirmPasswordVisible ? "text" : "password"}
-                  className="form-control finova-input"
-                  value={form.confirmPassword}
-                  onChange={(e) => updateField("confirmPassword", e.target.value)}
-                  disabled={isSubmitting}
-                />
-                <PasswordToggleButton
-                  isVisible={isConfirmPasswordVisible}
-                  onToggle={() => setIsConfirmPasswordVisible((current) => !current)}
-                  disabled={isSubmitting}
-                />
-              </div>
-            </div>
-
-            {error ? (
               <div className="col-12">
-                <div className="alert alert-danger py-2 mb-0" role="alert">
-                  {error}
+                <div className="finova-profile-section-heading finova-profile-section-heading-divider">
+                  <h2 className="finova-title h5 mb-1">{t("profile.changePasswordTitle")}</h2>
+                  <p className="finova-subtitle small mb-0">{t("profile.changePasswordSubtitle")}</p>
                 </div>
               </div>
-            ) : null}
 
-            {!error && success ? (
-              <div className="col-12">
-                <div className="alert alert-success py-2 mb-0" role="status">
-                  {success}
+              <div className="col-12 col-md-4">
+                <label className="form-label text-dark fw-medium">{t("common.currentPassword")}</label>
+                <div className="input-group">
+                  <input
+                    type={isCurrentPasswordVisible ? "text" : "password"}
+                    className="form-control finova-input"
+                    value={form.currentPassword}
+                    onChange={(e) => updateField("currentPassword", e.target.value)}
+                    disabled={isSubmitting}
+                  />
+                  <PasswordToggleButton
+                    isVisible={isCurrentPasswordVisible}
+                    onToggle={() => setIsCurrentPasswordVisible((current) => !current)}
+                    disabled={isSubmitting}
+                  />
                 </div>
               </div>
-            ) : null}
 
-            <div className="col-12">
-              <div className="finova-actions-row finova-actions-row-end pt-2">
-                <button
-                  type="submit"
-                  className="btn finova-btn-primary px-4"
-                  disabled={isSubmitting}
+              <div className="col-12 col-md-4">
+                <label className="form-label text-dark fw-medium">{t("common.newPassword")}</label>
+                <div className="input-group">
+                  <input
+                    type={isNewPasswordVisible ? "text" : "password"}
+                    className="form-control finova-input"
+                    value={form.newPassword}
+                    onChange={(e) => updateField("newPassword", e.target.value)}
+                    disabled={isSubmitting}
+                  />
+                  <PasswordToggleButton
+                    isVisible={isNewPasswordVisible}
+                    onToggle={() => setIsNewPasswordVisible((current) => !current)}
+                    disabled={isSubmitting}
+                  />
+                </div>
+                <div className="form-text">{t("passwordPolicy.message")}</div>
+              </div>
+
+              <div className="col-12 col-md-4">
+                <label className="form-label text-dark fw-medium">{t("common.confirmPassword")}</label>
+                <div className="input-group">
+                  <input
+                    type={isConfirmPasswordVisible ? "text" : "password"}
+                    className="form-control finova-input"
+                    value={form.confirmPassword}
+                    onChange={(e) => updateField("confirmPassword", e.target.value)}
+                    disabled={isSubmitting}
+                  />
+                  <PasswordToggleButton
+                    isVisible={isConfirmPasswordVisible}
+                    onToggle={() => setIsConfirmPasswordVisible((current) => !current)}
+                    disabled={isSubmitting}
+                  />
+                </div>
+              </div>
+
+              {error ? (
+                <div className="col-12">
+                  <div className="alert alert-danger py-2 mb-0" role="alert">
+                    {error}
+                  </div>
+                </div>
+              ) : null}
+
+              {!error && success ? (
+                <div className="col-12">
+                  <div className="alert alert-success py-2 mb-0" role="status">
+                    {success}
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="col-12">
+                <div className="finova-actions-row finova-actions-row-end pt-2">
+                  <button
+                    type="submit"
+                    className="btn finova-btn-primary px-4"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? t("profile.savingButton") : t("profile.saveButton")}
+                  </button>
+                </div>
+              </div>
+            </form>
+          )}
+        </div>
+
+        {!isLoading ? (
+          <div style={{ maxWidth: 760 }}>
+            <HomeCustomizationCard
+              widgets={homeWidgets}
+              onToggle={handleToggleHomeWidget}
+              onReset={handleResetHomeWidgets}
+              title={t("profile.homeCustomizationTitle")}
+              description={t("profile.homeCustomizationSubtitle")}
+              resetLabel={t("profile.homeCustomizationReset")}
+            />
+          </div>
+        ) : null}
+
+        {!isLoading ? (
+          <div className="finova-card p-4 p-md-5" style={{ maxWidth: 760 }}>
+            <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-start gap-3 mb-3">
+              <div>
+                <h2 className="finova-title h5 mb-1">{t("profile.publicDashboardTitle")}</h2>
+                <p className="finova-subtitle small mb-0">
+                  {t("profile.publicDashboardSubtitle")}
+                </p>
+              </div>
+
+              <div className="form-check form-switch m-0">
+                <input
+                  id="publicDashboardEnabled"
+                  type="checkbox"
+                  className="form-check-input"
+                  checked={publicDashboard.enabled}
+                  onChange={(event) => handleTogglePublicDashboard(event.target.checked)}
+                  disabled={isUpdatingPublicDashboard}
+                />
+                <label
+                  className="form-check-label text-dark fw-medium"
+                  htmlFor="publicDashboardEnabled"
                 >
-                  {isSubmitting ? t("profile.savingButton") : t("profile.saveButton")}
-                </button>
+                  {publicDashboard.enabled
+                    ? t("profile.publicDashboardEnabled")
+                    : t("profile.publicDashboardDisabled")}
+                </label>
               </div>
             </div>
-          </form>
-        )}
-      </div>
 
-      {!isLoading ? (
-        <div className="finova-card p-4 p-md-5" style={{ maxWidth: 760 }}>
-          <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-start gap-3 mb-3">
-            <div>
-              <h2 className="finova-title h5 mb-1">{t("profile.publicDashboardTitle")}</h2>
+            {publicDashboard.enabled ? (
+              <div className="d-grid gap-3">
+                <div>
+                  <label className="form-label text-dark fw-medium" htmlFor="publicDashboardUrl">
+                    {t("profile.publicDashboardLinkLabel")}
+                  </label>
+                  <input
+                    id="publicDashboardUrl"
+                    type="text"
+                    className="form-control finova-input"
+                    value={publicDashboard.publicUrl}
+                    readOnly
+                  />
+                  <div className="form-text">{t("profile.publicDashboardLinkHelp")}</div>
+                </div>
+
+                <div className="finova-actions-row">
+                  <button
+                    type="button"
+                    className="btn finova-btn-light"
+                    onClick={handleCopyPublicDashboardLink}
+                  >
+                    {t("profile.publicDashboardCopy")}
+                  </button>
+                  <a
+                    href={publicDashboard.publicUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn finova-btn-primary"
+                  >
+                    {t("profile.publicDashboardOpen")}
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <p className="finova-subtitle mb-0">{t("profile.publicDashboardEmpty")}</p>
+            )}
+
+            {publicDashboardMessage ? (
+              <div className="alert alert-success py-2 mb-0 mt-3" role="status">
+                {publicDashboardMessage}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        {!isLoading ? (
+          <div className="finova-card p-4 p-md-5" style={{ maxWidth: 760 }}>
+            <div className="d-flex flex-column gap-1 mb-3">
+              <h2 className="finova-title h5 mb-0">{t("profile.notificationHistoryTitle")}</h2>
               <p className="finova-subtitle small mb-0">
-                {t("profile.publicDashboardSubtitle")}
+                {t("profile.notificationHistorySubtitle")}
               </p>
             </div>
 
-            <div className="form-check form-switch m-0">
-              <input
-                id="publicDashboardEnabled"
-                type="checkbox"
-                className="form-check-input"
-                checked={publicDashboard.enabled}
-                onChange={(event) => handleTogglePublicDashboard(event.target.checked)}
-                disabled={isUpdatingPublicDashboard}
-              />
-              <label
-                className="form-check-label text-dark fw-medium"
-                htmlFor="publicDashboardEnabled"
-              >
-                {publicDashboard.enabled
-                  ? t("profile.publicDashboardEnabled")
-                  : t("profile.publicDashboardDisabled")}
-              </label>
-            </div>
-          </div>
-
-          {publicDashboard.enabled ? (
-            <div className="d-grid gap-3">
-              <div>
-                <label className="form-label text-dark fw-medium" htmlFor="publicDashboardUrl">
-                  {t("profile.publicDashboardLinkLabel")}
-                </label>
-                <input
-                  id="publicDashboardUrl"
-                  type="text"
-                  className="form-control finova-input"
-                  value={publicDashboard.publicUrl}
-                  readOnly
-                />
-                <div className="form-text">{t("profile.publicDashboardLinkHelp")}</div>
-              </div>
-
-              <div className="finova-actions-row">
-                <button
-                  type="button"
-                  className="btn finova-btn-light"
-                  onClick={handleCopyPublicDashboardLink}
-                >
-                  {t("profile.publicDashboardCopy")}
-                </button>
-                <a
-                  href={publicDashboard.publicUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn finova-btn-primary"
-                >
-                  {t("profile.publicDashboardOpen")}
-                </a>
-              </div>
-            </div>
-          ) : (
-            <p className="finova-subtitle mb-0">{t("profile.publicDashboardEmpty")}</p>
-          )}
-
-          {publicDashboardMessage ? (
-            <div className="alert alert-success py-2 mb-0 mt-3" role="status">
-              {publicDashboardMessage}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-
-      {!isLoading ? (
-        <div className="finova-card p-4 p-md-5" style={{ maxWidth: 760 }}>
-          <div className="d-flex flex-column gap-1 mb-3">
-            <h2 className="finova-title h5 mb-0">{t("profile.notificationHistoryTitle")}</h2>
-            <p className="finova-subtitle small mb-0">
-              {t("profile.notificationHistorySubtitle")}
-            </p>
-          </div>
-
-          {notificationDeliveries.length === 0 ? (
-            <p className="finova-subtitle mb-0">{t("profile.notificationHistoryEmpty")}</p>
-          ) : (
-            <div className="d-grid gap-3">
-              {notificationDeliveries.map((delivery) => (
-                <div key={delivery.id} className="finova-card-soft p-3">
-                  <div className="d-flex flex-column flex-md-row justify-content-between gap-2 mb-2">
-                    <div className="d-flex align-items-center gap-2 flex-wrap">
-                      <span className="finova-badge-neutral">
-                        {formatNotificationType(delivery.notificationType, t)}
+            {notificationDeliveries.length === 0 ? (
+              <p className="finova-subtitle mb-0">{t("profile.notificationHistoryEmpty")}</p>
+            ) : (
+              <div className="d-grid gap-3">
+                {notificationDeliveries.map((delivery) => (
+                  <div key={delivery.id} className="finova-card-soft p-3">
+                    <div className="d-flex flex-column flex-md-row justify-content-between gap-2 mb-2">
+                      <div className="d-flex align-items-center gap-2 flex-wrap">
+                        <span className="finova-badge-neutral">
+                          {formatNotificationType(delivery.notificationType, t)}
+                        </span>
+                      </div>
+                      <span className="finova-subtitle small">
+                        {formatDateTime(delivery.sentAtUtc)}
                       </span>
                     </div>
-                    <span className="finova-subtitle small">
-                      {formatDateTime(delivery.sentAtUtc)}
-                    </span>
+                    <div className="fw-medium">{delivery.subject}</div>
                   </div>
-                  <div className="fw-medium">{delivery.subject}</div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      ) : null}
+                ))}
+              </div>
+            )}
+          </div>
+        ) : null}
+      </div>
     </section>
   );
 }

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import HomeCustomizationCard from "../components/HomeCustomizationCard";
 import {
   CategoryInsightCard,
   ComparisonCard,
@@ -38,7 +39,6 @@ import { useFinancialAccountOptions } from "../lib/financialAccounts/useFinancia
 import { formatBRLFromCents } from "../lib/format/currency";
 import {
   DEFAULT_HOME_WIDGETS,
-  HOME_WIDGET_OPTIONS,
   loadHomeWidgets,
   saveHomeWidgets,
 } from "../lib/home/homePreferences";
@@ -219,41 +219,6 @@ function ShortcutTile({ title, description, to }) {
           <p className="finova-subtitle mb-0">{description}</p>
         </div>
       </Link>
-    </div>
-  );
-}
-
-function HomeCustomizationCard({ widgets, onToggle, onReset }) {
-  return (
-    <div className="finova-card p-4">
-      <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-3">
-        <div>
-          <h2 className="finova-title h5 mb-1">Personalize sua Home</h2>
-          <p className="finova-subtitle mb-0">
-            Escolha os blocos que merecem ficar logo de entrada. O restante continua nas paginas
-            dedicadas.
-          </p>
-        </div>
-
-        <button type="button" className="btn finova-btn-light" onClick={onReset}>
-          Restaurar padrao
-        </button>
-      </div>
-
-      <div className="row g-2">
-        {HOME_WIDGET_OPTIONS.map((option) => (
-          <div className="col-12 col-md-6 col-xl-4" key={option.key}>
-            <label className="finova-widget-toggle">
-              <input
-                type="checkbox"
-                checked={widgets[option.key]}
-                onChange={() => onToggle(option.key)}
-              />
-              <span>{option.label}</span>
-            </label>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
@@ -638,12 +603,6 @@ export default function Home() {
       </div>
 
       <div className="d-grid gap-4">
-        <HomeCustomizationCard
-          widgets={widgets}
-          onToggle={handleToggleWidget}
-          onReset={handleResetWidgets}
-        />
-
         {visibleWidgetCount === 0 ? (
           <div className="finova-card p-4 text-center">
             <h2 className="finova-title h5 mb-2">Sua Home esta vazia</h2>

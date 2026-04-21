@@ -1,13 +1,13 @@
 import { loadJSON, saveJSON } from "../storage/jsonStorage";
 
 export const HOME_WIDGET_OPTIONS = [
-  { key: "context", label: "Guia e contexto" },
-  { key: "summary", label: "Resumo financeiro" },
-  { key: "shortcuts", label: "Atalhos principais" },
-  { key: "insights", label: "Insights do periodo" },
-  { key: "comparisons", label: "Comparativo rapido" },
-  { key: "goals", label: "Resumo de metas" },
-  { key: "history", label: "Historico recente" },
+  { key: "context", labelKey: "profile.homeWidgetContext" },
+  { key: "summary", labelKey: "profile.homeWidgetSummary" },
+  { key: "shortcuts", labelKey: "profile.homeWidgetShortcuts" },
+  { key: "insights", labelKey: "profile.homeWidgetInsights" },
+  { key: "comparisons", labelKey: "profile.homeWidgetComparisons" },
+  { key: "goals", labelKey: "profile.homeWidgetGoals" },
+  { key: "history", labelKey: "profile.homeWidgetHistory" },
 ];
 
 export const DEFAULT_HOME_WIDGETS = HOME_WIDGET_OPTIONS.reduce((accumulator, option) => {

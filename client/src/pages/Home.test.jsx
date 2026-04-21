@@ -94,27 +94,13 @@ describe("Home page", () => {
     ]);
   });
 
-  it("shows personalization controls and default widgets", async () => {
+  it("shows default widgets on home", async () => {
     renderHome();
 
-    expect(screen.getByText("Personalize sua Home")).toBeInTheDocument();
     const historyMatches = await screen.findAllByText("Historico recente");
     expect(historyMatches.length).toBeGreaterThan(0);
     expect(screen.getAllByText("Resumo financeiro").length).toBeGreaterThan(0);
     expect(screen.getByText("Saldo global em todas as contas")).toBeInTheDocument();
-  });
-
-  it("persists widget visibility when a block is disabled", async () => {
-    renderHome();
-    await screen.findAllByText("Historico recente");
-
-    const insightsToggle = screen.getByLabelText("Insights do periodo");
-    fireEvent.click(insightsToggle);
-
-    expect(screen.queryByText("Insights em destaque")).not.toBeInTheDocument();
-
-    const stored = JSON.parse(localStorage.getItem("finova:home-widgets:7"));
-    expect(stored.insights).toBe(false);
   });
 
   it("persists onboarding preference when the user opts in", async () => {

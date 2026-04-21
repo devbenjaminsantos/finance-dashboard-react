@@ -123,11 +123,26 @@ export const translations = {
     },
     profile: {
       title: "Perfil",
-      subtitle: "Atualize seus dados pessoais e altere sua senha quando precisar.",
+      subtitle:
+        "Centralize aqui suas preferencias da conta, notificacoes e visibilidade do que aparece para voce logo na entrada.",
+      accountSectionTitle: "Dados da conta",
+      accountSectionSubtitle:
+        "Revise como seu nome aparece no app e acompanhe as configuracoes principais do seu acesso.",
+      homeCustomizationTitle: "Personalizacao da Home",
+      homeCustomizationSubtitle:
+        "Escolha com calma o que faz sentido ver logo na entrada e monte uma Home mais util para o seu jeito de acompanhar as financas.",
+      homeCustomizationReset: "Restaurar selecao inicial",
+      homeWidgetContext: "Guia e contexto",
+      homeWidgetSummary: "Resumo financeiro",
+      homeWidgetShortcuts: "Atalhos principais",
+      homeWidgetInsights: "Insights do periodo",
+      homeWidgetComparisons: "Comparativo rapido",
+      homeWidgetGoals: "Resumo de metas",
+      homeWidgetHistory: "Historico recente",
       loading: "Carregando perfil...",
       emailAlertsTitle: "Alertas por e-mail",
       emailAlertsSubtitle:
-        "Escolha se voce quer receber um aviso quando estiver se aproximando do limite da sua meta mensal.",
+        "Receba avisos quando seus gastos estiverem se aproximando do limite definido para o mes e mantenha o controle antes de estourar a meta.",
       emailAlertsEnabled: "Receber alertas",
       emailAlertsDisabled: "Nao receber alertas",
       emailAlertsThresholdLabel: "Quando enviar o aviso",
@@ -136,7 +151,7 @@ export const translations = {
       emailAlertsThresholdOption: "Ao atingir {{percent}}% da meta",
       monthlyReportTitle: "Resumo mensal",
       monthlyReportSubtitle:
-        "Receba automaticamente um resumo do mes anterior com receitas, despesas, saldo e metas.",
+        "Receba automaticamente um resumo do mes anterior com receitas, despesas, saldo e o andamento das metas.",
       monthlyReportEnabled: "Receber resumo mensal",
       monthlyReportDisabled: "Nao receber resumo mensal",
       monthlyReportDayLabel: "Dia do envio",
@@ -145,13 +160,13 @@ export const translations = {
       monthlyReportDayOption: "Dia {{day}}",
       notificationHistoryTitle: "Historico de notificacoes",
       notificationHistorySubtitle:
-        "Acompanhe os ultimos alertas e resumos enviados para o seu e-mail.",
+        "Veja os ultimos envios feitos para o seu e-mail e confirme se os alertas estao chegando como esperado.",
       notificationHistoryEmpty: "Nenhum envio registrado por enquanto.",
       notificationTypeGoalAlert: "Alerta de meta",
       notificationTypeMonthlyReport: "Resumo mensal",
       publicDashboardTitle: "Dashboard publico",
       publicDashboardSubtitle:
-        "Ative um link so leitura para compartilhar seus graficos sem expor a area autenticada.",
+        "Gere um link somente leitura para compartilhar sua visao financeira sem abrir acesso a area autenticada.",
       publicDashboardEnabled: "Dashboard publico ativo",
       publicDashboardDisabled: "Dashboard publico inativo",
       publicDashboardLinkLabel: "Link compartilhavel",
@@ -168,7 +183,7 @@ export const translations = {
       publicDashboardUpdateError: "Nao foi possivel atualizar o dashboard publico.",
       changePasswordTitle: "Alterar senha",
       changePasswordSubtitle:
-        "Preencha os campos abaixo apenas se quiser trocar sua senha atual.",
+        "Preencha os campos abaixo apenas quando quiser trocar sua senha. Se preferir, deixe tudo em branco.",
       saveButton: "Salvar perfil",
       savingButton: "Salvando alteracoes...",
       loadError: "Nao foi possivel carregar seu perfil.",
@@ -449,11 +464,26 @@ export const translations = {
     },
     profile: {
       title: "Profile",
-      subtitle: "Update your personal details and change your password whenever needed.",
+      subtitle:
+        "Manage your account preferences, notifications, and what you want to see first when you open the app.",
+      accountSectionTitle: "Account details",
+      accountSectionSubtitle:
+        "Review how your name appears in the app and keep the main account settings under control.",
+      homeCustomizationTitle: "Home customization",
+      homeCustomizationSubtitle:
+        "Choose what deserves space on your home page and shape a calmer, more useful entry view for the way you track your finances.",
+      homeCustomizationReset: "Restore initial selection",
+      homeWidgetContext: "Guide and context",
+      homeWidgetSummary: "Financial summary",
+      homeWidgetShortcuts: "Main shortcuts",
+      homeWidgetInsights: "Period insights",
+      homeWidgetComparisons: "Quick comparison",
+      homeWidgetGoals: "Goals summary",
+      homeWidgetHistory: "Recent history",
       loading: "Loading profile...",
       emailAlertsTitle: "Email alerts",
       emailAlertsSubtitle:
-        "Choose whether you want a warning email when you are getting close to your monthly goal limit.",
+        "Get warned when your spending is getting close to the monthly limit you set, so you can react before the goal is exceeded.",
       emailAlertsEnabled: "Receive alerts",
       emailAlertsDisabled: "Do not receive alerts",
       emailAlertsThresholdLabel: "When to send the alert",
@@ -462,7 +492,7 @@ export const translations = {
       emailAlertsThresholdOption: "When reaching {{percent}}% of the goal",
       monthlyReportTitle: "Monthly summary",
       monthlyReportSubtitle:
-        "Receive an automatic summary of the previous month with income, expenses, balance, and goals.",
+        "Receive an automatic summary of the previous month with income, expenses, balance, and goal progress.",
       monthlyReportEnabled: "Receive monthly summary",
       monthlyReportDisabled: "Do not receive monthly summary",
       monthlyReportDayLabel: "Delivery day",
@@ -471,13 +501,13 @@ export const translations = {
       monthlyReportDayOption: "Day {{day}}",
       notificationHistoryTitle: "Notification history",
       notificationHistorySubtitle:
-        "Track the latest alerts and summaries sent to your email.",
+        "See the latest emails sent to you and confirm whether alerts are arriving as expected.",
       notificationHistoryEmpty: "No deliveries recorded yet.",
       notificationTypeGoalAlert: "Goal alert",
       notificationTypeMonthlyReport: "Monthly summary",
       publicDashboardTitle: "Public dashboard",
       publicDashboardSubtitle:
-        "Enable a read-only link to share your charts without exposing the authenticated area.",
+        "Create a read-only link to share your financial view without exposing the authenticated area.",
       publicDashboardEnabled: "Public dashboard enabled",
       publicDashboardDisabled: "Public dashboard disabled",
       publicDashboardLinkLabel: "Shareable link",
@@ -494,7 +524,7 @@ export const translations = {
       publicDashboardUpdateError: "Unable to update the public dashboard.",
       changePasswordTitle: "Change password",
       changePasswordSubtitle:
-        "Fill the fields below only if you want to replace your current password.",
+        "Fill in the fields below only when you want to replace your current password. Otherwise, leave them blank.",
       saveButton: "Save profile",
       savingButton: "Saving changes...",
       loadError: "Unable to load your profile.",

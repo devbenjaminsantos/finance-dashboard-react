@@ -752,6 +752,24 @@ a {
   border: 1px solid var(--border);
 }
 
+.finova-profile-section-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.25rem;
+}
+
+.finova-profile-section-heading-divider {
+  padding-top: 1rem;
+  border-top: 1px solid var(--divider);
+}
+
+.finova-profile-subsection {
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+
 .finova-modal-backdrop {
   background: var(--overlay);
 }

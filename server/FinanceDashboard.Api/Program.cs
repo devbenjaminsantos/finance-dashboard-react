@@ -26,7 +26,18 @@ builder.Configuration.AddJsonFile(
     reloadOnChange: true);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(GetRequiredConnectionString(builder.Configuration)));
+    options.UseSqlServer(
+        GetRequiredConnectionString(builder.Configuration),
+        sqlOptions =>
+        {
+            // Azure SQL serverless pode falhar na primeira tentativa
+            // enquanto o banco sai do estado pausado. O retry cobre
+            // essas falhas transitórias sem exigir nova tentativa manual.
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorNumbersToAdd: null);
+        }));
 
 builder.Services.Configure<PluggyOptions>(
     builder.Configuration.GetSection(PluggyOptions.SectionName));

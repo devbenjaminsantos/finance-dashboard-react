@@ -1,11 +1,13 @@
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace FinanceDashboard.Api.Migrations
 {
-    public partial class AddPublicDashboardSharing : Migration
+    /// <inheritdoc />
+    public partial class AddPublicDashboardEnabled : Migration
     {
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<bool>(
@@ -16,6 +18,7 @@ namespace FinanceDashboard.Api.Migrations
                 defaultValue: false);
         }
 
+        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(

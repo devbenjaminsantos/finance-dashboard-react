@@ -258,13 +258,15 @@ function GoalsPreview({ goalsCount, goalsRiskCount }) {
 }
 
 function HistoryPreview({ logs, isLoading }) {
+  const { t, formatDateTime } = useI18n();
+
   return (
     <HomeWidgetCard
       title="Historico recente"
       description="As ultimas acoes mais relevantes da sua conta, sem a parte tecnica."
     >
       {isLoading ? (
-        <p className="finova-subtitle mb-0">Carregando historico...</p>
+        <p className="finova-subtitle mb-0">{t("history.loading")}</p>
       ) : logs.length === 0 ? (
         <p className="finova-subtitle mb-0">
           Assim que voce usar o sistema, as principais acoes aparecem aqui.
@@ -275,9 +277,11 @@ function HistoryPreview({ logs, isLoading }) {
             <div key={log.id} className="finova-card-soft p-3">
               <div className="d-flex justify-content-between align-items-start gap-3 mb-2">
                 <span className={getActionToneClass(log.action)}>
-                  {formatActionLabel(log.action)}
+                  {formatActionLabel(log.action, t)}
                 </span>
-                <span className="finova-subtitle small">{formatAuditDate(log.createdAtUtc)}</span>
+                <span className="finova-subtitle small">
+                  {formatAuditDate(log.createdAtUtc, formatDateTime)}
+                </span>
               </div>
               <div className="fw-medium small">{log.summary}</div>
             </div>

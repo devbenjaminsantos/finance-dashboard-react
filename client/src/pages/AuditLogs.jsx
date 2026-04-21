@@ -10,7 +10,7 @@ import { useI18n } from "../i18n/LanguageProvider";
 import { getAuditLogs } from "../lib/api/auditLogs";
 
 export default function AuditLogs() {
-  const { t } = useI18n();
+  const { t, formatDateTime } = useI18n();
   const [logs, setLogs] = useState([]);
   const [limit, setLimit] = useState(50);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,7 +31,7 @@ export default function AuditLogs() {
         }
       } catch (requestError) {
         if (active) {
-          setError(requestError.message || "Nao foi possivel carregar o historico.");
+          setError(requestError.message || t("history.loadError"));
         }
       } finally {
         if (active) {
@@ -69,9 +69,9 @@ export default function AuditLogs() {
             value={limit}
             onChange={(event) => setLimit(Number(event.target.value))}
           >
-            <option value={25}>Ultimos 25 registros</option>
-            <option value={50}>Ultimos 50 registros</option>
-            <option value={100}>Ultimos 100 registros</option>
+            <option value={25}>{t("history.limit25")}</option>
+            <option value={50}>{t("history.limit50")}</option>
+            <option value={100}>{t("history.limit100")}</option>
           </select>
         </div>
       </div>
@@ -80,7 +80,7 @@ export default function AuditLogs() {
         {isLoading ? (
           <div className="d-flex align-items-center gap-3">
             <div className="spinner-border spinner-border-sm text-primary" />
-            <p className="finova-subtitle mb-0">Carregando historico...</p>
+            <p className="finova-subtitle mb-0">{t("history.loading")}</p>
           </div>
         ) : error ? (
           <div className="alert alert-danger py-2 mb-0" role="alert">
@@ -88,18 +88,19 @@ export default function AuditLogs() {
           </div>
         ) : visibleLogs.length === 0 ? (
           <div className="text-center py-4">
-            <h2 className="finova-title h6 mb-2">Nenhum registro relevante encontrado</h2>
-            <p className="finova-subtitle mb-0">
-              As principais acoes da sua conta aparecerao aqui conforme voce usa o sistema.
-            </p>
+            <h2 className="finova-title h6 mb-2">{t("history.emptyTitle")}</h2>
+            <p className="finova-subtitle mb-0">{t("history.emptySubtitle")}</p>
           </div>
         ) : (
           <div className="d-grid gap-3">
             {hiddenLogsCount > 0 ? (
               <div className="alert alert-info py-2 mb-0" role="status">
-                {hiddenLogsCount} registro{hiddenLogsCount === 1 ? "" : "s"} mais tecnico
-                {hiddenLogsCount === 1 ? " foi ocultado" : "s foram ocultados"} para manter este
-                historico mais direto.
+                {t(
+                  hiddenLogsCount === 1
+                    ? "history.hiddenLogsSingle"
+                    : "history.hiddenLogsPlural",
+                  { count: hiddenLogsCount }
+                )}
               </div>
             ) : null}
 
@@ -108,12 +109,14 @@ export default function AuditLogs() {
                 <div className="d-flex flex-column flex-md-row justify-content-between gap-2 mb-2">
                   <div className="d-flex flex-wrap align-items-center gap-2">
                     <span className={getActionToneClass(log.action)}>
-                      {formatActionLabel(log.action)}
+                      {formatActionLabel(log.action, t)}
                     </span>
-                    <span className="finova-badge-neutral">{getActionGroup(log.action)}</span>
+                    <span className="finova-badge-neutral">{getActionGroup(log.action, t)}</span>
                   </div>
 
-                  <span className="finova-subtitle small">{formatAuditDate(log.createdAtUtc)}</span>
+                  <span className="finova-subtitle small">
+                    {formatAuditDate(log.createdAtUtc, formatDateTime)}
+                  </span>
                 </div>
 
                 <div className="fw-medium">{log.summary}</div>

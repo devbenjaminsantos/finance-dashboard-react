@@ -43,6 +43,8 @@ describe("AuditLogs page", () => {
 
     expect(screen.queryByText("IP: 127.0.0.1")).not.toBeInTheDocument();
     expect(screen.queryByText("Novo e-mail de confirmacao enviado.")).not.toBeInTheDocument();
-    expect(screen.getByText(/registro mais tecnico foi ocultado/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/registro mais tecnico foi ocultado para manter este historico mais direto/i)
+    ).toBeInTheDocument();
   });
 });

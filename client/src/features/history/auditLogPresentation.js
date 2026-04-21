@@ -18,55 +18,56 @@ export const VISIBLE_AUDIT_ACTIONS = new Set([
   "profile.updated-with-password",
 ]);
 
-export function formatAuditDate(value) {
+export function formatAuditDate(value, formatDateTime) {
   if (!value) {
     return "-";
   }
 
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(value));
+  if (typeof formatDateTime === "function") {
+    return formatDateTime(value);
+  }
+
+  return value;
 }
 
-export function formatActionLabel(action) {
+export function formatActionLabel(action, t) {
   const labels = {
-    "auth.registered": "Conta criada",
-    "auth.login-succeeded": "Login realizado",
-    "auth.login-blocked-unconfirmed-email": "Login bloqueado por e-mail nao confirmado",
-    "auth.login-locked-out": "Conta bloqueada por excesso de tentativas",
-    "auth.login-blocked-locked-out": "Novo acesso bloqueado temporariamente",
-    "auth.demo-login": "Entrada na conta de demonstracao",
-    "auth.email-confirmed": "E-mail confirmado",
-    "auth.password-reset-requested": "Recuperacao de senha solicitada",
-    "auth.password-reset-completed": "Senha redefinida",
-    "transaction.created": "Transacao adicionada",
-    "transaction.updated": "Transacao editada",
-    "transaction.deleted": "Transacao removida",
-    "budget-goal.created": "Meta criada",
-    "budget-goal.updated": "Meta editada",
-    "budget-goal.deleted": "Meta removida",
-    "profile.updated": "Perfil atualizado",
-    "profile.updated-with-password": "Perfil e senha atualizados",
+    "auth.registered": "history.actionRegistered",
+    "auth.login-succeeded": "history.actionLoginSucceeded",
+    "auth.login-blocked-unconfirmed-email": "history.actionLoginBlockedUnconfirmedEmail",
+    "auth.login-locked-out": "history.actionLoginLockedOut",
+    "auth.login-blocked-locked-out": "history.actionLoginBlockedLockedOut",
+    "auth.demo-login": "history.actionDemoLogin",
+    "auth.email-confirmed": "history.actionEmailConfirmed",
+    "auth.password-reset-requested": "history.actionPasswordResetRequested",
+    "auth.password-reset-completed": "history.actionPasswordResetCompleted",
+    "transaction.created": "history.actionTransactionCreated",
+    "transaction.updated": "history.actionTransactionUpdated",
+    "transaction.deleted": "history.actionTransactionDeleted",
+    "budget-goal.created": "history.actionBudgetGoalCreated",
+    "budget-goal.updated": "history.actionBudgetGoalUpdated",
+    "budget-goal.deleted": "history.actionBudgetGoalDeleted",
+    "profile.updated": "history.actionProfileUpdated",
+    "profile.updated-with-password": "history.actionProfileUpdatedWithPassword",
   };
 
-  return labels[action] || "Atividade registrada";
+  return t ? t(labels[action] || "history.actionFallback") : labels[action] || action;
 }
 
-export function getActionGroup(action) {
+export function getActionGroup(action, t) {
   if (action.startsWith("transaction.")) {
-    return "Transacoes";
+    return t ? t("history.groupTransactions") : "Transactions";
   }
 
   if (action.startsWith("budget-goal.")) {
-    return "Metas";
+    return t ? t("history.groupGoals") : "Goals";
   }
 
   if (action.startsWith("profile.")) {
-    return "Perfil";
+    return t ? t("history.groupProfile") : "Profile";
   }
 
-  return "Acesso e seguranca";
+  return t ? t("history.groupAccessSecurity") : "Access and security";
 }
 
 export function getActionToneClass(action) {

@@ -50,15 +50,18 @@ export default function VerifyEmail() {
   }, [token, t]);
 
   return (
-    <div className="finova-page d-flex align-items-center justify-content-center px-3">
+    <div className="finova-page finova-auth-layout d-flex align-items-center justify-content-center px-3 py-4">
       <div className="finova-auth-shell finova-auth-shell-md">
-        <div className="text-center mb-4">
+        <div className="text-center mb-4 finova-auth-hero">
           <BrandMark className="mb-2" size="hero" centered />
           <p className="finova-subtitle mb-0">{t("auth.verifySubtitle")}</p>
         </div>
 
-        <div className="finova-card p-4 p-md-5 text-center">
-          <h2 className="finova-title h4 mb-3">{t("auth.verifyTitle")}</h2>
+        <div className="finova-card finova-auth-card p-4 p-md-5 text-center">
+          <div className="finova-auth-card-header mb-4">
+            <h2 className="finova-title h4 mb-2">{t("auth.verifyTitle")}</h2>
+            <p className="finova-subtitle mb-0">{t("auth.verifySubtitle")}</p>
+          </div>
 
           {isSubmitting ? (
             <div className="alert alert-info py-2 mb-0" role="status">
@@ -78,8 +81,8 @@ export default function VerifyEmail() {
             </div>
           ) : null}
 
-          <div className="text-center mt-4">
-            <Link to="/login" className="text-decoration-none fw-semibold">
+          <div className="text-center mt-4 finova-auth-footer">
+            <Link to="/login" className="text-decoration-none fw-semibold finova-auth-link">
               {t("auth.goToLogin")}
             </Link>
           </div>

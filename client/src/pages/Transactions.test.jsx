@@ -224,7 +224,7 @@ describe("Transactions page", () => {
 
     expect(screen.getByText("Mercado")).toBeInTheDocument();
     expect(screen.queryByRole("cell", { name: "Notebook" })).not.toBeInTheDocument();
-    expect(screen.getByText("Conta: Conta principal • final 1234")).toBeInTheDocument();
+    expect(screen.getByText("Conta: Conta principal - final 1234")).toBeInTheDocument();
   });
 
   it("exports the currently filtered rows to CSV", () => {

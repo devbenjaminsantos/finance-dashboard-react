@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import BrandMark from "../components/BrandMark";
 import PasswordToggleButton from "../components/PasswordToggleButton";
+import { useI18n } from "../i18n/LanguageProvider";
 import {
   consumePostLoginRedirect,
   consumeStoredLogoutReason,
@@ -15,7 +15,7 @@ import {
 
 export default function Login() {
   const navigate = useNavigate();
-  const { t } = useTranslation(["auth", "common"]);
+  const { t } = useI18n();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,10 +41,10 @@ export default function Login() {
 
     try {
       await loginRequest(email, password);
-      setInfo(t("auth:loginSuccess"));
+      setInfo(t("auth.loginSuccess"));
       navigate(consumePostLoginRedirect(), { replace: true });
     } catch (requestError) {
-      setError(requestError.message || t("auth:loginError"));
+      setError(requestError.message || t("auth.loginError"));
     } finally {
       setIsSubmitting(false);
     }
@@ -52,15 +52,15 @@ export default function Login() {
 
   async function handleDemoLogin() {
     setError("");
-    setInfo(t("auth:preparingDemo"));
+    setInfo(t("auth.preparingDemo"));
     setIsDemoSubmitting(true);
 
     try {
       await demoLoginRequest();
-      setInfo(t("auth:demoReady"));
+      setInfo(t("auth.demoReady"));
       navigate(consumePostLoginRedirect(), { replace: true });
     } catch (requestError) {
-      setError(requestError.message || t("auth:demoError"));
+      setError(requestError.message || t("auth.demoError"));
       setInfo("");
     } finally {
       setIsDemoSubmitting(false);
@@ -81,40 +81,40 @@ export default function Login() {
           "Se a conta existir e ainda nao estiver confirmada, enviaremos um novo link."
       );
     } catch (requestError) {
-      setError(requestError.message || t("auth:verifyError"));
+      setError(requestError.message || t("auth.verifyError"));
     } finally {
       setIsResendingVerification(false);
     }
   }
 
-  const demoHighlights = t("auth:demoHighlights", { returnObjects: true });
+  const demoHighlights = t("auth.demoHighlights");
 
   return (
-    <div className="finova-page d-flex align-items-center justify-content-center px-3">
+    <div className="finova-page finova-auth-layout d-flex align-items-center justify-content-center px-3 py-4">
       <div className="finova-auth-shell finova-auth-shell-lg">
-        <div className="text-center mb-4">
+        <div className="text-center mb-4 finova-auth-hero">
           <BrandMark className="mb-2" size="hero" centered />
-          <p className="finova-subtitle mb-0">{t("auth:loginPageSubtitle")}</p>
+          <p className="finova-subtitle mb-0">{t("auth.loginPageSubtitle")}</p>
         </div>
 
-        <div className="finova-card p-4 p-md-5">
-          <div className="mb-4 text-center">
-            <h2 className="finova-title h4 mb-2">{t("auth:loginTitle")}</h2>
-            <p className="finova-subtitle mb-0">{t("auth:loginSubtitle")}</p>
+        <div className="finova-card finova-auth-card p-4 p-md-5">
+          <div className="mb-4 text-center finova-auth-card-header">
+            <h2 className="finova-title h4 mb-2">{t("auth.loginTitle")}</h2>
+            <p className="finova-subtitle mb-0">{t("auth.loginSubtitle")}</p>
           </div>
 
           <div className="finova-demo-panel p-4 mb-4">
             <div className="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-start">
               <div>
                 <div className="small text-uppercase fw-semibold text-primary mb-2">
-                  {t("auth:demoEyebrow")}
+                  {t("auth.demoEyebrow")}
                 </div>
-                <h3 className="finova-title h5 mb-2">{t("auth:demoTitle")}</h3>
-                <p className="finova-subtitle mb-3">{t("auth:demoDescription")}</p>
-                <div className="d-grid gap-2">
+                <h3 className="finova-title h5 mb-2">{t("auth.demoTitle")}</h3>
+                <p className="finova-subtitle mb-3">{t("auth.demoDescription")}</p>
+                <div className="d-grid gap-2 finova-auth-highlight-list">
                   {demoHighlights.map((item) => (
-                    <div key={item} className="small text-muted">
-                      - {item}
+                    <div key={item} className="small text-muted finova-auth-highlight-item">
+                      {item}
                     </div>
                   ))}
                 </div>
@@ -126,26 +126,26 @@ export default function Login() {
                 onClick={handleDemoLogin}
                 disabled={isSubmitting || isDemoSubmitting || isResendingVerification}
               >
-                {isDemoSubmitting ? t("auth:demoButtonLoading") : t("auth:demoButton")}
+                {isDemoSubmitting ? t("auth.demoButtonLoading") : t("auth.demoButton")}
               </button>
             </div>
           </div>
 
           <div className="finova-divider mb-4">
             <hr />
-            <span className="finova-subtitle small">{t("auth:demoDivider")}</span>
+            <span className="finova-subtitle small">{t("auth.demoDivider")}</span>
             <hr />
           </div>
 
           <form onSubmit={handleSubmit} className="d-grid gap-3">
             <div>
-              <label className="form-label text-dark fw-medium">{t("common:email")}</label>
+              <label className="form-label text-dark fw-medium">{t("common.email")}</label>
               <input
                 type="email"
                 className="form-control finova-input"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder="seuemail@exemplo.com"
+                placeholder={t("common.emailPlaceholder")}
                 disabled={isSubmitting || isDemoSubmitting || isResendingVerification}
                 required
               />
@@ -153,9 +153,12 @@ export default function Login() {
 
             <div>
               <div className="d-flex justify-content-between align-items-center">
-                <label className="form-label text-dark fw-medium">{t("common:password")}</label>
-                <Link to="/forgot-password" className="small text-decoration-none fw-semibold mb-2">
-                  {t("auth:forgotPassword")}
+                <label className="form-label text-dark fw-medium">{t("common.password")}</label>
+                <Link
+                  to="/forgot-password"
+                  className="small text-decoration-none fw-semibold mb-2 finova-auth-link"
+                >
+                  {t("auth.forgotPassword")}
                 </Link>
               </div>
               <div className="input-group">
@@ -164,7 +167,7 @@ export default function Login() {
                   className="form-control finova-input"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  placeholder={t("common:password")}
+                  placeholder={t("common.password")}
                   disabled={isSubmitting || isDemoSubmitting || isResendingVerification}
                   required
                 />
@@ -182,13 +185,13 @@ export default function Login() {
                 {shouldShowResendVerification ? (
                   <button
                     type="button"
-                    className="btn btn-link px-0 mt-2 text-decoration-none fw-semibold"
+                    className="btn btn-link px-0 mt-2 text-decoration-none fw-semibold finova-auth-link"
                     onClick={handleResendVerification}
                     disabled={isResendingVerification}
                   >
                     {isResendingVerification
-                      ? t("auth:resendingVerification")
-                      : t("auth:resendVerification")}
+                      ? t("auth.resendingVerification")
+                      : t("auth.resendVerification")}
                   </button>
                 ) : null}
               </div>
@@ -205,15 +208,15 @@ export default function Login() {
               className="btn finova-btn-primary"
               disabled={isSubmitting || isDemoSubmitting || isResendingVerification}
             >
-              {isSubmitting ? t("auth:submittingLogin") : t("auth:submitLogin")}
+              {isSubmitting ? t("auth.submittingLogin") : t("auth.submitLogin")}
             </button>
           </form>
 
-          <div className="text-center mt-4">
+          <div className="text-center mt-4 finova-auth-footer">
             <span className="finova-subtitle small">
-              {t("auth:noAccount")}{" "}
-              <Link to="/register" className="text-decoration-none fw-semibold">
-                {t("auth:createAccount")}
+              {t("auth.noAccount")}{" "}
+              <Link to="/register" className="text-decoration-none fw-semibold finova-auth-link">
+                {t("auth.createAccount")}
               </Link>
             </span>
           </div>

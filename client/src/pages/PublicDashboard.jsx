@@ -53,8 +53,8 @@ export default function PublicDashboard() {
   const transactions = dashboard?.transactions ?? [];
 
   const selectedPeriodLabel = useMemo(
-    () => PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? "Mes atual",
-    [period]
+    () => PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? t("dashboard.focusMonth"),
+    [period, t]
   );
 
   const chartMonths = useMemo(
@@ -104,18 +104,27 @@ export default function PublicDashboard() {
         </div>
       </div>
 
+      <div className="finova-page-note mb-4">
+        {t("publicDashboard.pageNote")}
+      </div>
+
       <div className="finova-card p-4 mb-4">
         <div className="d-flex flex-column flex-lg-row justify-content-between gap-3">
           <div>
             <span className="finova-badge-primary">{t("publicDashboard.readOnlyBadge")}</span>
             <p className="finova-subtitle mb-0 mt-2">{t("publicDashboard.readOnlyDescription")}</p>
           </div>
-          <div className="finova-subtitle small">
-            {dashboard?.lastTransactionDate
-              ? t("publicDashboard.lastUpdated", {
-                  date: formatDate(dashboard.lastTransactionDate),
-                })
-              : t("publicDashboard.noUpdate")}
+
+          <div className="finova-public-dashboard-meta">
+            <div className="finova-subtitle small">{t("publicDashboard.visibilityLabel")}</div>
+            <div className="finova-title h6 mb-0">{t("publicDashboard.visibilityValue")}</div>
+            <div className="finova-subtitle small mt-2">
+              {dashboard?.lastTransactionDate
+                ? t("publicDashboard.lastUpdated", {
+                    date: formatDate(dashboard.lastTransactionDate),
+                  })
+                : t("publicDashboard.noUpdate")}
+            </div>
           </div>
         </div>
       </div>
@@ -128,14 +137,19 @@ export default function PublicDashboard() {
         <div className="finova-card p-4">
           <h2 className="finova-title h5 mb-2">{t("publicDashboard.unavailableTitle")}</h2>
           <p className="finova-subtitle mb-3">{error}</p>
-          <Link to="/login" className="btn finova-btn-light">
-            {t("auth.goToLogin")}
-          </Link>
+          <div className="finova-actions-row">
+            <Link to="/login" className="btn finova-btn-light">
+              {t("auth.goToLogin")}
+            </Link>
+            <Link to="/register" className="btn finova-btn-primary">
+              {t("auth.createAccount")}
+            </Link>
+          </div>
         </div>
       ) : filteredTransactions.length === 0 ? (
         <div className="finova-card p-4">
-          <h2 className="finova-title h5 mb-2">{t("pages.dashboardEmptyTitle")}</h2>
-          <p className="finova-subtitle mb-0">{t("pages.dashboardEmptySubtitle")}</p>
+          <h2 className="finova-title h5 mb-2">{t("publicDashboard.emptyTitle")}</h2>
+          <p className="finova-subtitle mb-0">{t("publicDashboard.emptySubtitle")}</p>
         </div>
       ) : (
         <>

@@ -537,6 +537,42 @@ a {
   max-width: 540px;
 }
 
+.finova-auth-layout {
+  position: relative;
+}
+
+.finova-auth-layout::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(31, 94, 255, 0.1), transparent 24%),
+    radial-gradient(circle at 0% 100%, rgba(16, 26, 45, 0.08), transparent 30%);
+}
+
+.finova-auth-hero {
+  position: relative;
+  z-index: 1;
+}
+
+.finova-auth-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.finova-auth-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(31, 94, 255, 0.25), transparent);
+}
+
+.finova-auth-card-header {
+  padding-bottom: 0.15rem;
+}
+
 .finova-demo-panel {
   background: linear-gradient(
     135deg,
@@ -550,6 +586,27 @@ a {
     0 12px 30px rgba(31, 94, 255, 0.08);
 }
 
+.finova-auth-highlight-list {
+  color: var(--text-muted);
+}
+
+.finova-auth-highlight-item {
+  position: relative;
+  padding-left: 1rem;
+}
+
+.finova-auth-highlight-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.5rem;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: var(--brand);
+  box-shadow: 0 0 0 4px rgba(31, 94, 255, 0.1);
+}
+
 :root[data-theme="dark"] .finova-demo-panel {
   background: linear-gradient(
     135deg,
@@ -557,6 +614,21 @@ a {
     rgba(16, 26, 45, 0.16)
   );
   border-color: rgba(77, 135, 255, 0.2);
+}
+
+.finova-auth-link {
+  color: var(--brand-strong);
+  transition: color 160ms ease;
+}
+
+.finova-auth-link:hover,
+.finova-auth-link:focus {
+  color: var(--brand);
+}
+
+.finova-auth-footer {
+  border-top: 1px solid var(--divider);
+  padding-top: 1rem;
 }
 
 .finova-divider {
@@ -814,6 +886,16 @@ a {
   border: 1px solid var(--border);
   color: color-mix(in srgb, var(--text-muted) 82%, var(--text) 18%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+
+.finova-public-dashboard-meta {
+  min-width: 220px;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-soft) 100%);
+  border: 1px solid var(--border);
+  text-align: right;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 .finova-page-stack .finova-card,
@@ -1078,6 +1160,15 @@ hr {
 :root[data-theme="dark"] .finova-input::placeholder,
 :root[data-theme="dark"] textarea::placeholder {
   color: #9eb0cd !important;
+}
+
+:root[data-theme="dark"] .finova-auth-link {
+  color: #cfe0ff;
+}
+
+:root[data-theme="dark"] .finova-auth-link:hover,
+:root[data-theme="dark"] .finova-auth-link:focus {
+  color: #ffffff;
 }
 
 .finova-row-highlight td {

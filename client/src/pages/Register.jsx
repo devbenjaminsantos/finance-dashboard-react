@@ -46,15 +46,15 @@ export default function Register() {
   }
 
   return (
-    <div className="finova-page d-flex align-items-center justify-content-center px-3">
+    <div className="finova-page finova-auth-layout d-flex align-items-center justify-content-center px-3 py-4">
       <div className="finova-auth-shell finova-auth-shell-sm">
-        <div className="text-center mb-4">
+        <div className="text-center mb-4 finova-auth-hero">
           <BrandMark className="mb-2" size="hero" centered />
           <p className="finova-subtitle mb-0">{t("auth.registerPageSubtitle")}</p>
         </div>
 
-        <div className="finova-card p-4 p-md-5">
-          <div className="mb-4 text-center">
+        <div className="finova-card finova-auth-card p-4 p-md-5">
+          <div className="mb-4 text-center finova-auth-card-header">
             <h2 className="finova-title h4 mb-2">{t("auth.registerTitle")}</h2>
             <p className="finova-subtitle mb-0">{t("auth.registerSubtitle")}</p>
           </div>
@@ -81,7 +81,7 @@ export default function Register() {
                 className="form-control finova-input"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder="seuemail@exemplo.com"
+                placeholder={t("common.emailPlaceholder")}
                 disabled={isSubmitting}
                 required
               />
@@ -125,10 +125,10 @@ export default function Register() {
             </button>
           </form>
 
-          <div className="text-center mt-4">
+          <div className="text-center mt-4 finova-auth-footer">
             <span className="finova-subtitle small">
               {t("auth.alreadyHaveAccount")}{" "}
-              <Link to="/login" className="text-decoration-none fw-semibold">
+              <Link to="/login" className="text-decoration-none fw-semibold finova-auth-link">
                 {t("auth.signIn")}
               </Link>
             </span>

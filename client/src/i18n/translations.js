@@ -10,6 +10,7 @@ export const translations = {
     common: {
       brandSubtitle: "Seu painel financeiro pessoal, com clareza e controle.",
       email: "E-mail",
+      emailPlaceholder: "seuemail@exemplo.com",
       password: "Senha",
       name: "Nome",
       preferredNamePlaceholder: "Como voce prefere ser chamado",
@@ -407,13 +408,20 @@ export const translations = {
       title: "Dashboard publico",
       subtitle: "Painel compartilhado em modo leitura.",
       subtitleWithName: "Painel financeiro compartilhado por {{name}} em modo leitura.",
+      pageNote:
+        "Este link foi pensado para apresentacao e consulta rapida, sem expor a area autenticada nem permitir alteracoes.",
       readOnlyBadge: "Somente leitura",
       readOnlyDescription:
         "Este painel exibe um recorte compartilhado dos graficos e do resumo financeiro.",
+      visibilityLabel: "Acesso",
+      visibilityValue: "Leitura compartilhada",
       lastUpdated: "Ultima movimentacao em {{date}}",
       noUpdate: "Sem movimentacoes compartilhadas ainda",
       unavailableTitle: "Painel indisponivel",
       loadError: "Nao foi possivel carregar este dashboard publico.",
+      emptyTitle: "Sem dados para exibir neste link",
+      emptySubtitle:
+        "O painel publico existe, mas ainda nao ha movimentacoes suficientes nesse recorte para montar a visualizacao compartilhada.",
       balanceLabel: "Saldo",
     },
     dashboard: {
@@ -668,6 +676,7 @@ export const translations = {
     common: {
       brandSubtitle: "Your personal finance dashboard with clarity and control.",
       email: "Email",
+      emailPlaceholder: "you@example.com",
       password: "Password",
       name: "Name",
       preferredNamePlaceholder: "How would you like to be called",
@@ -1062,13 +1071,20 @@ export const translations = {
       title: "Public dashboard",
       subtitle: "Shared dashboard in read-only mode.",
       subtitleWithName: "{{name}}'s shared financial dashboard in read-only mode.",
+      pageNote:
+        "This link is meant for presentation and quick consultation, without exposing the authenticated area or allowing changes.",
       readOnlyBadge: "Read only",
       readOnlyDescription:
         "This dashboard shows a shared view of charts and the financial summary.",
+      visibilityLabel: "Access",
+      visibilityValue: "Shared read-only view",
       lastUpdated: "Latest transaction on {{date}}",
       noUpdate: "No shared activity yet",
       unavailableTitle: "Dashboard unavailable",
       loadError: "Unable to load this public dashboard.",
+      emptyTitle: "No data to display in this link",
+      emptySubtitle:
+        "The public dashboard exists, but there is still not enough activity in this range to build the shared view.",
       balanceLabel: "Balance",
     },
     dashboard: {

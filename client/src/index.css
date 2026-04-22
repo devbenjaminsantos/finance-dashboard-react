@@ -298,10 +298,13 @@ a {
 .finova-navbar-link {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   min-height: 36px;
   padding-left: 0.8rem !important;
   padding-right: 0.8rem !important;
   font-size: 0.94rem;
+  position: relative;
+  border: 1px solid transparent;
 }
 
 .navbar .nav-link.active,
@@ -336,12 +339,43 @@ a {
 
 .navbar .nav-link {
   border-radius: 999px;
-  transition: background 160ms ease, color 160ms ease;
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease;
 }
 
 .navbar .nav-link:hover,
 .navbar .nav-link:focus {
   background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #fff !important;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(2, 6, 23, 0.16);
+}
+
+.finova-navbar-link::after {
+  content: "";
+  position: absolute;
+  left: 0.9rem;
+  right: 0.9rem;
+  bottom: 0.32rem;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.92), rgba(191, 219, 254, 0.72));
+  opacity: 0;
+  transform: scaleX(0.72);
+  transform-origin: center;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.finova-navbar-link:hover::after,
+.finova-navbar-link:focus-visible::after,
+.finova-navbar-link-active::after {
+  opacity: 1;
+  transform: scaleX(1);
 }
 
 .finova-navbar-toggler {
@@ -855,6 +889,21 @@ a {
   margin-bottom: 0;
 }
 
+.finova-toolbar-surface {
+  position: relative;
+  overflow: hidden;
+}
+
+.finova-toolbar-surface::before,
+.finova-table-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(31, 94, 255, 0.2), transparent);
+  pointer-events: none;
+}
+
 .finova-table thead th {
   color: color-mix(in srgb, var(--text-muted) 84%, var(--text) 16%);
   font-size: 0.85rem;
@@ -874,6 +923,19 @@ a {
 
 .finova-table tbody tr:hover {
   background: rgba(31, 94, 255, 0.05);
+}
+
+.finova-table-shell {
+  position: relative;
+  overflow: hidden;
+}
+
+.finova-table-shell-responsive {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.finova-transaction-meta-line {
+  line-height: 1.45;
 }
 
 .finova-goal-summary {
@@ -1001,6 +1063,25 @@ a {
   line-height: 1.55;
 }
 
+.finova-status-banner {
+  box-shadow: var(--shadow-sm);
+  font-weight: 600;
+}
+
+.finova-progress {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-soft) 78%, var(--border) 22%);
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(16, 26, 45, 0.08);
+}
+
+.finova-progress-bar {
+  height: 100%;
+  border-radius: inherit;
+}
+
 .finova-public-dashboard-meta {
   min-width: 220px;
   padding: 0.9rem 1rem;
@@ -1059,6 +1140,28 @@ a {
 .modal-header,
 .modal-footer {
   border-color: var(--border);
+}
+
+.finova-modal-surface {
+  border-radius: var(--radius-lg) !important;
+  overflow: hidden;
+  border: 1px solid var(--border) !important;
+  background: linear-gradient(180deg, var(--surface-elevated) 0%, var(--surface) 100%);
+  box-shadow: 0 24px 60px rgba(16, 26, 45, 0.18);
+}
+
+.finova-modal-header {
+  position: relative;
+}
+
+.finova-modal-header::after {
+  content: "";
+  position: absolute;
+  left: 1.5rem;
+  right: 1.5rem;
+  bottom: -0.35rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(31, 94, 255, 0.16), transparent);
 }
 
 .table {
@@ -1130,6 +1233,25 @@ a {
   filter: var(--finova-close-filter, none);
 }
 
+.finova-modal-close {
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background-color: rgba(148, 163, 184, 0.08);
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.finova-modal-close:hover,
+.finova-modal-close:focus {
+  background-color: rgba(31, 94, 255, 0.1);
+  border-color: rgba(31, 94, 255, 0.18);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(31, 94, 255, 0.12);
+}
+
 :root[data-theme="dark"] .btn-close {
   --finova-close-filter: invert(1) grayscale(1) brightness(200%);
 }
@@ -1146,6 +1268,43 @@ hr {
 
 .form-text {
   color: var(--text-muted);
+}
+
+.finova-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-soft) 100%);
+}
+
+.finova-check .form-check-input {
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+}
+
+.finova-check .form-check-label {
+  line-height: 1.45;
+}
+
+.finova-check-input,
+.form-check-input {
+  border-color: rgba(31, 94, 255, 0.24);
+  box-shadow: none;
+}
+
+.finova-check-input:checked,
+.form-check-input:checked {
+  background-color: var(--brand);
+  border-color: var(--brand);
+}
+
+.finova-check-input:focus,
+.form-check-input:focus {
+  border-color: rgba(31, 94, 255, 0.42);
+  box-shadow: 0 0 0 4px rgba(31, 94, 255, 0.12);
 }
 
 .spinner-border.text-primary {
@@ -1232,9 +1391,20 @@ hr {
     0 14px 32px rgba(2, 6, 23, 0.28);
 }
 
+:root[data-theme="dark"] .finova-modal-surface {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 28px 64px rgba(2, 6, 23, 0.42);
+}
+
 :root[data-theme="dark"] .navbar .nav-link.active,
 :root[data-theme="dark"] .navbar .nav-link[aria-current="page"] {
   background: rgba(255, 255, 255, 0.14);
+}
+
+:root[data-theme="dark"] .navbar .nav-link:hover,
+:root[data-theme="dark"] .navbar .nav-link:focus {
+  box-shadow: 0 12px 24px rgba(2, 6, 23, 0.28);
 }
 
 :root[data-theme="dark"] .finova-goal-suggestion {

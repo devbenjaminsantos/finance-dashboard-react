@@ -794,24 +794,15 @@ export default function Transactions() {
                         %
                       </span>
                     </div>
-                    <div
-                      className="w-100"
-                      style={{
-                        height: "10px",
-                        borderRadius: "999px",
-                        background: "var(--border-subtle, rgba(148, 163, 184, 0.18))",
-                        overflow: "hidden",
-                      }}
-                    >
+                    <div className="finova-progress">
                       <div
+                        className="finova-progress-bar"
                         style={{
                           width: `${Math.round(
                             ((Number(group.paidAmountCents) || 0) /
                               Math.max(Number(group.totalAmountCents) || 1, 1)) *
                               100
                           )}%`,
-                          height: "100%",
-                          borderRadius: "999px",
                           background:
                             "linear-gradient(90deg, var(--brand), var(--brand-strong, #0f766e))",
                         }}
@@ -912,7 +903,7 @@ export default function Transactions() {
 
       <div>
         {importFeedback ? (
-          <div className="alert alert-success mb-4" role="status">
+          <div className="alert alert-success mb-4 finova-status-banner" role="status">
             {importFeedback}
           </div>
         ) : null}

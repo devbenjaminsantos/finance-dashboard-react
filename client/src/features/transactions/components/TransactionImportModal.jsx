@@ -511,8 +511,8 @@ export default function TransactionImportModal({
       }}
     >
       <div className="modal-dialog modal-dialog-centered modal-xl">
-        <div className="modal-content border-0" style={{ borderRadius: "16px" }}>
-          <div className="modal-header border-0 pb-0 px-4 pt-4">
+        <div className="modal-content border-0 finova-modal-surface">
+          <div className="modal-header border-0 pb-0 px-4 pt-4 finova-modal-header">
             <div>
               <h2 className="finova-title h4 mb-1">{t("transactions.importTitle")}</h2>
               <p className="finova-subtitle small mb-0">{t("transactions.importSubtitle")}</p>
@@ -520,7 +520,7 @@ export default function TransactionImportModal({
 
             <button
               type="button"
-              className="btn-close"
+              className="btn-close finova-modal-close finova-icon-tooltip"
               aria-label={t("transactions.close")}
               title={t("transactions.close")}
               data-tooltip={t("transactions.close")}
@@ -593,8 +593,8 @@ export default function TransactionImportModal({
               </div>
             ) : null}
 
-            {error ? <div className="alert alert-danger py-2">{error}</div> : null}
-            {feedback ? <div className="alert alert-success py-2">{feedback}</div> : null}
+            {error ? <div className="alert alert-danger py-2 finova-status-banner">{error}</div> : null}
+            {feedback ? <div className="alert alert-success py-2 finova-status-banner">{feedback}</div> : null}
 
             {reconciledPreview.length > 0 ? (
               <>
@@ -893,7 +893,7 @@ export default function TransactionImportModal({
                   </div>
                 </div>
 
-                <div className="table-responsive">
+                <div className="table-responsive finova-table-shell-responsive">
                   <table className="table finova-table align-middle mb-0">
                     <thead>
                       <tr>
@@ -916,7 +916,7 @@ export default function TransactionImportModal({
                             <td>
                               <input
                                 type="checkbox"
-                                className="form-check-input"
+                                className="form-check-input finova-check-input"
                                 checked={isSelected}
                                 onChange={() => toggleSelection(originalIndex)}
                                 aria-label={t("transactions.importSelectRow", {

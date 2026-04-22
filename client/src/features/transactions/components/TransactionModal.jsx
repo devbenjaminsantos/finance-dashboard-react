@@ -248,8 +248,8 @@ export default function TransactionModal({
       }}
     >
       <div className="modal-dialog modal-dialog-centered modal-lg">
-        <div className="modal-content border-0" style={{ borderRadius: "16px" }}>
-          <div className="modal-header border-0 pb-0 px-4 pt-4">
+        <div className="modal-content border-0 finova-modal-surface">
+          <div className="modal-header border-0 pb-0 px-4 pt-4 finova-modal-header">
             <div>
               <h2 className="finova-title h4 mb-1">{title}</h2>
               <p className="finova-subtitle small mb-0">{t("transactions.modalSubtitle")}</p>
@@ -257,7 +257,7 @@ export default function TransactionModal({
 
             <button
               type="button"
-              className="btn-close"
+              className="btn-close finova-modal-close finova-icon-tooltip"
               aria-label={t("transactions.close")}
               title={t("transactions.close")}
               data-tooltip={t("transactions.close")}
@@ -394,7 +394,7 @@ export default function TransactionModal({
                 <>
                   {type === "expense" ? (
                     <div className="col-12 col-md-6">
-                      <div className="form-check">
+                      <div className="form-check finova-check">
                         <input
                           id="transaction-installment"
                           type="checkbox"
@@ -443,7 +443,7 @@ export default function TransactionModal({
                   ) : null}
 
                   <div className="col-12">
-                    <div className="form-check">
+                    <div className="form-check finova-check">
                       <input
                         id="transaction-recurring"
                         type="checkbox"
@@ -496,7 +496,7 @@ export default function TransactionModal({
                 </>
               ) : initial?.isRecurring ? (
                 <div className="col-12">
-                  <div className="alert alert-info py-2 mb-0">
+                  <div className="alert alert-info py-2 mb-0 finova-status-banner">
                     {t("transactions.editRecurringInfo")}
                   </div>
                 </div>
@@ -504,7 +504,7 @@ export default function TransactionModal({
 
               {error ? (
                 <div className="col-12">
-                  <div className="alert alert-danger py-2 mb-0">{error}</div>
+                  <div className="alert alert-danger py-2 mb-0 finova-status-banner">{error}</div>
                 </div>
               ) : null}
 

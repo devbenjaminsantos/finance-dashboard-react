@@ -23,7 +23,7 @@ export default function TransactionsFilters({
   const { t } = useI18n();
 
   return (
-    <div className="finova-card p-4 mb-4">
+    <div className="finova-card p-4 mb-4 finova-toolbar-surface">
       <div className="row g-3">
         <div className="col-12 col-lg-4">
           <label className="form-label text-dark fw-medium" htmlFor="transactions-search">

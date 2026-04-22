@@ -58,7 +58,7 @@ export default function TransactionsTable({
   }
 
   return (
-    <div className="finova-card p-4">
+    <div className="finova-card p-4 finova-table-shell">
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
         <div>
           <h2 className="finova-title h5 mb-1">{t("transactions.historyTitle")}</h2>
@@ -103,7 +103,7 @@ export default function TransactionsTable({
           </p>
         </div>
       ) : (
-        <div className="table-responsive">
+        <div className="table-responsive finova-table-shell-responsive">
           <table className="table finova-table align-middle mb-0">
             <thead>
               <tr>
@@ -156,21 +156,21 @@ export default function TransactionsTable({
                         ))}
                       </div>
                       {transaction.importedAtUtc ? (
-                        <div className="small text-muted mt-2">
+                        <div className="small text-muted mt-2 finova-transaction-meta-line">
                           {t("transactions.importedAt", {
                             date: formatDateTime(transaction.importedAtUtc),
                           })}
                         </div>
                       ) : null}
                       {installmentMeta ? (
-                        <div className="small text-muted mt-2">
+                        <div className="small text-muted mt-2 finova-transaction-meta-line">
                           {t("transactions.installmentRemaining", {
                             count: installmentMeta.remainingInstallments,
                             amount: formatCurrencyFromCents(installmentMeta.remainingAmountCents),
                           })}
                         </div>
                       ) : null}
-                      <div className="small text-muted mt-2">
+                      <div className="small text-muted mt-2 finova-transaction-meta-line">
                         {t("transactions.accountLabel")}:{" "}
                         {transaction.financialAccountLabel || t("transactions.unlinkedAccount")}
                       </div>

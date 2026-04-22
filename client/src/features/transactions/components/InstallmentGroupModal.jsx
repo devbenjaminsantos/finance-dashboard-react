@@ -111,8 +111,8 @@ export default function InstallmentGroupModal({
       }}
     >
       <div className="modal-dialog modal-dialog-centered">
-        <div className="modal-content border-0" style={{ borderRadius: "16px" }}>
-          <div className="modal-header border-0 pb-0 px-4 pt-4">
+        <div className="modal-content border-0 finova-modal-surface">
+          <div className="modal-header border-0 pb-0 px-4 pt-4 finova-modal-header">
             <div>
               <h2 className="finova-title h4 mb-1">{t("transactions.installmentGroupTitle")}</h2>
               <p className="finova-subtitle small mb-0">
@@ -122,8 +122,10 @@ export default function InstallmentGroupModal({
 
             <button
               type="button"
-              className="btn-close"
+              className="btn-close finova-modal-close finova-icon-tooltip"
               aria-label={t("transactions.close")}
+              title={t("transactions.close")}
+              data-tooltip={t("transactions.close")}
               onClick={onClose}
             />
           </div>
@@ -178,7 +180,7 @@ export default function InstallmentGroupModal({
 
               {error ? (
                 <div className="col-12">
-                  <div className="alert alert-danger py-2 mb-0">{error}</div>
+                  <div className="alert alert-danger py-2 mb-0 finova-status-banner">{error}</div>
                 </div>
               ) : null}
 

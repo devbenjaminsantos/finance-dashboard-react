@@ -13,7 +13,8 @@ export default function Navbar() {
   const [user, setUser] = useState(() => getStoredUser());
 
   const linkClass = ({ isActive }) =>
-    "nav-link px-2 finova-navbar-link" + (isActive ? " fw-semibold text-white" : " text-white-50");
+    "nav-link px-2 finova-navbar-link" +
+    (isActive ? " fw-semibold text-white finova-navbar-link-active" : " text-white-50");
 
   useEffect(() => {
     function syncSession() {

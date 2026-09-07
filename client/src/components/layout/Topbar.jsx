@@ -6,6 +6,7 @@ import BrandMark from "../BrandMark";
 const PAGE_TITLE_KEYS = {
   "/": "pages.homeTitle",
   "/transacoes": "pages.transactionsTitle",
+  "/planejamento": "pages.planningTitle",
   "/analises": "pages.analysesTitle",
   "/contas": "pages.accountsTitle",
   "/historico": "pages.historyTitle",

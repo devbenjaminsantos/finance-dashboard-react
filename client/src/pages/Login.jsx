@@ -95,7 +95,7 @@ export default function Login() {
   const demoHighlights = t("auth.demoHighlights");
 
   return (
-    <div className="hestia-page hestia-auth-layout d-flex align-items-center justify-content-center px-3 py-4">
+    <div className="hestia-page hestia-auth-layout hestia-area hestia-area-overview d-flex align-items-center justify-content-center px-3 py-4">
       <div className="hestia-auth-shell hestia-auth-shell-lg">
         <div className="text-center mb-4 hestia-auth-hero">
           <BrandMark className="mb-2" size="hero" centered />

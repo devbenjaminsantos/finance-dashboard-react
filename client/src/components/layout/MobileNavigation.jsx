@@ -9,8 +9,8 @@ import {
   MOBILE_SECONDARY_ITEMS,
 } from "./navigationItems";
 
-function getNavClass({ isActive }) {
-  return `app-mobile-nav-link${isActive ? " app-mobile-nav-link-active" : ""}`;
+function getNavClass({ isActive }, tone = "overview") {
+  return `app-mobile-nav-link app-mobile-nav-link-${tone}${isActive ? " app-mobile-nav-link-active" : ""}`;
 }
 
 function MobileNavLink({ item, onClick }) {
@@ -18,7 +18,12 @@ function MobileNavLink({ item, onClick }) {
   const Icon = item.icon;
 
   return (
-    <NavLink to={item.to} end={item.end} className={getNavClass} onClick={onClick}>
+    <NavLink
+      to={item.to}
+      end={item.end}
+      className={(state) => getNavClass(state, item.tone)}
+      onClick={onClick}
+    >
       <Icon size={20} strokeWidth={1.8} aria-hidden="true" />
       <span>{t(item.labelKey)}</span>
     </NavLink>
@@ -70,7 +75,11 @@ export default function MobileNavigation({ user, onLogout }) {
             {MOBILE_MORE_ITEMS.map((item) => (
               <MobileNavLink key={item.to} item={item} onClick={() => setMoreOpenPath(null)} />
             ))}
-            <NavLink to="/perfil" className={getNavClass} onClick={() => setMoreOpenPath(null)}>
+            <NavLink
+              to="/perfil"
+              className={(state) => getNavClass(state, "account")}
+              onClick={() => setMoreOpenPath(null)}
+            >
               <UserRound size={20} strokeWidth={1.8} aria-hidden="true" />
               <span>{t("navbar.profile")}</span>
             </NavLink>

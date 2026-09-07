@@ -17,6 +17,7 @@ export function ComparisonCard({
   previousValue,
   currentRangeLabel,
   previousRangeLabel,
+  tone = "neutral",
 }) {
   const { formatCurrencyFromCents, t } = useI18n();
   const delta = currentValue - previousValue;
@@ -32,7 +33,9 @@ export function ComparisonCard({
 
   return (
     <div className="col-12 col-md-4">
-      <div className="hestia-card-soft h-100 p-4">
+      <div
+        className={`hestia-card-soft hestia-comparison-card hestia-comparison-card-${tone} h-100 p-4`}
+      >
         <div className="d-flex justify-content-between align-items-start gap-2 mb-3">
           <div>
             <div className="hestia-subtitle small mb-1">{label}</div>

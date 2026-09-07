@@ -26,13 +26,21 @@
   --focus-ring: rgba(82, 99, 74, 0.24);
   --success: #3e704b;
   --success-dark: #2d5a39;
-  --info: var(--brand);
-  --info-bg: #e5eae0;
+  --info: var(--accent-overview);
+  --info-bg: var(--accent-overview-soft);
   --success-bg: #e7f0e8;
   --warning: #765510;
   --warning-bg: #f6edd8;
   --danger-bg: #f8e9e5;
   --danger: #9d3934;
+  --accent-overview: #355e78;
+  --accent-overview-soft: #e9f0f4;
+  --accent-insight: #675271;
+  --accent-insight-soft: #f0eaf2;
+  --accent-account: #356b67;
+  --accent-account-soft: #e7f1ef;
+  --accent-activity: #496781;
+  --accent-activity-soft: #e8eef2;
   --shadow-sm: 0 1px 2px rgba(32, 36, 31, 0.08);
   --shadow-md: 0 2px 8px rgba(32, 36, 31, 0.1);
   --radius-sm: 6px;
@@ -59,14 +67,14 @@
   --brand-deep: #edf1e9;
   --brand-deep-soft: #d9e2d4;
 
-  --bg: #171a16;
-  --surface: #20251f;
-  --surface-soft: #292f27;
-  --surface-elevated: #242a23;
-  --border: #444d41;
+  --bg: #181918;
+  --surface: #222322;
+  --surface-soft: #2b2d2b;
+  --surface-elevated: #262826;
+  --border: #474a47;
   --nav-surface: #1d231c;
   --nav-border: #3c4639;
-  --divider: #3c4339;
+  --divider: #3f423f;
   --overlay: rgba(8, 10, 8, 0.7);
 
   --text: #f0efe9;
@@ -78,13 +86,21 @@
   --focus-ring: rgba(169, 186, 159, 0.3);
   --success: #85b38e;
   --success-dark: #9bc3a2;
-  --info: var(--brand-strong);
-  --info-bg: #303a2d;
+  --info: var(--accent-overview);
+  --info-bg: var(--accent-overview-soft);
   --success-bg: #263b2a;
   --warning: #e7c87b;
   --warning-bg: #3b3422;
   --danger-bg: #442725;
   --danger: #f0aaa5;
+  --accent-overview: #9fc7df;
+  --accent-overview-soft: #25343d;
+  --accent-insight: #c8afd1;
+  --accent-insight-soft: #342d38;
+  --accent-account: #9acbc4;
+  --accent-account-soft: #243936;
+  --accent-activity: #abc7db;
+  --accent-activity-soft: #293740;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.24);
   --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.28);
 }
@@ -292,9 +308,9 @@ a {
 }
 
 .hestia-btn-primary:hover,
-.hestia-btn-primary:focus,
+.hestia-btn-primary:focus-visible,
 .hestia-button-primary:hover,
-.hestia-button-primary:focus {
+.hestia-button-primary:focus-visible {
   background: var(--primary-hover);
   border-color: var(--primary-hover);
   color: var(--primary-contrast);
@@ -334,7 +350,7 @@ a {
 }
 
 .hestia-button-danger:hover,
-.hestia-button-danger:focus {
+.hestia-button-danger:focus-visible {
   border-color: var(--danger);
   background: color-mix(in srgb, var(--danger) 10%, var(--surface) 90%);
   color: var(--danger);
@@ -353,7 +369,7 @@ a {
 }
 
 .hestia-button-link:hover,
-.hestia-button-link:focus {
+.hestia-button-link:focus-visible {
   color: var(--brand-deep);
   text-decoration: underline;
 }
@@ -371,20 +387,26 @@ a {
   box-shadow: none;
 }
 
-.hestia-btn-light:focus,
-.hestia-btn-primary:focus,
-.hestia-button-secondary:focus,
-.hestia-button-primary:focus,
-.hestia-button-danger:focus,
-.hestia-button-link:focus,
-.btn-outline-danger:focus,
-.btn-link:focus {
+.hestia-btn-light:focus-visible,
+.hestia-btn-primary:focus-visible,
+.hestia-button-secondary:focus-visible,
+.hestia-button-primary:focus-visible,
+.hestia-button-danger:focus-visible,
+.hestia-button-link:focus-visible,
+.btn-outline-danger:focus-visible,
+.btn-link:focus-visible {
   box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
-:where(a, button, input, select, textarea, [tabindex]):focus-visible {
-  outline: 2px solid var(--focus);
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--focus) !important;
   outline-offset: 2px;
+}
+
+.hestia-navbar :where(a, button, select):focus-visible,
+.app-sidebar :where(a, button, select):focus-visible,
+.app-public-header :where(a, button, select):focus-visible {
+  outline-color: #ffffff !important;
 }
 
 .hestia-theme-toggle {
@@ -406,7 +428,7 @@ a {
 }
 
 .hestia-theme-toggle:hover,
-.hestia-theme-toggle:focus {
+.hestia-theme-toggle:focus-visible {
   color: #fff;
   background: rgba(255, 255, 255, 0.18);
   border-color: rgba(255, 255, 255, 0.32);
@@ -475,7 +497,7 @@ a {
   color: #fff;
 }
 
-.hestia-language-select:focus {
+.hestia-language-select:focus-visible {
   background: rgba(255, 255, 255, 0.18);
   border-color: rgba(255, 255, 255, 0.28);
   color: #fff;
@@ -497,7 +519,7 @@ a {
 }
 
 .navbar .nav-link:hover,
-.navbar .nav-link:focus {
+.navbar .nav-link:focus-visible {
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.16);
   color: #fff !important;
@@ -709,6 +731,73 @@ a {
   min-width: 156px;
 }
 
+.hestia-area {
+  --area-accent: var(--accent-overview);
+  --area-soft: var(--accent-overview-soft);
+}
+
+.hestia-area-overview {
+  --area-accent: var(--accent-overview);
+  --area-soft: var(--accent-overview-soft);
+}
+
+.hestia-area-insight {
+  --area-accent: var(--accent-insight);
+  --area-soft: var(--accent-insight-soft);
+}
+
+.hestia-area-planning {
+  --area-accent: var(--warning);
+  --area-soft: var(--warning-bg);
+}
+
+.hestia-area-account {
+  --area-accent: var(--accent-account);
+  --area-soft: var(--accent-account-soft);
+}
+
+.hestia-area-activity {
+  --area-accent: var(--accent-activity);
+  --area-soft: var(--accent-activity-soft);
+}
+
+.hestia-area-success {
+  --area-accent: var(--success);
+  --area-soft: var(--success-bg);
+}
+
+.hestia-area:not(.hestia-auth-layout) .hestia-page-header {
+  padding: clamp(1rem, 2vw, 1.35rem);
+  border: 1px solid color-mix(in srgb, var(--area-accent) 24%, var(--border) 76%);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--area-soft) 40%, var(--surface) 60%);
+  box-shadow: inset 4px 0 0 var(--area-accent);
+}
+
+.hestia-area .hestia-page-note {
+  border-color: color-mix(in srgb, var(--area-accent) 24%, var(--border) 76%);
+  background: color-mix(in srgb, var(--area-soft) 46%, var(--surface) 54%);
+}
+
+.hestia-area > .hestia-card,
+.hestia-area > .hestia-page-stack > .hestia-card,
+.hestia-area > .d-grid > .hestia-card {
+  border-top-color: color-mix(in srgb, var(--area-accent) 48%, var(--border) 52%);
+}
+
+.hestia-auth-layout.hestia-area {
+  background: color-mix(in srgb, var(--area-soft) 22%, var(--bg) 78%);
+}
+
+.hestia-auth-layout.hestia-area .hestia-auth-card {
+  border-color: color-mix(in srgb, var(--area-accent) 26%, var(--border) 74%);
+  box-shadow: inset 0 3px 0 var(--area-accent), var(--shadow-md);
+}
+
+.hestia-auth-layout.hestia-area .hestia-auth-card-header .hestia-title {
+  color: color-mix(in srgb, var(--area-accent) 78%, var(--text) 22%);
+}
+
 @media (max-width: 767.98px) {
   .hestia-section-space {
     padding-top: 1.5rem;
@@ -897,7 +986,7 @@ a {
 }
 
 .hestia-auth-link:hover,
-.hestia-auth-link:focus {
+.hestia-auth-link:focus-visible {
   color: var(--brand);
 }
 
@@ -1119,6 +1208,10 @@ a {
 
 .hestia-transaction-list-item:hover {
   background: color-mix(in srgb, var(--brand-soft) 54%, transparent 46%);
+}
+
+.hestia-area-activity .hestia-transaction-list-item:hover {
+  background: color-mix(in srgb, var(--accent-activity-soft) 72%, transparent 28%);
 }
 
 .hestia-transaction-list-main {
@@ -1346,7 +1439,7 @@ a {
 }
 
 .hestia-transaction-more-options summary:focus-visible {
-  outline: 3px solid var(--focus-ring);
+  outline-color: var(--focus);
   outline-offset: 4px;
   border-radius: var(--radius-sm);
 }
@@ -1442,7 +1535,7 @@ a {
 }
 
 .hestia-goal-suggestion:hover,
-.hestia-goal-suggestion:focus {
+.hestia-goal-suggestion:focus-visible {
   background: var(--brand-soft);
   color: var(--text);
   border-color: var(--brand);
@@ -1616,6 +1709,71 @@ a {
   border-color: color-mix(in srgb, var(--danger) 22%, var(--border) 78%);
 }
 
+.hestia-metric-overview {
+  background: color-mix(in srgb, var(--accent-overview-soft) 78%, var(--surface) 22%);
+  border-color: color-mix(in srgb, var(--accent-overview) 22%, var(--border) 78%);
+}
+
+.hestia-metric-overview .hestia-metric-value {
+  color: var(--accent-overview);
+}
+
+.hestia-metric-account {
+  background: color-mix(in srgb, var(--accent-account-soft) 78%, var(--surface) 22%);
+  border-color: color-mix(in srgb, var(--accent-account) 22%, var(--border) 78%);
+}
+
+.hestia-metric-account .hestia-metric-value {
+  color: var(--accent-account);
+}
+
+.hestia-metric-warning {
+  background: color-mix(in srgb, var(--warning-bg) 78%, var(--surface) 22%);
+  border-color: color-mix(in srgb, var(--warning) 22%, var(--border) 78%);
+}
+
+.hestia-metric-warning .hestia-metric-value {
+  color: var(--warning);
+}
+
+.hestia-metric-primary {
+  background: color-mix(in srgb, var(--accent-activity-soft) 78%, var(--surface) 22%);
+  border-color: color-mix(in srgb, var(--accent-activity) 22%, var(--border) 78%);
+}
+
+.hestia-metric-primary .hestia-metric-value {
+  color: var(--accent-activity);
+}
+
+.hestia-account-metrics .hestia-metric {
+  min-height: 112px;
+  padding: var(--space-4);
+  border-style: solid;
+  border-width: 1px;
+  border-top-width: 3px;
+  border-radius: var(--radius-md);
+}
+
+.hestia-account-metrics .hestia-metric-income {
+  border-top-color: var(--success);
+}
+
+.hestia-account-metrics .hestia-metric-warning {
+  border-top-color: var(--warning);
+}
+
+.hestia-account-metrics .hestia-metric-primary {
+  border-top-color: var(--accent-activity);
+}
+
+.hestia-account-metrics .hestia-metric-account {
+  border-top-color: var(--accent-account);
+}
+
+.hestia-account-metrics .hestia-metric-overview {
+  border-top-color: var(--accent-overview);
+}
+
 .hestia-money-delta {
   display: inline-flex;
   align-items: center;
@@ -1738,6 +1896,32 @@ a {
   border: 1px solid var(--border);
   text-align: right;
   box-shadow: none;
+}
+
+.hestia-area-overview .hestia-public-dashboard-meta {
+  border-color: color-mix(in srgb, var(--accent-overview) 24%, var(--border) 76%);
+  background: color-mix(in srgb, var(--accent-overview-soft) 64%, var(--surface) 36%);
+}
+
+.hestia-area-account .hestia-profile-subsection {
+  border: 1px solid color-mix(in srgb, var(--warning) 22%, var(--border) 78%) !important;
+  background: color-mix(in srgb, var(--warning-bg) 46%, var(--surface) 54%);
+  box-shadow: inset 3px 0 0 var(--warning);
+}
+
+.hestia-area-activity .hestia-history-entry {
+  border-color: color-mix(in srgb, var(--accent-activity) 20%, var(--border) 80%);
+  background: color-mix(in srgb, var(--accent-activity-soft) 52%, var(--surface) 48%);
+}
+
+.hestia-area-activity .hestia-commitment-section {
+  padding-left: var(--space-4);
+  border-left: 3px solid var(--warning);
+}
+
+.hestia-area-planning .hestia-commitment-section {
+  padding-left: var(--space-4);
+  border-left: 3px solid var(--accent-activity);
 }
 
 .hestia-page-stack .hestia-card,
@@ -1877,7 +2061,7 @@ a {
 }
 
 .btn-outline-danger:hover,
-.btn-outline-danger:focus {
+.btn-outline-danger:focus-visible {
   background: var(--danger-bg);
   border-color: var(--danger);
   color: var(--danger);
@@ -1888,7 +2072,7 @@ a {
 }
 
 .btn-link:hover,
-.btn-link:focus {
+.btn-link:focus-visible {
   color: var(--info);
 }
 
@@ -1908,7 +2092,7 @@ a {
 }
 
 .hestia-modal-close:hover,
-.hestia-modal-close:focus {
+.hestia-modal-close:focus-visible {
   background-color: var(--brand-soft);
   border-color: var(--brand);
   transform: none;
@@ -2031,9 +2215,33 @@ hr {
   display: block;
 }
 
+.hestia-home-shortcut-card {
+  --home-accent: var(--accent-overview);
+  --home-accent-soft: var(--accent-overview-soft);
+  border-color: color-mix(in srgb, var(--home-accent) 24%, var(--border) 76%);
+  background: color-mix(in srgb, var(--home-accent-soft) 72%, var(--surface) 28%);
+  box-shadow: inset 0 3px 0 var(--home-accent);
+}
+
+.hestia-home-tone-insight {
+  --home-accent: var(--accent-insight);
+  --home-accent-soft: var(--accent-insight-soft);
+}
+
+.hestia-home-tone-activity {
+  --home-accent: var(--accent-activity);
+  --home-accent-soft: var(--accent-activity-soft);
+}
+
+.hestia-home-tone-account {
+  --home-accent: var(--accent-account);
+  --home-accent-soft: var(--accent-account-soft);
+}
+
 .hestia-home-shortcut:hover .hestia-card-soft,
 .hestia-home-shortcut:focus-visible .hestia-card-soft {
-  border-color: var(--brand);
+  border-color: var(--home-accent);
+  background: var(--home-accent-soft);
   transform: none;
 }
 
@@ -2042,9 +2250,9 @@ hr {
   gap: var(--space-5);
   margin-bottom: var(--space-6);
   padding: clamp(1.25rem, 3vw, 2rem);
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in srgb, var(--accent-overview) 22%, var(--border) 78%);
   border-radius: var(--radius-lg);
-  background: var(--surface);
+  background: color-mix(in srgb, var(--accent-overview-soft) 32%, var(--surface) 68%);
   box-shadow: var(--shadow-sm);
 }
 
@@ -2108,6 +2316,7 @@ hr {
   gap: 0.35rem;
   min-width: 0;
   padding: var(--space-4);
+  border-top: 3px solid transparent;
 }
 
 .hestia-home-metric + .hestia-home-metric {
@@ -2133,12 +2342,32 @@ hr {
   color: var(--success-dark);
 }
 
+.hestia-home-metric-default {
+  border-top-color: var(--accent-overview);
+  background: color-mix(in srgb, var(--accent-overview-soft) 58%, transparent 42%);
+}
+
+.hestia-home-metric-income {
+  border-top-color: var(--success);
+  background: color-mix(in srgb, var(--success-bg) 58%, transparent 42%);
+}
+
 .hestia-home-metric-expense strong {
   color: var(--danger);
 }
 
+.hestia-home-metric-expense {
+  border-top-color: var(--danger);
+  background: color-mix(in srgb, var(--danger-bg) 58%, transparent 42%);
+}
+
 .hestia-home-metric-result strong {
-  color: var(--brand-strong);
+  color: var(--accent-insight);
+}
+
+.hestia-home-metric-result {
+  border-top-color: var(--accent-insight);
+  background: color-mix(in srgb, var(--accent-insight-soft) 58%, transparent 42%);
 }
 
 .hestia-home-trend {
@@ -2167,7 +2396,7 @@ hr {
 
 .hestia-home-trend-line {
   fill: none;
-  stroke: var(--brand-strong);
+  stroke: var(--accent-overview);
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 3;
@@ -2175,7 +2404,7 @@ hr {
 
 .hestia-home-trend-point {
   fill: var(--surface);
-  stroke: var(--brand-strong);
+  stroke: var(--accent-overview);
   stroke-width: 2.5;
 }
 
@@ -2189,12 +2418,28 @@ hr {
 }
 
 .hestia-home-reading-panel {
+  --home-panel-accent: var(--accent-overview);
+  --home-panel-soft: var(--accent-overview-soft);
   height: 100%;
   padding: clamp(1.25rem, 2.5vw, 1.75rem);
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in srgb, var(--home-panel-accent) 22%, var(--border) 78%);
   border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
+  background: color-mix(in srgb, var(--home-panel-soft) 48%, var(--surface) 52%);
+  box-shadow: inset 0 3px 0 var(--home-panel-accent), var(--shadow-sm);
+}
+
+.hestia-home-panel-insight {
+  --home-panel-accent: var(--accent-insight);
+  --home-panel-soft: var(--accent-insight-soft);
+}
+
+.hestia-home-panel-expense {
+  --home-panel-accent: var(--danger);
+  --home-panel-soft: var(--danger-bg);
+}
+
+.hestia-home-reading-panel > .hestia-home-eyebrow {
+  color: var(--home-panel-accent);
 }
 
 .hestia-home-reading-panel > .hestia-home-eyebrow {
@@ -2245,7 +2490,7 @@ hr {
   height: 100%;
   min-width: 6px;
   border-radius: inherit;
-  background: var(--brand);
+  background: var(--danger);
 }
 
 .hestia-home-spending-row small {
@@ -2263,8 +2508,51 @@ hr {
 }
 
 .hestia-home-summary-panel {
+  --home-panel-accent: var(--accent-overview);
+  --home-panel-soft: var(--accent-overview-soft);
   height: 100%;
-  padding: var(--space-4) 0;
+  padding: var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--home-panel-accent) 22%, var(--border) 78%);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--home-panel-soft) 42%, var(--surface) 58%);
+  box-shadow: inset 0 3px 0 var(--home-panel-accent);
+}
+
+.hestia-home-panel-planning {
+  --home-panel-accent: var(--warning);
+  --home-panel-soft: var(--warning-bg);
+}
+
+.hestia-home-panel-activity {
+  --home-panel-accent: var(--accent-activity);
+  --home-panel-soft: var(--accent-activity-soft);
+}
+
+.hestia-home-summary-panel > .hestia-home-eyebrow {
+  color: var(--home-panel-accent);
+}
+
+.hestia-comparison-card {
+  --comparison-accent: var(--text-muted);
+  --comparison-soft: var(--surface-soft);
+  border-color: color-mix(in srgb, var(--comparison-accent) 20%, var(--border) 80%);
+  background: color-mix(in srgb, var(--comparison-soft) 62%, var(--surface) 38%);
+  box-shadow: inset 0 3px 0 var(--comparison-accent);
+}
+
+.hestia-comparison-card-income {
+  --comparison-accent: var(--success);
+  --comparison-soft: var(--success-bg);
+}
+
+.hestia-comparison-card-expense {
+  --comparison-accent: var(--danger);
+  --comparison-soft: var(--danger-bg);
+}
+
+.hestia-comparison-card-overview {
+  --comparison-accent: var(--accent-overview);
+  --comparison-soft: var(--accent-overview-soft);
 }
 
 .hestia-home-stat-list {
@@ -2360,7 +2648,7 @@ hr {
   }
 
   .hestia-home-summary-panel {
-    padding: var(--space-4) 0 0;
+    padding: var(--space-4);
   }
 }
 
@@ -2474,7 +2762,7 @@ hr {
 }
 
 :root[data-theme="dark"] .navbar .nav-link:hover,
-:root[data-theme="dark"] .navbar .nav-link:focus {
+:root[data-theme="dark"] .navbar .nav-link:focus-visible {
   box-shadow: none;
 }
 
@@ -2501,7 +2789,7 @@ hr {
 }
 
 :root[data-theme="dark"] .hestia-goal-suggestion:hover,
-:root[data-theme="dark"] .hestia-goal-suggestion:focus {
+:root[data-theme="dark"] .hestia-goal-suggestion:focus-visible {
   box-shadow: none;
 }
 
@@ -2562,12 +2850,19 @@ hr {
 }
 
 :root[data-theme="dark"] .hestia-auth-link:hover,
-:root[data-theme="dark"] .hestia-auth-link:focus {
+:root[data-theme="dark"] .hestia-auth-link:focus-visible {
   color: #ffffff;
 }
 
 .hestia-row-highlight td {
   background: transparent !important;
+}
+
+@media (forced-colors: active) {
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible,
+  .app-language-control:has(select:focus-visible) {
+    outline-color: Highlight !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2630,6 +2925,7 @@ hr {
 }
 
 .app-nav-link {
+  --nav-accent: var(--accent-overview);
   display: flex;
   align-items: center;
   gap: var(--space-3);
@@ -2642,6 +2938,36 @@ hr {
   font-weight: 600;
 }
 
+.app-nav-link-overview,
+.app-mobile-nav-link-overview {
+  --nav-accent: var(--accent-overview);
+  --nav-soft: var(--accent-overview-soft);
+}
+
+.app-nav-link-activity,
+.app-mobile-nav-link-activity {
+  --nav-accent: var(--accent-activity);
+  --nav-soft: var(--accent-activity-soft);
+}
+
+.app-nav-link-planning,
+.app-mobile-nav-link-planning {
+  --nav-accent: var(--warning);
+  --nav-soft: var(--warning-bg);
+}
+
+.app-nav-link-insight,
+.app-mobile-nav-link-insight {
+  --nav-accent: var(--accent-insight);
+  --nav-soft: var(--accent-insight-soft);
+}
+
+.app-nav-link-account,
+.app-mobile-nav-link-account {
+  --nav-accent: var(--accent-account);
+  --nav-soft: var(--accent-account-soft);
+}
+
 .app-nav-link:hover,
 .app-nav-link:focus-visible {
   color: #ffffff;
@@ -2651,8 +2977,9 @@ hr {
 
 .app-nav-link-active {
   color: #ffffff;
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.16);
+  background: color-mix(in srgb, var(--nav-accent) 24%, transparent 76%);
+  border-color: color-mix(in srgb, var(--nav-accent) 72%, transparent 28%);
+  box-shadow: inset 3px 0 0 var(--nav-accent);
 }
 
 .app-sidebar-footer {
@@ -2734,6 +3061,16 @@ hr {
   color: inherit;
   font: inherit;
   cursor: pointer;
+}
+
+.app-language-control:has(select:focus-visible) {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.app-sidebar .app-language-control:has(select:focus-visible),
+.app-public-header .app-language-control:has(select:focus-visible) {
+  outline-color: #ffffff;
 }
 
 .app-language-control option {
@@ -2956,8 +3293,12 @@ hr {
   .app-mobile-nav-link:hover,
   .app-mobile-nav-link:focus-visible,
   .app-mobile-nav-link-active {
-    background: var(--brand-soft);
-    color: var(--brand-strong);
+    background: var(--nav-soft, var(--brand-soft));
+    color: var(--nav-accent, var(--brand-strong));
+  }
+
+  .app-mobile-nav-link-active {
+    box-shadow: inset 0 3px 0 var(--nav-accent, var(--brand));
   }
 
   .app-mobile-create {

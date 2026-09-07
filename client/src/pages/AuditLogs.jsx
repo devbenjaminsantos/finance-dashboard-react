@@ -56,7 +56,7 @@ export default function AuditLogs() {
   const hiddenLogsCount = logs.length - visibleLogs.length;
 
   return (
-    <section className="hestia-section-space">
+    <section className="hestia-section-space hestia-area hestia-area-activity">
       <PageHeader
         title={t("pages.historyTitle")}
         subtitle={t("pages.historySubtitle")}
@@ -110,7 +110,7 @@ export default function AuditLogs() {
             ) : null}
 
             {visibleLogs.map((log) => (
-              <div key={log.id} className="hestia-card-soft p-3">
+              <div key={log.id} className="hestia-card-soft hestia-history-entry p-3">
                 <div className="d-flex flex-column flex-md-row justify-content-between gap-2 mb-2">
                   <div className="d-flex flex-wrap align-items-center gap-2">
                     <span className={getActionToneClass(log.action)}>

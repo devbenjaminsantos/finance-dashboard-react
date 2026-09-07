@@ -211,11 +211,13 @@ function HomeWidgetCard({ title, description, children }) {
   );
 }
 
-function ShortcutTile({ title, description, to }) {
+function ShortcutTile({ title, description, to, tone }) {
   return (
-    <div className="col-12 col-md-6 col-xl-3">
+    <div className="col-12 col-md-6 col-xl-4">
       <Link to={to} className="hestia-home-shortcut text-decoration-none">
-        <div className="hestia-card-soft h-100 p-3">
+        <div
+          className={`hestia-card-soft hestia-home-shortcut-card hestia-home-tone-${tone} h-100 p-3`}
+        >
           <div className="hestia-title h6 mb-2">{title}</div>
           <p className="hestia-subtitle mb-0">{description}</p>
         </div>
@@ -228,7 +230,10 @@ function GoalsPreview({ error, goalsCount, goalsRiskCount, isLoading }) {
   const { t } = useI18n();
 
   return (
-    <section className="hestia-home-summary-panel" aria-labelledby="home-planning-title">
+    <section
+      className="hestia-home-summary-panel hestia-home-panel-planning"
+      aria-labelledby="home-planning-title"
+    >
       <span className="hestia-home-eyebrow">{t("home.planningEyebrow")}</span>
       <h3 id="home-planning-title" className="hestia-title h5 mb-2">
         {t("home.goalsTitle")}
@@ -269,7 +274,10 @@ function HistoryPreview({ error, logs, isLoading }) {
   const { t, formatDateTime } = useI18n();
 
   return (
-    <section className="hestia-home-summary-panel" aria-labelledby="home-activity-title">
+    <section
+      className="hestia-home-summary-panel hestia-home-panel-activity"
+      aria-labelledby="home-activity-title"
+    >
       <span className="hestia-home-eyebrow">{t("home.activityEyebrow")}</span>
       <h3 id="home-activity-title" className="hestia-title h5 mb-2">
         {t("home.historyTitle")}
@@ -421,7 +429,10 @@ function HomeFinancialHero({
   ];
 
   return (
-    <section className="hestia-home-hero" aria-labelledby="home-financial-title">
+    <section
+      className="hestia-home-hero hestia-home-tone-overview"
+      aria-labelledby="home-financial-title"
+    >
       <div className="hestia-home-hero-main">
         <div className="hestia-home-hero-copy">
           <span className="hestia-home-eyebrow">{t("home.heroEyebrow")}</span>
@@ -509,7 +520,10 @@ function HomePerception({ insight, isLoading }) {
   const { t } = useI18n();
 
   return (
-    <section className="hestia-home-reading-panel" aria-labelledby="home-perception-title">
+    <section
+      className="hestia-home-reading-panel hestia-home-panel-insight"
+      aria-labelledby="home-perception-title"
+    >
       <span className="hestia-home-eyebrow">{t("home.perceptionEyebrow")}</span>
       <h2 id="home-perception-title" className="hestia-title h4 mb-2">
         {insight?.title || t("home.perceptionTitle")}
@@ -541,7 +555,10 @@ function HomeSpendingCategories({ categories, isLoading }) {
   const { formatCurrencyFromCents, t } = useI18n();
 
   return (
-    <section className="hestia-home-reading-panel" aria-labelledby="home-spending-title">
+    <section
+      className="hestia-home-reading-panel hestia-home-panel-expense"
+      aria-labelledby="home-spending-title"
+    >
       <span className="hestia-home-eyebrow">{t("home.spendingEyebrow")}</span>
       <h2 id="home-spending-title" className="hestia-title h4 mb-2">
         {t("home.spendingTitle")}
@@ -867,7 +884,7 @@ export default function Home() {
   const visibleWidgetCount = Object.values(widgets).filter(Boolean).length;
 
   return (
-    <section className="hestia-section-space">
+    <section className="hestia-section-space hestia-home-page">
       {widgets.summary ? (
         <HomeFinancialHero
           accountFilter={accountFilter}
@@ -928,16 +945,19 @@ export default function Home() {
                 title={t("navbar.analyses")}
                 description={t("home.shortcutAnalysesDescription")}
                 to="/analises"
+                tone="insight"
               />
               <ShortcutTile
                 title={t("navbar.transactions")}
                 description={t("home.shortcutTransactionsDescription")}
                 to="/transacoes"
+                tone="activity"
               />
               <ShortcutTile
                 title={t("navbar.accounts")}
                 description={t("home.shortcutAccountsDescription")}
                 to="/contas"
+                tone="account"
               />
             </div>
           </HomeWidgetCard>
@@ -957,7 +977,7 @@ export default function Home() {
           ) : null}
 
           {widgets.comparisons ? (
-            <div className="col-12 col-xxl-6">
+            <div className="col-12">
               <HomeWidgetCard
                 title={t("home.comparisonTitle")}
                 description={t("home.comparisonDescription")}
@@ -973,6 +993,7 @@ export default function Home() {
                         previousValue={comparison.previous.income}
                         currentRangeLabel={comparison.currentRangeLabel}
                         previousRangeLabel={comparison.previousRangeLabel}
+                        tone="income"
                       />
                       <ComparisonCard
                         label={t("transactions.expensePlural")}
@@ -980,6 +1001,7 @@ export default function Home() {
                         previousValue={comparison.previous.expense}
                         currentRangeLabel={comparison.currentRangeLabel}
                         previousRangeLabel={comparison.previousRangeLabel}
+                        tone="expense"
                       />
                       <ComparisonCard
                         label={t("publicDashboard.balanceLabel")}
@@ -987,6 +1009,7 @@ export default function Home() {
                         previousValue={comparison.previous.balance}
                         currentRangeLabel={comparison.currentRangeLabel}
                         previousRangeLabel={comparison.previousRangeLabel}
+                        tone="overview"
                       />
                     </div>
 

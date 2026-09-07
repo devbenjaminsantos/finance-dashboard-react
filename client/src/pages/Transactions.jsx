@@ -551,7 +551,7 @@ export default function Transactions() {
   }
 
   return (
-    <section className="hestia-section-space">
+    <section className="hestia-section-space hestia-area hestia-area-activity">
       <PageHeader
         title={t("pages.transactionsTitle")}
         subtitle={t("pages.transactionsSubtitle")}

@@ -132,7 +132,7 @@ antes da troca global de Finova para Héstia.
 - [x] Criar tokens dark naturais e equivalentes.
 - [x] Remover gradientes, glows e sombras decorativas da fundação.
 - [x] Definir spacing, bordas, raios de até 8 px e elevação discreta.
-- [ ] Definir foco visível e contraste acessível para todos os controles.
+- [x] Definir foco visível e contraste acessível para todos os controles.
 - [x] Respeitar `prefers-reduced-motion`.
 - [x] Manter letter spacing em `0`.
 - [x] Garantir que a aparência validada seja reproduzível apenas a partir dos
@@ -153,7 +153,25 @@ antes da troca global de Finova para Héstia.
   timeouts funcionais e uma expectativa antiga `finova-transacoes` divergindo do
   nome atual `hestia-transacoes`;
 - a auditoria de foco e contraste em todos os tipos de controle e em todas as
-  rotas permanece pendente antes de encerrar a etapa.
+  rotas permaneceu pendente antes de encerrar a etapa.
+
+**Evidência de conclusão do foco acessível (2026-09-04):**
+
+- links, botões, campos, selects, textareas, `summary` e controles com
+  `tabindex` receberam uma regra única de `:focus-visible`, sem aplicar o mesmo
+  destaque visual ao clique do mouse;
+- o contorno verde mediu `4.75:1` contra a superfície clara e `7.59:1` contra a
+  superfície escura; nas áreas de navegação verde-escuras, onde ele media apenas
+  `2.85:1`, o contorno passou a ser branco (`13.66:1`);
+- o seletor de idioma agora expõe o foco no contêiner completo e o modo de alto
+  contraste do sistema usa a cor semântica `Highlight`;
+- a inspeção em navegador confirmou o login desktop, a sidebar desktop e o menu
+  móvel, e os testes Playwright cobrem formulário público nos dois temas,
+  navegação lateral e seletor de idioma mobile;
+- `npm run lint`, `npm run build`, o teste de foco corrigido e três cenários
+  representativos do smoke Playwright passaram. A suíte unitária completa ficou
+  inconclusiva neste ambiente por timeouts de cinco segundos em testes antigos
+  de módulos não alterados nesta rodada.
 
 **Gate:** login, cadastro e uma página autenticada devem permanecer legíveis e
 operantes nos dois temas, em desktop e mobile.
@@ -524,6 +542,49 @@ correções de fluxo com novas funcionalidades.
     preservados conforme o contrato atual.
   - A necessidade foi identificada no teste manual de recuperação de senha com
     a Brevo, em 4 de setembro de 2026.
+- [ ] Refinar UI, diversificar cores e layout das páginas.
+  - [x] Criar uma paleta semântica dessaturada: azul para visão geral e
+        atividade, violeta para leitura analítica, âmbar para planejamento,
+        teal para contas, verde para receita/sucesso e terracota para
+        despesa/risco.
+  - [x] Aplicar a linguagem à Home como página-piloto, diferenciando métricas,
+        atalhos, leitura financeira, comparativos, planejamento e atividade.
+  - [x] Estender a paleta às demais rotas somente depois da validação da Home,
+        preservando significado consistente em vez de alternar cores apenas
+        por decoração.
+- [ ] Polir UX, organização, hierarquia e apresentação de conteúdo.
+
+**Evidência do piloto de diversidade visual (2026-09-04):**
+
+- as novas combinações de texto e superfície medem entre `5.28:1` e `7.61:1`;
+- o verde ficou reservado à marca, ação principal e estados positivos, sem ser
+  usado como cor padrão de todos os blocos;
+- a grade desktop passou a distribuir os três atalhos por toda a linha e o
+  comparativo deixou de ocupar apenas metade da área sem um bloco vizinho;
+- a inspeção em navegador confirmou a Home em desktop claro e mobile escuro,
+  sem perda de leitura, overflow ou saturação excessiva;
+- os oito testes unitários da Home e os dois smokes Playwright afetados
+  passaram; os screenshots de inspeção permaneceram temporários e não foram
+  versionados.
+
+**Evidência da extensão da paleta (2026-09-04):**
+
+- transações e histórico usam azul de atividade; análises, violeta; planejamento,
+  âmbar; contas e perfil, teal; o dashboard público usa azul de visão geral;
+- login, cadastro, recuperação, redefinição e verificação de e-mail receberam a
+  mesma identidade semântica, sem alterar o funcionamento dos formulários;
+- a navegação lateral e mobile agora preserva a cor da área ativa, e o título de
+  `Planejamento` foi incluído no topo autenticado;
+- as bases do tema escuro passaram de oliva para grafite neutro, reservando verde
+  para marca, ação principal e estados positivos;
+- a inspeção em navegador cobriu todas as rotas públicas e autenticadas em tema
+  claro, além de desktop e mobile no tema escuro, sem overflow ou perda de
+  legibilidade; os testes Playwright específicos de identidade por rota e menu
+  mobile passaram;
+- dez dos onze testes unitários selecionados das páginas afetadas passaram. O
+  teste preexistente de cadastro que espera redirecionamento para recuperação de
+  senha continua falhando também isoladamente; `Register.jsx` recebeu apenas uma
+  classe visual neste incremento.
 
 ## Etapa 7 - camada Héstia e agentes
 

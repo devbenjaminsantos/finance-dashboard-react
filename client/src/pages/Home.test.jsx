@@ -99,7 +99,14 @@ describe("Home page", () => {
 
     const historyMatches = await screen.findAllByText("Histórico recente");
     expect(historyMatches.length).toBeGreaterThan(0);
-    expect(screen.getByRole("heading", { name: "Seu dinheiro, em perspectiva" })).toBeInTheDocument();
+    const hero = screen.getByRole("region", { name: "Seu dinheiro, em perspectiva" });
+    expect(hero).toHaveClass("hestia-home-tone-overview");
+    expect(screen.getByRole("region", { name: "Maiores gastos do período" })).toHaveClass(
+      "hestia-home-panel-expense"
+    );
+    expect(document.querySelector(".hestia-home-panel-insight")).toBeInTheDocument();
+    expect(document.querySelector(".hestia-home-panel-planning")).toBeInTheDocument();
+    expect(document.querySelector(".hestia-home-panel-activity")).toBeInTheDocument();
     expect(screen.getByText("Saldo global em todas as contas")).toBeInTheDocument();
   });
 

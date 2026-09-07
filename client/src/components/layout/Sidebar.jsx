@@ -5,8 +5,8 @@ import BrandMark from "../BrandMark";
 import ShellPreferences from "./ShellPreferences";
 import { PRIMARY_NAV_ITEMS, SECONDARY_NAV_ITEMS } from "./navigationItems";
 
-function getNavClass({ isActive }) {
-  return `app-nav-link${isActive ? " app-nav-link-active" : ""}`;
+function getNavClass({ isActive }, tone = "overview") {
+  return `app-nav-link app-nav-link-${tone}${isActive ? " app-nav-link-active" : ""}`;
 }
 
 function SidebarNavItem({ item }) {
@@ -14,7 +14,7 @@ function SidebarNavItem({ item }) {
   const Icon = item.icon;
 
   return (
-    <NavLink to={item.to} end={item.end} className={getNavClass}>
+    <NavLink to={item.to} end={item.end} className={(state) => getNavClass(state, item.tone)}>
       <Icon size={19} strokeWidth={1.8} aria-hidden="true" />
       <span>{t(item.labelKey)}</span>
     </NavLink>
@@ -41,7 +41,7 @@ export default function Sidebar({ user, onLogout }) {
           <SidebarNavItem key={item.to} item={item} />
         ))}
 
-        <NavLink to="/perfil" className={getNavClass}>
+        <NavLink to="/perfil" className={(state) => getNavClass(state, "account")}>
           <UserRound size={19} strokeWidth={1.8} aria-hidden="true" />
           <span>{t("navbar.profile")}</span>
         </NavLink>

@@ -181,7 +181,7 @@ export default function Analyses() {
         : "hestia-badge-neutral";
 
   return (
-    <section className="hestia-section-space">
+    <section className="hestia-section-space hestia-area hestia-area-insight">
       <PageHeader
         title={t("pages.analysesTitle")}
         subtitle={t("pages.analysesSubtitle")}
@@ -351,7 +351,7 @@ export default function Analyses() {
               <SummaryCard
                 label={t("publicDashboard.balanceLabel")}
                 value={formatCurrencyFromCents(summary.balance)}
-                tone="default"
+                tone="overview"
               />
             </div>
 
@@ -415,6 +415,7 @@ export default function Analyses() {
                 previousValue={comparison.previous.income}
                 currentRangeLabel={comparison.currentRangeLabel}
                 previousRangeLabel={comparison.previousRangeLabel}
+                tone="income"
               />
               <ComparisonCard
                 label={t("analyses.comparisonsExpenseLabel")}
@@ -422,6 +423,7 @@ export default function Analyses() {
                 previousValue={comparison.previous.expense}
                 currentRangeLabel={comparison.currentRangeLabel}
                 previousRangeLabel={comparison.previousRangeLabel}
+                tone="expense"
               />
               <ComparisonCard
                 label={t("analyses.comparisonsBalanceLabel")}
@@ -429,6 +431,7 @@ export default function Analyses() {
                 previousValue={comparison.previous.balance}
                 currentRangeLabel={comparison.currentRangeLabel}
                 previousRangeLabel={comparison.previousRangeLabel}
+                tone="overview"
               />
             </div>
 

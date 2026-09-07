@@ -64,7 +64,7 @@ export default function Register() {
   }
 
   return (
-    <div className="hestia-page hestia-auth-layout d-flex align-items-center justify-content-center px-3 py-4">
+    <div className="hestia-page hestia-auth-layout hestia-area hestia-area-account d-flex align-items-center justify-content-center px-3 py-4">
       <div className="hestia-auth-shell hestia-auth-shell-sm">
         <div className="text-center mb-4 hestia-auth-hero">
           <BrandMark className="mb-2" size="hero" centered />

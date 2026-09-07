@@ -34,7 +34,7 @@ export default function Planning() {
   const hasCommitments = installmentGroups.length > 0 || visibleRecurringRules.length > 0;
 
   return (
-    <section className="hestia-page-container">
+    <section className="hestia-page-container hestia-area hestia-area-planning">
       <PageHeader
         title={t("pages.planningTitle")}
         subtitle={t("pages.planningSubtitle")}

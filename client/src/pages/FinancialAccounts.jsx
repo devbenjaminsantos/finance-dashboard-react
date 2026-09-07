@@ -323,7 +323,7 @@ export default function FinancialAccounts() {
   }
 
   return (
-    <section className="hestia-section-space">
+    <section className="hestia-section-space hestia-area hestia-area-account">
       <PageHeader title={t("pages.accountsTitle")} subtitle={t("pages.accountsSubtitle")} />
 
       <div className="d-grid gap-4">
@@ -332,11 +332,11 @@ export default function FinancialAccounts() {
         </div>
 
         <div className="hestia-account-metrics">
-          <Metric label={t("accounts.summaryRegistered")} value={summary.total} />
+          <Metric label={t("accounts.summaryRegistered")} value={summary.total} tone="account" />
           <Metric label={t("accounts.summaryConnected")} value={summary.connected} tone="income" />
           <Metric label={t("accounts.summaryPending")} value={summary.pending} tone="warning" />
           <Metric label={t("accounts.summarySynced")} value={summary.synced} tone="primary" />
-          <Metric label={t("accounts.summaryCreditCards")} value={summary.creditCards} />
+          <Metric label={t("accounts.summaryCreditCards")} value={summary.creditCards} tone="overview" />
         </div>
 
         <div className="row g-4">

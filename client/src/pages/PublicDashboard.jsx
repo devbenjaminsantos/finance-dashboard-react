@@ -78,7 +78,7 @@ export default function PublicDashboard() {
   const summary = useMemo(() => summarizeTransactions(filteredTransactions), [filteredTransactions]);
 
   return (
-    <section className="hestia-section-space">
+    <section className="hestia-section-space hestia-area hestia-area-overview">
       <PageHeader
         title={t("publicDashboard.title")}
         subtitle={
@@ -171,7 +171,7 @@ export default function PublicDashboard() {
             <SummaryCard
               label={t("publicDashboard.balanceLabel")}
               value={formatCurrencyFromCents(summary.balance)}
-              tone="default"
+              tone="overview"
             />
           </div>
 

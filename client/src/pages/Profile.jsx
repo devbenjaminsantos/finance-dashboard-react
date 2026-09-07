@@ -256,7 +256,7 @@ export default function Profile() {
   }
 
   return (
-    <section className="hestia-section-space">
+    <section className="hestia-section-space hestia-area hestia-area-account">
       <PageHeader title={t("profile.title")} subtitle={t("profile.subtitle")} />
 
       <div className="hestia-page-note">

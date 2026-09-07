@@ -47,8 +47,8 @@ não deve ser usada pela API durante a operação normal.
    não há secrets no worktree.
 2. Publicar o commit somente depois da revisão humana.
 3. Confirmar o deploy correspondente na Vercel e na Railway.
-4. Verificar `GET /health` na API pública e os logs de startup, sem copiar
-   credenciais.
+4. Verificar `GET /health` (processo) e `GET /health/ready` (banco e migrations)
+   na API pública e os logs de startup, sem copiar credenciais.
 5. Executar um smoke do frontend: sessão, CSRF e uma rota autenticada.
 
 ## Deploy com migration
@@ -59,10 +59,42 @@ não deve ser usada pela API durante a operação normal.
    um deploy controlado.
 4. Confirmar no log que migrations pendentes foram aplicadas com sucesso.
 5. Voltar `Database__ApplyMigrationsOnStartup=false` e fazer o deploy normal.
-6. Verificar `GET /health`, login, uma leitura autenticada e a tabela/fluxo
-   afetado.
+6. Exigir `200` em `GET /health/ready` e verificar login, uma leitura autenticada
+   e a tabela/fluxo afetado.
 
 Não conceda DDL à conexão de runtime para contornar um bloqueio de migration.
+
+## Liveness e readiness
+
+| Rota | O que verifica | Resposta |
+| --- | --- | --- |
+| `GET /health` ou `/health/live` | Processo HTTP, sem consultar banco ou sessão | `200`, `{"status":"ok"}` |
+| `GET /health/ready` | Acesso ao banco de runtime e presença de todas as migrations desta API | `200`, `{"status":"ready"}` ou `503`, `{"status":"not_ready"}` |
+
+As respostas não são cacheadas nem expõem conexão, nomes de migrations ou
+exceções. O readiness recebe cancelamento após 5 segundos e respeita o rate
+limit global (excesso pode retornar `429`); somente liveness fica isento.
+As rotas de saúde não validam JWT/cookies, pois essa validação acessa o banco.
+
+Usar liveness para verificar o processo e readiness no smoke e na aprovação do
+deploy. Não reiniciar o processo apenas porque o banco está temporariamente
+indisponível. A configuração externa do healthcheck Railway não foi alterada.
+Evitar polling contínuo de readiness em ambientes que precisam suspender o
+banco por inatividade: a checagem abre conexão com o banco.
+
+A role de runtime precisa poder ler `__EFMigrationsHistory`, além das permissões
+normais da aplicação. Não precisa de DDL. A checagem não aplica migrations nem
+confere drift manual de tabelas/colunas, permissões de escrita, Brevo ou Pluggy;
+esses pontos continuam dependendo dos smokes específicos. Migrations adicionais
+no banco são aceitas para permitir rollback da API, mas não provam compatibilidade
+com alterações destrutivas. O histórico esperado é o PostgreSQL versionado;
+a configuração local legada SQL Server não é critério de prontidão da produção.
+
+Validação pendente em PostgreSQL/Docker e produção: banco atualizado retorna
+`200`; banco vazio ou sem a migration mais recente retorna `503`; banco desligado
+retorna `503` no readiness enquanto liveness continua `200`. Repetir com cookie
+de sessão para confirmar a independência da autenticação. Não remover migrations
+nem desligar o banco de produção para esse teste: usar uma instância descartável.
 
 ## Deploy do histórico de senhas
 
@@ -97,6 +129,25 @@ Após alterar e-mail, validar:
 
 O domínio próprio ainda exige SPF, DKIM, DMARC e webhook assinado. A ordem e
 os itens pendentes estão no [roadmap de e-mail](EMAIL_DELIVERY_ROADMAP.md).
+
+## Espera do frontend e cold start
+
+O cliente HTTP usa prazo total de 30 segundos por operação, contando obtenção
+de CSRF, eventual renovação de CSRF, retry e leitura do corpo. Leituras repetem
+uma vez após falha de rede ou HTTP `502/503/504`, aguardando 1 segundo dentro
+desse prazo. `429` não é repetido automaticamente.
+
+Gravações não repetem automaticamente após timeout, falha de rede ou `5xx`.
+A exceção de retry existente é `INVALID_CSRF_TOKEN`: a API rejeitou a operação
+antes de executar o controller, então o cliente renova o token uma única vez.
+Quando uma gravação perde sua resposta, a interface pede conferir o resultado
+antes de tentar novamente. Cancelar a espera no navegador não garante rollback
+no servidor. A sessão local permanece preservada em timeout/falha de rede.
+
+Smoke pendente em produção: testar uma leitura após inatividade, confirmar o
+estado de espera, o encerramento após timeout e uma gravação com resposta
+interrompida. Conferir os dados antes de reenviar; medir API e banco quentes e
+adormecidos antes de ajustar o prazo. Não registrar payloads nem tokens.
 
 ## Alertas conhecidos
 

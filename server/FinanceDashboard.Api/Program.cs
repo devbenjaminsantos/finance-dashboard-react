@@ -2,6 +2,7 @@ using FinanceDashboard.Api.Data;
 using FinanceDashboard.Api.Models;
 using FinanceDashboard.Api.Configuration;
 using FinanceDashboard.Api.Services.Audit;
+using FinanceDashboard.Api.Services.Health;
 using FinanceDashboard.Api.Services.Auth;
 using FinanceDashboard.Api.Services.BankSync;
 using FinanceDashboard.Api.Services.BankSync.Pluggy;
@@ -36,6 +37,7 @@ builder.Configuration.AddJsonFile(
     reloadOnChange: true);
 
 builder.Services.AddHestiaDatabase(builder.Configuration);
+builder.Services.AddHestiaHealthChecks();
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
@@ -111,6 +113,12 @@ builder.Services.AddAuthentication(options =>
     {
         OnMessageReceived = context =>
         {
+            if (HealthEndpoints.IsHealthEndpoint(context.HttpContext))
+            {
+                context.NoResult();
+                return Task.CompletedTask;
+            }
+
             if (string.IsNullOrWhiteSpace(context.Token) &&
                 AuthCookieService.TryRead(context.Request.Cookies, out var cookieToken))
             {
@@ -204,7 +212,7 @@ builder.Services.AddRateLimiter(options =>
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
     {
         if (HttpMethods.IsOptions(httpContext.Request.Method) ||
-            httpContext.Request.Path.StartsWithSegments("/health"))
+            HealthEndpoints.IsLivenessPath(httpContext.Request.Path))
         {
             return RateLimitPartition.GetNoLimiter("system");
         }
@@ -332,7 +340,7 @@ app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
+app.MapHestiaHealthChecks();
 app.MapControllers();
 
 app.Run();

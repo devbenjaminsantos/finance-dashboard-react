@@ -7,6 +7,9 @@ import i18n from "../../i18n/i18n";
 
 const API_URL = resolveApiUrl();
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+const REQUEST_TIMEOUT_MS = 30_000;
+const READ_RETRY_DELAY_MS = 1_000;
+const TRANSIENT_STATUSES = new Set([502, 503, 504]);
 let csrfToken = null;
 
 const ERROR_CODE_TRANSLATIONS = {
@@ -39,16 +42,45 @@ export class ApiError extends Error {
 }
 
 export async function apiRequest(path, options = {}) {
-  return sendApiRequest(path, options, true);
+  const controller = new AbortController();
+  const state = { mutationStarted: false };
+  const cancel = () => controller.abort(options.signal.reason);
+  let timedOut = false;
+  if (options.signal?.aborted) cancel();
+  else options.signal?.addEventListener("abort", cancel, { once: true });
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, REQUEST_TIMEOUT_MS);
+
+  try {
+    return await sendApiRequest(path, { ...options, signal: controller.signal }, true, state);
+  } catch (error) {
+    if (controller.signal.aborted) {
+      const code = timedOut ? "REQUEST_TIMEOUT" : "REQUEST_ABORTED";
+      const key = state.mutationStarted ? "requestOutcomeUnknown"
+        : timedOut ? "requestTimeout" : "requestAborted";
+      throw new ApiError(i18n.t(`common:${key}`), 0, code);
+    }
+    if (error instanceof TypeError) {
+      throw new ApiError(i18n.t(state.mutationStarted
+        ? "common:requestOutcomeUnknown" : "common:networkError"), 0);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
+    options.signal?.removeEventListener("abort", cancel);
+  }
 }
 
-async function sendApiRequest(path, options, canRetryCsrf) {
+async function sendApiRequest(path, options, canRetryCsrf, state) {
+  options.signal.throwIfAborted();
   const method = (options.method || "GET").toUpperCase();
   const hadSession = localStorage.getItem("user") !== null;
   const hasBody = options.body != null;
   const requestCsrfToken = SAFE_METHODS.has(method)
     ? null
-    : await getCsrfToken();
+    : await getCsrfToken(options.signal);
 
   const headers = {
     ...(hasBody && { "Content-Type": "application/json" }),
@@ -56,17 +88,13 @@ async function sendApiRequest(path, options, canRetryCsrf) {
     ...(requestCsrfToken && { "X-CSRF-TOKEN": requestCsrfToken }),
   };
 
-  let response;
-
-  try {
-    response = await fetch(`${API_URL}${path}`, {
-      ...options,
-      headers,
-      credentials: "include",
-    });
-  } catch {
-    throw new ApiError(i18n.t("common:networkError"), 0);
-  }
+  options.signal.throwIfAborted();
+  if (!SAFE_METHODS.has(method)) state.mutationStarted = true;
+  const response = await fetchWithReadRetry(`${API_URL}${path}`, {
+    ...options,
+    headers,
+    credentials: "include",
+  });
 
   if (response.status === 401 && hadSession) {
     rememberPostLoginRedirect(window.location.pathname);
@@ -89,17 +117,20 @@ async function sendApiRequest(path, options, canRetryCsrf) {
         errorPayload = await response.json();
       }
     } catch {
+      options.signal.throwIfAborted();
       // A interface usa uma mensagem localizada mesmo se a resposta for inválida.
     }
 
     const code = typeof errorPayload?.code === "string" ? errorPayload.code : null;
 
     if (code === "INVALID_CSRF_TOKEN" && canRetryCsrf && !SAFE_METHODS.has(method)) {
+      state.mutationStarted = false;
       resetCsrfToken();
-      return sendApiRequest(path, options, false);
+      return sendApiRequest(path, options, false, state);
     }
 
-    const translationKey = ERROR_CODE_TRANSLATIONS[code] ||
+    const translationKey = (!SAFE_METHODS.has(method) && response.status >= 500
+      ? "common:requestOutcomeUnknown" : null) || ERROR_CODE_TRANSLATIONS[code] ||
       STATUS_TRANSLATIONS[response.status] ||
       "common:requestFailed";
 
@@ -120,20 +151,15 @@ export function resetCsrfToken() {
   csrfToken = null;
 }
 
-async function getCsrfToken() {
+async function getCsrfToken(signal) {
   if (csrfToken) {
     return csrfToken;
   }
 
-  let response;
-
-  try {
-    response = await fetch(`${API_URL}/auth/csrf-token`, {
-      credentials: "include",
-    });
-  } catch {
-    throw new ApiError(i18n.t("common:networkError"), 0);
-  }
+  const response = await fetchWithReadRetry(`${API_URL}/auth/csrf-token`, {
+    credentials: "include",
+    signal,
+  });
 
   if (!response.ok) {
     throw new ApiError(i18n.t("common:requestFailed"), response.status);
@@ -147,6 +173,38 @@ async function getCsrfToken() {
 
   csrfToken = data.token;
   return csrfToken;
+}
+
+// Only safe HTTP methods retry, once, within the original request deadline.
+async function fetchWithReadRetry(url, options) {
+  const canRetry = SAFE_METHODS.has((options.method || "GET").toUpperCase());
+  for (let attempt = 0; ; attempt += 1) {
+    options.signal.throwIfAborted();
+    try {
+      const response = await fetch(url, options);
+      if (!canRetry || attempt > 0 || !TRANSIENT_STATUSES.has(response.status)) return response;
+      await response.body?.cancel();
+    } catch (error) {
+      options.signal.throwIfAborted();
+      if (!canRetry || attempt > 0 || !(error instanceof TypeError)) throw error;
+    }
+    await waitForReadRetry(options.signal);
+  }
+}
+
+function waitForReadRetry(signal) {
+  return new Promise((resolve, reject) => {
+    signal.throwIfAborted();
+    const cancel = () => {
+      clearTimeout(timer);
+      reject(signal.reason);
+    };
+    const timer = setTimeout(() => {
+      signal.removeEventListener("abort", cancel);
+      resolve();
+    }, READ_RETRY_DELAY_MS);
+    signal.addEventListener("abort", cancel, { once: true });
+  });
 }
 
 function resolveApiUrl() {

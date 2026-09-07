@@ -42,8 +42,13 @@ adequados e validação no ambiente correspondente.
   enviado diretamente por um cliente.
 - [ ] Verificar cookies, CSRF, logout, expiração e revogação no domínio
   definitivo, depois do cutover de DNS.
-- [ ] Adicionar timeout, estado de espera e retry seguro no frontend para cold
-  start, sem repetir automaticamente operações mutáveis.
+- [x] Limitar chamadas do frontend a 30 segundos, incluindo CSRF e corpo da
+  resposta; repetir leituras uma única vez após falha de rede ou `502/503/504`.
+  Gravações não são repetidas por essas falhas; a renovação de CSRF continua
+  somente após `INVALID_CSRF_TOKEN` explícito. Resultado incerto tem mensagem
+  própria em PT-BR/EN; timeout não apaga a sessão.
+- [ ] Validar os estados de espera e medir o cold start real de Railway/Neon
+  em produção; ajustar o prazo com base nas medições.
 
 ## E-mail e privacidade
 
@@ -62,9 +67,11 @@ adequados e validação no ambiente correspondente.
 
 - [ ] Validar os locks transacionais PostgreSQL de conta demo e notificações
   com duas instâncias concorrentes contra o Neon.
-- [ ] Separar liveness de readiness para que saúde da API, acesso ao Neon e
-  schema esperado possam ser observados sem tratar um `200` isolado como prova
-  de disponibilidade completa.
+- [x] Separar liveness (`/health`, `/health/live`) de readiness (`/health/ready`),
+  com consulta ao banco e histórico de migrations, prazo de 5 segundos, resposta
+  genérica e sem cache. Readiness mantém rate limit e não valida sessão.
+- [ ] Validar readiness contra PostgreSQL real e no deploy; histórico de migrations
+  não substitui verificação de drift manual de schema nem smoke funcional.
 - [ ] Definir monitoramento, backup e restauração para Vercel, Railway e Neon.
 - [ ] Manter notificações financeiras desativadas até adotar worker/cron com
   outbox, coordenação idempotente e retenção definida.

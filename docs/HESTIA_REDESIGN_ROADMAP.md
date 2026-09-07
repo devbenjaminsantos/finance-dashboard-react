@@ -650,13 +650,41 @@ o redesign pronto para produção.
 
 ### P1 - saúde e cold start
 
-- [ ] Separar liveness e readiness, mantendo um endpoint simples para processo e
-      outro que confirme acesso ao Neon e schema esperado.
-- [ ] Não tratar `/health=200` como prova isolada de que banco e migrations estão
-      operacionais.
+- [x] Separar liveness (`/health`, `/health/live`) de readiness (`/health/ready`),
+      verificando conexão de runtime e migrations aplicadas, com cancelamento
+      após 5 segundos, resposta genérica e sem cache. Apenas liveness fica fora
+      do rate limit; ambas as verificações independem de JWT/cookies.
+- [ ] Validar em PostgreSQL real os cenários atualizado, migration pendente e
+      indisponível, além do smoke em produção.
+- [x] Documentar `/health=200` como liveness; o smoke de banco/migrations exige
+      também `/health/ready=200`, sem substituir os testes funcionais.
 - [ ] Medir frontend, API e Neon nos estados quente, API adormecida e API+banco
       adormecidos.
-- [ ] Implementar loading e retry limitado sem duplicar operações mutáveis.
+- [x] Implementar timeout total de 30 segundos no cliente HTTP e retry único
+      de leituras após falha de rede ou `502/503/504`, com intervalo de 1 segundo.
+      CSRF, retry e corpo da resposta compartilham o mesmo prazo. Timeout,
+      cancelamento e resultado incerto possuem mensagens PT-BR/EN; os formulários
+      existentes encerram loading ao receber o erro. Gravações não são repetidas
+      por falhas de rede; a exceção existente é a rejeição explícita de CSRF.
+- [ ] Validar essa experiência com cold start real em produção.
+
+**Validação local de liveness/readiness (2026-09-07):** build e suíte completa
+da API passaram com 132 testes. Nove casos de saúde cobrem HTTP real em Kestrel,
+liveness sem consulta ao probe, readiness disponível/indisponível, timeout,
+resposta sem detalhes de exceção, ausência de cache e metadados usados pela
+exceção de autenticação. O probe de banco foi substituído nos testes HTTP;
+PostgreSQL real continua pendente porque o Docker local está desligado.
+Nenhuma migration, configuração externa ou deploy foi executado.
+
+**Validação local do timeout (2026-09-07):** 40 testes focados de HTTP,
+autenticação e traduções passaram; o teste de integração do formulário de
+redefinição também passou isoladamente (1 teste). Ele confirma loading, mensagem
+de resultado incerto, preservação dos campos e ausência de reenvio automático.
+A primeira execução desse teste excedeu 5 segundos enquanto lint/build rodavam;
+a repetição isolada passou em 1,21 segundo, sem alterar seu limite. Lint, build
+de produção e `git diff --check` passaram. Cold start e smoke reais não foram
+executados neste incremento.
+
 - [ ] Persistir ou substituir a estratégia de Data Protection antes de usar mais
       de uma réplica; validar antiforgery durante redeploys.
 - [ ] Manter a automação periódica desabilitada no serviço web para permitir
@@ -815,5 +843,7 @@ CSS não comprovam o estado atual.
 
 Aplicar a migration `AddPasswordHistory` antes de publicar a API atualizada e
 validar manualmente a rejeição de senha atual e histórica, seguida de nova
-tentativa com o mesmo token e uma senha inédita. Depois, investigar a falha
-conhecida de `Register.test.jsx` em um incremento separado.
+tentativa com o mesmo token e uma senha inédita. Em segurança/confiabilidade,
+validar timeout/cold start e liveness/readiness no ambiente real. O próximo
+incremento de implementação é revisar proxies confiáveis e proteção do IP de
+auditoria/rate limit. O teste de cadastro continua na fila de polimentos.

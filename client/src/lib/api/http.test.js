@@ -72,9 +72,10 @@ describe("apiRequest errors", () => {
 
     await apiRequest("/auth/logout", { method: "POST" });
 
-    expect(fetchMock).toHaveBeenNthCalledWith(1, expect.stringContaining("/auth/csrf-token"), {
+    expect(fetchMock).toHaveBeenNthCalledWith(1, expect.stringContaining("/auth/csrf-token"), expect.objectContaining({
       credentials: "include",
-    });
+      signal: expect.any(AbortSignal),
+    }));
     expect(fetchMock).toHaveBeenNthCalledWith(
       2,
       expect.stringContaining("/auth/logout"),

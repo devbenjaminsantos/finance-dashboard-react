@@ -105,8 +105,10 @@ deve usar “enviado” quando a API só conhece um estado pendente.
   auditoria, sem guardar o token bruto nem o conteúdo completo do e-mail.
 - [x] Ajustar cadastro, reenvio e recuperação para respostas honestas quando o
   serviço estiver desligado ou pendente.
-- [ ] Adicionar timeout também às chamadas de autenticação do frontend e manter
-  loading/retry adequados ao cold boot da Railway.
+- [x] Adicionar timeout total de 30 segundos às chamadas de autenticação,
+  incluindo CSRF e leitura do corpo. Preservar loading e liberar o formulário
+  com mensagem de resultado incerto quando uma gravação perder a resposta.
+- [ ] Medir e validar esses estados com cold boot real da Railway.
 - [x] Manter `Notifications__Enabled=false`; alertas financeiros e resumo
   mensal continuam fora da primeira ativação.
 

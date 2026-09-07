@@ -39,6 +39,22 @@ describe("apiRequest errors", () => {
     });
   });
 
+  it.each([
+    ["pt-BR", "Escolha uma senha que você ainda não utilizou nesta conta."],
+    ["en-US", "Choose a password you have not used for this account before."],
+  ])("localizes password reuse in %s", async (language, message) => {
+    await i18n.changeLanguage(language);
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ token: "csrf" }) })
+      .mockResolvedValueOnce({
+        ok: false, status: 400,
+        headers: { get: () => "application/problem+json" },
+        json: async () => ({ code: "PASSWORD_REUSED" }),
+      }));
+    await expect(apiRequest("/auth/reset-password", { method: "POST" }))
+      .rejects.toMatchObject({ code: "PASSWORD_REUSED", message });
+  });
+
   it("uses credentialed cookies and antiforgery without an Authorization header", async () => {
     localStorage.setItem("token", "legacy-jwt");
     const fetchMock = vi.fn()

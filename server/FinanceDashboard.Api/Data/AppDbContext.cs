@@ -11,6 +11,7 @@ namespace FinanceDashboard.Api.Data
 
         }
 
+        public DbSet<PasswordHistory> PasswordHistory { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<FinancialAccount> FinancialAccounts { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
@@ -48,7 +49,8 @@ namespace FinanceDashboard.Api.Data
                     .HasMaxLength(256);
 
                 entity.Property(user => user.PasswordHash)
-                    .HasMaxLength(512);
+                    .HasMaxLength(512)
+                    .IsConcurrencyToken();
 
                 entity.Property(user => user.SessionVersion)
                     .HasDefaultValue(1);
@@ -84,6 +86,13 @@ namespace FinanceDashboard.Api.Data
                         $"{Column("MonthlyReportDay")} >= 1 AND " +
                         $"{Column("MonthlyReportDay")} <= 28");
                 });
+            });
+
+            modelBuilder.Entity<PasswordHistory>(entity =>
+            {
+                entity.Property(entry => entry.PasswordHash).HasMaxLength(512);
+                entity.HasOne(entry => entry.User).WithMany()
+                    .HasForeignKey(entry => entry.UserId).OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<Transaction>(entity =>

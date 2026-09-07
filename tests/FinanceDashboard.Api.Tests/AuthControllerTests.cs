@@ -985,6 +985,45 @@ public class AuthControllerTests
         Assert.NotNull(ok.Value);
     }
 
+    [Theory]
+    [InlineData("SenhaSegura123!")]
+    [InlineData("SenhaAnterior123!")]
+    public async Task ResetPassword_RejectsUsedPassword_AndAllowsRetry(string password)
+    {
+        using var context = CreateContext();
+        var controller = CreateController(context, configurationValues: new Dictionary<string, string?>
+        {
+            ["Client:BaseUrl"] = "https://hestia.example",
+            ["PasswordReset:ExposeResetUrlInResponse"] = "true"
+        });
+        var user = new User { Name = "User", Email = "history@hestia.local", EmailConfirmed = true };
+        user.PasswordHash = HashPassword("SenhaSegura123!", user);
+        context.Users.Add(user);
+        context.PasswordHistory.Add(new PasswordHistory
+        {
+            User = user, PasswordHash = HashPassword("SenhaAnterior123!", user)
+        });
+        await context.SaveChangesAsync();
+        var originalHash = user.PasswordHash;
+        var forgot = await controller.ForgotPassword(new ForgotPasswordRequest { Email = user.Email });
+        var payload = Assert.IsType<ForgotPasswordResponse>(Assert.IsType<OkObjectResult>(forgot.Result).Value);
+        var token = ExtractTokenFromUrl(payload.ResetUrl);
+        var result = await controller.ResetPassword(new ResetPasswordRequest { Token = token, NewPassword = password });
+        var problem = Assert.IsType<ProblemDetails>(Assert.IsType<BadRequestObjectResult>(result).Value);
+        Assert.Equal("PASSWORD_REUSED", problem.Extensions["code"]);
+        Assert.Equal(originalHash, user.PasswordHash);
+        Assert.Equal(1, user.SessionVersion);
+        Assert.Null((await context.PasswordResetTokens.SingleAsync()).UsedAtUtc);
+        Assert.DoesNotContain(context.AuditLogs, log => log.Action == "auth.password-reset-completed");
+        Assert.Single(context.PasswordHistory);
+        Assert.IsType<OkObjectResult>(await controller.ResetPassword(new ResetPasswordRequest
+        {
+            Token = token, NewPassword = "NovaSenha456!"
+        }));
+        Assert.Equal(2, await context.PasswordHistory.CountAsync());
+        Assert.Contains(context.PasswordHistory, entry => entry.PasswordHash == originalHash);
+    }
+
     [Fact]
     public async Task ResetPassword_ReturnsBadRequest_WhenPasswordIsTooWeak()
     {
@@ -1027,6 +1066,25 @@ public class AuthControllerTests
 
         Assert.Equal(StatusCodes.Status400BadRequest, badRequest.StatusCode);
         Assert.Equal(PasswordPolicyService.DefaultMessage, problem.Title);
+    }
+
+    [Fact]
+    public async Task PasswordChange_RejectsStaleConcurrentWrite()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+        var root = new InMemoryDatabaseRoot();
+        using var first = CreateContext(databaseName, root);
+        using var second = CreateContext(databaseName, root);
+        var user = new User { Name = "User", Email = "concurrent@hestia.local" };
+        user.PasswordHash = HashPassword("SenhaSegura123!", user);
+        first.Users.Add(user);
+        await first.SaveChangesAsync();
+        var staleUser = await second.Users.SingleAsync();
+        PasswordHistoryService.ArchiveCurrent(first, user);
+        user.PasswordHash = HashPassword("NovaSenha456!", user);
+        await first.SaveChangesAsync();
+        staleUser.PasswordHash = HashPassword("OutraSenha789!", staleUser);
+        await Assert.ThrowsAsync<DbUpdateConcurrencyException>(() => second.SaveChangesAsync());
     }
 
     private static AppDbContext CreateContext(

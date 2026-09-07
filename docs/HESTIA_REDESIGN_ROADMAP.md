@@ -531,17 +531,26 @@ Esta seção concentra ajustes descobertos na validação manual depois do redes
 Os itens serão adicionados e tratados em incrementos pequenos, sem misturar
 correções de fluxo com novas funcionalidades.
 
-- [ ] Impedir, na redefinição de senha, que o usuário volte a usar a senha que
-      já está ativa na conta.
-  - Comparar a senha proposta com o hash atual no backend antes de alterá-la;
-    nunca persistir senha em texto claro nem registrar valor, hash ou tentativa
-    em logs.
-  - Retornar erro acionável e neutro para o usuário, preservando o token de
-    redefinição para uma nova tentativa com outra senha.
-  - Cobrir: mesma senha rejeitada, nova senha aceita e token/código de auditoria
-    preservados conforme o contrato atual.
-  - A necessidade foi identificada no teste manual de recuperação de senha com
-    a Brevo, em 4 de setembro de 2026.
+- [x] Impedir reutilização da senha atual e das senhas registradas no histórico,
+      tanto na redefinição quanto na troca pelo perfil.
+  - Histórico somente com hashes, isolado por usuário e removido com a conta.
+  - Rejeição `PASSWORD_REUSED` com mensagem PT-BR/EN, sem consumir o token,
+    alterar a sessão ou registrar auditoria de sucesso.
+  - Alteração e arquivamento na mesma gravação transacional; concorrência
+    otimista pelo hash atual impede sobrescrita por uma alteração simultânea.
+  - Senhas sobrescritas antes desta implementação não podem ser recuperadas.
+  - [ ] Aplicar a migration `AddPasswordHistory` no deploy controlado e validar
+        recuperação e troca pelo perfil manualmente em produção.
+**Validação local do histórico de senhas (2026-09-07):** build da API, oito
+testes focados do cliente, lint e geração do SQL da migration passaram. A suíte
+completa da API teve 122 testes aprovados e uma falha em
+`Import_RejectsMoreThanMaximumItemsWithoutPersistingTransactions`
+(`ObjectResult.StatusCode` nulo, esperado `400`), em arquivos não alterados por
+este incremento. A execução focada de autenticação, perfil e modelo passou
+com 48 testes, incluindo rejeição, retry e concorrência.
+A migration ainda não foi executada em PostgreSQL: Docker local indisponível;
+produção e smoke manual permanecem pendentes.
+
 - [ ] Refinar UI, diversificar cores e layout das páginas.
   - [x] Criar uma paleta semântica dessaturada: azul para visão geral e
         atividade, violeta para leitura analítica, âmbar para planejamento,
@@ -783,8 +792,8 @@ CSS não comprovam o estado atual.
 2. [x] Encerrar a migração operacional para Vercel, Railway e Neon e remover
        pipelines Azure conflitantes.
 3. [x] Configurar e validar a Brevo com a URL estável da Vercel.
-4. [ ] Tratar a fila de **Correções e polimentos**, iniciando pela reutilização
-       de senha na redefinição.
+4. [ ] Tratar a fila de **Correções e polimentos**: validar o histórico de
+       senhas em produção e resolver as falhas conhecidas dos testes.
 5. [ ] Executar os hardenings P0/P1 restantes que não dependem do domínio:
        proxies Railway, timeout/retry seguro no frontend, readiness e locks
        concorrentes no Neon.
@@ -795,6 +804,7 @@ CSS não comprovam o estado atual.
 
 ## Próximo incremento
 
-Tratar o primeiro item de **Correções e polimentos**: impedir a reutilização da
-senha ativa durante a redefinição, com validação de backend e testes focados.
-O incremento deve preservar o token para uma nova tentativa com senha diferente.
+Aplicar a migration `AddPasswordHistory` antes de publicar a API atualizada e
+validar manualmente a rejeição de senha atual e histórica, seguida de nova
+tentativa com o mesmo token e uma senha inédita. Depois, investigar a falha
+conhecida de `Register.test.jsx` em um incremento separado.

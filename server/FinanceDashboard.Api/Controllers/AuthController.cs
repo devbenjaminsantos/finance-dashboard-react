@@ -504,11 +504,33 @@ namespace FinanceDashboard.Api.Controllers
                 });
             }
 
+            if (await PasswordHistoryService.WasUsedAsync(_context, _passwordHasher, resetToken.User, dto.NewPassword))
+            {
+                return BadRequest(new ProblemDetails
+                {
+                    Title = "Escolha uma senha que você ainda não utilizou nesta conta.",
+                    Status = StatusCodes.Status400BadRequest,
+                    Extensions = { ["code"] = "PASSWORD_REUSED" }
+                });
+            }
+
+            PasswordHistoryService.ArchiveCurrent(_context, resetToken.User);
             resetToken.User.PasswordHash = _passwordHasher.HashPassword(resetToken.User, dto.NewPassword);
             resetToken.User.SessionVersion += 1;
             resetToken.UsedAtUtc = now;
 
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return Conflict(new ProblemDetails
+                {
+                    Title = "A conta foi alterada. Atualize a página e tente novamente.",
+                    Status = StatusCodes.Status409Conflict
+                });
+            }
             await _auditLogService.WriteAsync(
                 action: "auth.password-reset-completed",
                 entityType: "User",

@@ -118,9 +118,38 @@ public class ProfileControllerTests
         var setCookie = controller.Response.Headers.SetCookie.ToString();
 
         Assert.Equal(2, refreshedUser.SessionVersion);
+        Assert.Single(context.PasswordHistory);
         Assert.Contains($"{AuthCookieService.CookieName}=", setCookie);
         Assert.Contains("httponly", setCookie, StringComparison.OrdinalIgnoreCase);
         Assert.Contains(context.AuditLogs, log => log.Action == "profile.updated-with-password");
+    }
+
+    [Theory]
+    [InlineData("SenhaSegura123!")]
+    [InlineData("SenhaAnterior123!")]
+    public async Task UpdatePassword_RejectsCurrentAndHistoricalPasswords(string password)
+    {
+        using var context = CreateContext();
+        var user = new User { Name = "User", Email = "history@hestia.local", EmailConfirmed = true };
+        user.PasswordHash = HashPassword("SenhaSegura123!", user);
+        context.Users.Add(user);
+        context.PasswordHistory.Add(new PasswordHistory
+        {
+            User = user, PasswordHash = HashPassword("SenhaAnterior123!", user)
+        });
+        await context.SaveChangesAsync();
+        var originalHash = user.PasswordHash;
+        var controller = CreateController(context, user.Id);
+        var result = await controller.Update(new ProfileUpdateRequest
+        {
+            Name = user.Name, CurrentPassword = "SenhaSegura123!", NewPassword = password
+        });
+        var problem = Assert.IsType<ProblemDetails>(Assert.IsType<BadRequestObjectResult>(result.Result).Value);
+        Assert.Equal("PASSWORD_REUSED", problem.Extensions["code"]);
+        Assert.Equal(originalHash, user.PasswordHash);
+        Assert.Equal(1, user.SessionVersion);
+        Assert.Single(context.PasswordHistory);
+        Assert.Empty(context.AuditLogs);
     }
 
     [Fact]

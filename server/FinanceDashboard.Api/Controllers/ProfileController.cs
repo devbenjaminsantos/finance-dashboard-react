@@ -318,6 +318,17 @@ namespace FinanceDashboard.Api.Controllers
                     });
                 }
 
+                if (await PasswordHistoryService.WasUsedAsync(_context, _passwordHasher, user, dto.NewPassword))
+                {
+                    return BadRequest(new ProblemDetails
+                    {
+                        Title = "Escolha uma senha que você ainda não utilizou nesta conta.",
+                        Status = StatusCodes.Status400BadRequest,
+                        Extensions = { ["code"] = "PASSWORD_REUSED" }
+                    });
+                }
+
+                PasswordHistoryService.ArchiveCurrent(_context, user);
                 user.PasswordHash = _passwordHasher.HashPassword(user, dto.NewPassword);
                 user.SessionVersion += 1;
                 changedPassword = true;
@@ -329,7 +340,18 @@ namespace FinanceDashboard.Api.Controllers
             user.MonthlyReportEmailsEnabled = dto.MonthlyReportEmailsEnabled;
             user.MonthlyReportDay = dto.MonthlyReportDay;
 
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return Conflict(new ProblemDetails
+                {
+                    Title = "A conta foi alterada. Atualize a página e tente novamente.",
+                    Status = StatusCodes.Status409Conflict
+                });
+            }
             await _auditLogService.WriteAsync(
                 action: changedPassword ? "profile.updated-with-password" : "profile.updated",
                 entityType: "User",

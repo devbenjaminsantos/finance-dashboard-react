@@ -64,6 +64,21 @@ não deve ser usada pela API durante a operação normal.
 
 Não conceda DDL à conexão de runtime para contornar um bloqueio de migration.
 
+## Deploy do histórico de senhas
+
+A migration `AddPasswordHistory` deve ser aplicada antes da API que consulta o
+histórico. Ela cria uma tabela de hashes por usuário, com exclusão em cascata;
+não recupera senhas sobrescritas anteriormente. A senha atual é sempre comparada
+e arquivada quando uma alteração é aceita. O histórico não é truncado.
+
+No smoke controlado, alterar A para B e tentar voltar para A pelo perfil e pela
+recuperação. Ambos devem retornar `PASSWORD_REUSED`; na recuperação, o mesmo
+token deve continuar válido para uma senha inédita. Confirmar que uma rejeição
+não invalida sessões nem gera evento de sucesso. Não registrar senhas ou hashes.
+
+Em rollback da API, preservar a tabela; remover o histórico elimina a proteção
+contra reutilização dessas senhas. Uma versão antiga da API não impõe a regra.
+
 ## E-mail transacional
 
 O provedor ativo é a Brevo por HTTPS. Aceite da API (`201`) não é sinônimo de

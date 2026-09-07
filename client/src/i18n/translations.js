@@ -607,6 +607,7 @@ export const translations = {
       remove: "Remover",
     },
     passwordPolicy: {
+      reused: "Escolha uma senha que você ainda não utilizou nesta conta.",
       message:
         "A senha deve ter pelo menos 10 caracteres e incluir letra maiúscula, letra minúscula, número e símbolo.",
     },
@@ -1609,6 +1610,7 @@ export const translations = {
       remove: "Remove",
     },
     passwordPolicy: {
+      reused: "Choose a password you have not used for this account before.",
       message:
         "Password must have at least 10 characters and include an uppercase letter, a lowercase letter, a number, and a symbol.",
     },

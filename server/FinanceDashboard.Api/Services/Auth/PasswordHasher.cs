@@ -19,7 +19,12 @@ namespace FinanceDashboard.Api.Services.Auth
 
         public bool VerifyPassword(User user, string providedPassword)
         {
-            var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, providedPassword);
+            return VerifyPasswordHash(user, user.PasswordHash, providedPassword);
+        }
+
+        public bool VerifyPasswordHash(User user, string hash, string providedPassword)
+        {
+            var result = _passwordHasher.VerifyHashedPassword(user, hash, providedPassword);
             return result is PasswordVerificationResult.Success or PasswordVerificationResult.SuccessRehashNeeded;
         }
     }

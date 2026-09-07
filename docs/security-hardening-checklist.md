@@ -32,7 +32,8 @@ adequados e validação no ambiente correspondente.
 
 ## Prioridade alta
 
-- [ ] Impedir reutilização da senha atualmente ativa durante a redefinição.
+- [x] Implementar bloqueio da senha atual e do histórico na redefinição e no perfil.
+- [ ] Aplicar `AddPasswordHistory` e validar os dois fluxos em produção.
   O item e os critérios de aceite estão em
   [`HESTIA_REDESIGN_ROADMAP.md`](HESTIA_REDESIGN_ROADMAP.md#correções-e-polimentos).
 - [ ] Validar o intervalo de proxies confiáveis da Railway e reduzir a

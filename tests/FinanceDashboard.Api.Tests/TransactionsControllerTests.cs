@@ -9,6 +9,7 @@ using FinanceDashboard.Api.Services.Recurring;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace FinanceDashboard.Api.Tests;
@@ -357,7 +358,13 @@ public class TransactionsControllerTests
     public async Task Import_RejectsMoreThanMaximumItemsWithoutPersistingTransactions()
     {
         using var context = CreateContext();
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddControllers();
+        using var provider = services.BuildServiceProvider();
         var controller = CreateController(context, userId: 15);
+        // Use MVC's real ProblemDetailsFactory to apply the default HTTP 400 status.
+        controller.HttpContext.RequestServices = provider;
         var dto = new TransactionImportRequest
         {
             ImportFormat = "csv",
@@ -375,10 +382,11 @@ public class TransactionsControllerTests
 
         var result = await controller.Import(dto);
 
-        var validation = Assert.IsType<ObjectResult>(result.Result);
+        var validation = Assert.IsType<BadRequestObjectResult>(result.Result);
         var details = Assert.IsType<ValidationProblemDetails>(validation.Value);
 
         Assert.Equal(StatusCodes.Status400BadRequest, validation.StatusCode);
+        Assert.Equal(StatusCodes.Status400BadRequest, details.Status);
         Assert.Contains(nameof(dto.Transactions), details.Errors.Keys);
         Assert.Contains(
             $"Limite de {TransactionImportLimits.MaxItems} transações por importação.",

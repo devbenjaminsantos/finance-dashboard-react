@@ -551,6 +551,15 @@ com 48 testes, incluindo rejeição, retry e concorrência.
 A migration ainda não foi executada em PostgreSQL: Docker local indisponível;
 produção e smoke manual permanecem pendentes.
 
+**Correção do teste de limite de importação (2026-09-07):** a falha acima foi
+reproduzida isoladamente. O teste não registrava a `ProblemDetailsFactory` do
+MVC; o fallback de `ValidationProblem` deixava o status nulo. O teste agora
+registra os serviços reais com `AddControllers()` e exige `BadRequestObjectResult`,
+status `400` na resposta e no corpo, erro por campo e ausência de transações ou
+auditoria gravadas. O controller de produção não foi alterado.
+Validação: suíte completa da API com **123 testes aprovados**, nenhuma falha;
+`git diff --check` passou.
+
 - [ ] Refinar UI, diversificar cores e layout das páginas.
   - [x] Criar uma paleta semântica dessaturada: azul para visão geral e
         atividade, violeta para leitura analítica, âmbar para planejamento,

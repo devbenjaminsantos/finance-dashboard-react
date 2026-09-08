@@ -12,9 +12,10 @@ execução e critérios de aceite.
 - [x] Criar a identidade gráfica de Héstia.
 - [x] Iniciar a migração visual do frontend pela fundação da Etapa 1.
 
-O redesign local foi concluído e a transição operacional da identidade está
-registrada em `HESTIA_TRANSITION_ROADMAP.md`. A publicação ainda usa nomes
-técnicos legados até o término coordenado da migração de infraestrutura.
+O redesign local e a transição operacional da identidade foram concluídos e
+estão registrados em `HESTIA_TRANSITION_ROADMAP.md`. O namespace interno
+`FinanceDashboard.Api` permanece por compatibilidade, sem representar a marca
+ou a infraestrutura ativas.
 
 ## Contratos preservados
 
@@ -87,14 +88,14 @@ ou dashboard público.
 
 ## Etapa 0 - identidade gráfica
 
-- [ ] Explorar símbolos abstratos derivados de lar, centro e chama.
-- [ ] Escolher uma direção sem deusa, templo, mascote ou avatar.
-- [ ] Validar legibilidade do símbolo em 16 px.
+- [x] Explorar símbolos abstratos derivados de lar, centro e chama.
+- [x] Escolher uma direção sem deusa, templo, mascote ou avatar.
+- [x] Validar legibilidade do símbolo em 16 px.
 - [x] Produzir símbolo, wordmark, versões horizontal e compacta.
-- [ ] Produzir variações para fundos light e dark.
+- [x] Produzir variações para fundos light e dark.
 - [x] Gerar favicon e ícones necessários ao frontend.
 - [x] Atualizar `BrandMark`, metadados e textos visíveis PT-BR/inglês.
-- [ ] Substituir o losango textual provisório por um ativo aprovado.
+- [x] Substituir o losango textual provisório por um ativo aprovado.
 - [x] Remover ou substituir os favicons e logos antigos da Finova.
 - [x] Definir a grafia oficial da marca, incluindo uso de acento em português e
       inglês, nomes de arquivo e metadados.
@@ -115,8 +116,8 @@ antes da troca global de Finova para Héstia.
 - a versão compacta do favicon simplifica casa, barras de crescimento e curva
   ascendente do mesmo asset para 16 px, sem reutilizar o antigo favicon da
   Finova;
-- o losango provisório foi removido do código, mas o item de aprovação visual
-  permanece aberto até a confirmação explícita da direção de marca;
+- o losango provisório foi removido e o ativo aprovado passou a ser usado no
+  login, nas áreas públicas e no shell autenticado, em temas claro e escuro;
 - a grafia continua `Héstia` em PT-BR e inglês; identificadores técnicos usam
   `hestia` sem acento, conforme o roadmap de transição operacional.
 - a versão otimizada tem 27 kB, transparência real e cantos transparentes
@@ -686,8 +687,12 @@ a repetição isolada passou em 1,21 segundo, sem alterar seu limite. Lint, buil
 de produção e `git diff --check` passaram. Cold start e smoke reais não foram
 executados neste incremento.
 
-- [ ] Persistir ou substituir a estratégia de Data Protection antes de usar mais
-      de uma réplica; validar antiforgery durante redeploys.
+- [x] Persistir o key ring de Data Protection via `AppDbContext`, permitindo que
+      réplicas usem as mesmas chaves. A composição usa
+      `PersistKeysToDbContext<AppDbContext>()`, a migration cria a tabela e o
+      modelo tem teste específico.
+- [ ] Validar antiforgery durante redeploys e com mais de uma réplica no ambiente
+      de produção.
 - [ ] Manter a automação periódica desabilitada no serviço web para permitir
       sleep e planejar worker/cron dedicado antes de reativá-la.
 
@@ -741,9 +746,12 @@ operacional permanece pendente. Nenhuma configuração externa ou deploy foi alt
 - [ ] Avaliar expiração opcional do compartilhamento além de rotação e revogação.
 - [ ] Evitar vazamento do token do dashboard por histórico, referer, analytics ou
       logs; avaliar `Referrer-Policy: no-referrer` na rota compartilhada.
-- [ ] Definir limite de itens e tamanho total para importações CSV/OFX também na
-      API, independentemente da validação do navegador.
-- [ ] Adicionar testes de payload excessivo e resposta `413`/`400` controlada.
+- [x] Limitar itens de importações CSV/OFX na API a 500, independentemente da
+      validação do navegador; 501 itens retornam `400` controlado sem persistir
+      transações ou auditoria.
+- [ ] Definir e aplicar limite total de payload na API para importações CSV/OFX,
+      com teste de excesso e resposta `413`/`400` controlada. O teto de 500 itens
+      não limita o tamanho do corpo HTTP.
 
 ### P2 - headers, segredos e retenção
 

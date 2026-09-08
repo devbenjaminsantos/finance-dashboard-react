@@ -27,6 +27,10 @@ validá-los primeiro em ambientes descartáveis e depois na infraestrutura ativa
   API, auditorias e um drill descartável de `pg_dump`/`pg_restore`. Ainda é
   necessário configurar a proteção de `main`, alertas Railway/Vercel/Neon e
   executar o primeiro drill completo em uma recuperação Neon isolada.
+- A documentação foi conciliada com o código: Data Protection já persiste no
+  `AppDbContext`; importação tem limite de 500 itens e teste de 501, enquanto o
+  limite do tamanho total do payload permanece pendente. A Etapa 0 de identidade
+  foi concluída e a trilha Azure é somente histórica.
 
 ## Trabalho local aguardando revisão/commit
 

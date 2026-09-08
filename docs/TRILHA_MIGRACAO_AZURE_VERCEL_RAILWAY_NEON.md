@@ -14,6 +14,10 @@ O documento preserva o planejamento e suas evidências, não um checklist ativo.
 > provedor de e-mail atual, documentado em
 > [`EMAIL_DELIVERY_ROADMAP.md`](EMAIL_DELIVERY_ROADMAP.md).
 
+> Os checkboxes deste documento registram o estado observado durante a migração
+> Azure. Mesmo quando estão abertos, não são pendências atuais nem devem ser
+> atualizados para orientar operação, deploy ou priorização do Héstia.
+
 ## Objetivo
 
 Migrar o ecossistema atualmente hospedado na Azure para:

@@ -605,6 +605,44 @@ Validação: suíte completa da API com **123 testes aprovados**, nenhuma falha;
   senha continua falhando também isoladamente; `Register.jsx` recebeu apenas uma
   classe visual neste incremento.
 
+## Pré-requisito da Etapa 7 - canais conversacionais autenticados
+
+Antes de implementar agentes ou integrar modelos, criar a fundação para uma
+conversa Telegram/WhatsApp representar uma única conta Héstia autenticada. O
+canal é uma extensão da conta, nunca uma identidade financeira independente.
+
+- [ ] Criar pareamento iniciado somente na sessão autenticada: o usuário escolhe
+      Telegram ou WhatsApp e recebe um código de uso único, com TTL curto e
+      armazenado somente como hash.
+- [ ] Concluir o pareamento apenas quando a conversa informar o código válido;
+      vincular o identificador imutável do chat ao `UserId`, registrar a origem
+      sem conteúdo da conversa e permitir listar/revogar canais no Perfil.
+- [ ] Validar em toda mensagem o webhook assinado do provedor, o identificador
+      do chat pareado, estado ativo e limite de requisições. Rejeitar mensagens
+      de chats não pareados sem revelar se existe uma conta Héstia.
+- [ ] Persistir a chave idempotente do provedor (`update_id` ou equivalente) e
+      devolver o mesmo resultado para reentregas, impedindo que uma mensagem
+      repetida crie duas operações ou dois envios.
+- [ ] Tratar o texto `50 reais assinatura nova` como intenção estruturada e
+      mostrar valor, tipo, categoria e data para confirmação explícita antes de
+      qualquer escrita financeira. Entradas ambíguas devem pedir esclarecimento.
+- [ ] Executar uma confirmação aprovada somente por um comando de aplicação que
+      reutilize validações, autorização por `UserId`, auditoria e idempotência do
+      fluxo de transações atual. O adaptador de canal e qualquer agente não
+      recebem acesso direto ao `DbContext`, SQL ou credenciais de banco.
+- [ ] Permitir configurar no Perfil um resumo semanal para domingo, com canal e
+      fuso horário explícitos. Um worker/cron idempotente deve calcular um resumo
+      somente leitura e entregar uma vez por semana; a chave de entrega precisa
+      impedir duplicidade em retry, deploy ou duas instâncias.
+- [ ] Cobrir pareamento, expiração, revogação, chat não pareado, assinatura de
+      webhook, reentrega, confirmação de lançamento e resumo semanal duplicado
+      com testes contra os contratos dos provedores.
+
+Não guardar o texto bruto da conversa por padrão. Registrar apenas os metadados
+mínimos para segurança, auditoria e deduplicação, com retenção definida antes de
+ativar o canal. Telegram e WhatsApp devem compartilhar o mesmo contrato de
+pareamento e autorização, mas ficar atrás de adaptadores separados.
+
 ## Etapa 7 - camada Héstia e agentes
 
 - [ ] Adicionar uma entrada unificada apenas após a UX financeira amadurecer.
@@ -613,8 +651,11 @@ Validação: suíte completa da API com **123 testes aprovados**, nenhuma falha;
 - [ ] Evitar chat flutuante, avatares, gamificação e cinco paletas concorrentes.
 - [ ] Manter o produto plenamente funcional sem IA.
 
-Esta etapa não autoriza ainda integrar modelo, armazenar conversas ou permitir
-que um agente bloqueie decisões financeiras.
+Esta etapa só pode começar depois do pré-requisito de canais conversacionais
+autenticados. Ela não autoriza integrar modelo, armazenar conversas ou permitir
+que um agente bloqueie decisões financeiras. O pareamento não concede escrita
+direta: toda operação financeira continua passando pelos comandos da aplicação
+e pela confirmação do usuário.
 
 ## Trilha paralela A - arquitetura, deploy e operação
 

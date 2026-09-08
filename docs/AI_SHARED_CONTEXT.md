@@ -31,6 +31,11 @@ validá-los primeiro em ambientes descartáveis e depois na infraestrutura ativa
   `AppDbContext`; importação tem limite de 500 itens e teste de 501, enquanto o
   limite do tamanho total do payload permanece pendente. A Etapa 0 de identidade
   foi concluída e a trilha Azure é somente histórica.
+- Antes da Etapa 7, o roadmap prevê pareamento seguro Telegram/WhatsApp iniciado
+  por sessão autenticada, com código de uso único, vínculo ao `UserId`, webhook
+  validado, deduplicação e revogação. Escritas exigem confirmação e comandos da
+  aplicação existentes; resumo semanal de domingo exige worker/cron idempotente.
+  Isso é planejamento, sem integração de canal, agente ou modelo implementada.
 
 ## Trabalho local aguardando revisão/commit
 

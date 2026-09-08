@@ -1,252 +1,99 @@
 # Héstia
 
-Héstia is a full-stack personal finance application built to make day-to-day money management clearer, safer, and easier to inspect. It combines authentication, demo access, transaction management, financial charts, budgets, recurring entries, account organization, exports, notifications, and public read-only sharing.
+English · [Português](README-pt-BR.md)
 
-Portuguese version: [README-pt-BR.md](README-pt-BR.md)
+Héstia is a personal finance application for organizing transactions, tracking commitments, and understanding how money is allocated over time. It brings accounts, income, expenses, budgets, and analysis into one workflow: record or import transactions, review the data, and use it to plan the months ahead.
 
-## Preview
+The project combines a React interface with an ASP.NET Core API and PostgreSQL persistence. Its current focus is improving the financial experience and validating security and reliability in the production infrastructure.
 
-| Home | Transactions |
-| --- | --- |
-| ![Héstia home dashboard preview](media/inicio.png) | ![Héstia transactions page preview](media/transacoes.png) |
+## What you can do
 
-| Analyses | Profile |
-| --- | --- |
-| ![Héstia analyses page preview](media/analises.png) | ![Héstia profile page preview](media/perfil.png) |
+- **Manage daily finances:** create financial accounts and transactions, organize them by category and tags, filter by period and account, and track income, expenses, and balance.
+- **Plan commitments:** record recurring transactions and installments and set monthly budgets overall or by category.
+- **Analyze your history:** view charts, period comparisons, and indicators calculated from transactions.
+- **Bring and export your data:** import CSV/OFX files with a review before saving and export financial information.
+- **Share a limited view:** create a revocable link to a read-only dashboard. The API limits sharing to up to 100 transactions from the last 12 months, exposing month, category, amount, and type without descriptions, accounts, or tags.
+- **Explore and personalize:** try a demo account, switch between light and dark themes, and use Portuguese or English on desktop and mobile.
 
-## What It Does
+Account access includes registration, email confirmation, password recovery, and an audit history for sensitive actions. Brevo handles authentication emails. Financial alerts and automatic summaries remain disabled; Pluggy has a backend foundation, while Telegram, WhatsApp, and AI agents are planned and not yet implemented.
 
-Héstia helps users:
-
-- create an account and sign in with JWT authentication protected by an `HttpOnly` cookie
-- confirm email addresses during registration
-- recover and reset passwords by email
-- explore the product through a demo account
-- create, edit, remove, filter, import, and export transactions
-- track income, expenses, balance, categories, and tags
-- manage financial accounts and account-scoped views
-- define monthly budget goals, including category goals
-- follow recurring entries and installment purchases
-- review charts, comparisons, forecasts, and prescriptive insights
-- configure preferences for goal alerts and monthly summaries; automated
-  financial email remains disabled pending a dedicated worker
-- share a public read-only dashboard link
-- review relevant audit history for sensitive flows
-- switch between light and dark themes
-
-## Stack
-
-### Frontend
-
-- React 19
-- Vite
-- React Router
-- Bootstrap 5
-- Recharts
-- i18next / react-i18next
-- Vitest, Testing Library, Playwright
-
-### Backend
-
-- ASP.NET Core 10
-- Entity Framework Core 10
-- PostgreSQL in production, with SQL Server retained for local compatibility
-- JWT in an `HttpOnly` cookie, with Bearer support for external clients
-- Scalar.AspNetCore
-- email delivery behind an `IEmailSender` abstraction, with Brevo as the primary provider and Resend retained as an inactive fallback
-- Pluggy backend foundation for future Open Finance flows
-
-### Infrastructure
-
-- Vercel for the React frontend
-- Railway for the ASP.NET Core API
-- Neon PostgreSQL for persisted data
-- GitHub as the source repository
-
-## Architecture At A Glance
+## How the project works
 
 ```text
-Héstia/
-|-- client/                          # React/Vite frontend
-|-- server/
-|   |-- FinanceDashboard.Api/        # ASP.NET Core API
-|   |-- docker-compose.yml           # Optional local SQL Server
-|   `-- .env.example                 # Local environment example
-|-- tests/
-|   `-- FinanceDashboard.Api.Tests/  # Backend test project
-|-- docs/
-|   |-- HESTIA_TRANSITION_ROADMAP.md # Rebranding and cutover checklist
-|   |-- roadmap.md                   # Product and technical roadmap
-|   |-- changelog.md                 # Delivery history by milestone
-|   `-- architecture-decisions.md    # Design decisions and rationale
-`-- finance-dashboard-react.sln
+React/Vite on Vercel
+        │ /api/*
+        ▼
+ASP.NET Core API on Railway
+        ├── EF Core → PostgreSQL on Neon
+        └── Brevo → authentication emails
 ```
 
-The frontend calls `/api/*` through a Vercel rewrite to the Railway service. Direct clients can use the Railway API URL with `/api`.
+The frontend uses `/api` in production, forwarded to Railway by [vercel.json](vercel.json). The API handles validation, financial rules, and authorization: data and related IDs are checked against the authenticated `UserId` before write operations.
 
-## Deployment
+Authentication uses JWTs in an `HttpOnly` cookie, CSRF protection for mutations, and database-backed session version validation. The implementation also includes rate limiting, a password hash history to prevent password reuse, and auditing. The HTTP client limits waiting to 30 seconds and restricts retries after transient failures to reads. These controls have automated tests; outstanding operational validation is tracked in the [security checklist](docs/security-hardening-checklist.md).
 
-The production architecture is:
+| Layer | Technologies and code |
+| --- | --- |
+| Interface | React 19, Vite, React Router, Bootstrap, Recharts, and i18next — `client/` |
+| API and data | ASP.NET Core 10, EF Core, and PostgreSQL — `server/FinanceDashboard.Api/` |
+| Tests | Vitest, Testing Library, and Playwright in the client; xUnit and HTTP tests in `tests/FinanceDashboard.Api.Tests/` |
+| Operations | Vercel, Railway, and Neon; validation and smoke workflows in `.github/workflows/` |
 
-- Frontend: Vercel
-- Backend: Railway
-- Database: Neon PostgreSQL
+## Run locally
 
-The coordinated rename and its rollback boundaries are documented in the [Héstia transition roadmap](docs/HESTIA_TRANSITION_ROADMAP.md). Historical Azure material remains archived for audit purposes only.
+You need Node.js 22, the .NET 10 SDK, PostgreSQL, and the `dotnet-ef` 10 tool. The commands below start at the repository root.
 
-The custom domain is still pending. Brevo is the primary transactional email
-provider using a verified temporary sender; domain authentication remains a
-production-hardening requirement. See the [email delivery roadmap](docs/EMAIL_DELIVERY_ROADMAP.md).
+**1. Configure the API and a local PostgreSQL database.** Copy the [configuration example](server/FinanceDashboard.Api/appsettings.Development.local.example.json) to `appsettings.Development.local.json` in the same directory. This file is ignored by Git. The example still uses SQL Server: change `Database:Provider` to `PostgreSql` and `ConnectionStrings:Default` to your local connection, using the `Host=…;Database=…;Username=…;Password=…` format.
 
-## Running Locally
+Set your own JWT key with at least 32 characters and keep `Client:BaseUrl` and the CORS origin at `http://localhost:5173`. Email and notifications can remain disabled when exploring the demo account; the complete email registration flow requires provider configuration. Do not commit credentials.
 
-### 1. Database (local)
+**2. Apply migrations and start the API.** Before running EF, set `ConnectionStrings__Default` in your terminal to the local database connection. The migration factory reads this variable, not the local JSON file.
 
-SQL Server remains available only as an optional local environment. Create
-`server/.env` from `server/.env.example`, set a strong local password, and keep
-`Database__Provider=SqlServer` with a matching `ConnectionStrings__Default`.
-Use the same chosen password in `SA_PASSWORD` and in the example connection
-string; .NET does not expand `${SA_PASSWORD}` inside connection strings.
-
-```env
-SA_PASSWORD=YourStrongPasswordHere
+```bash
+dotnet restore finance-dashboard-react.sln
+dotnet ef database update --project server/FinanceDashboard.Api
+dotnet run --project server/FinanceDashboard.Api
 ```
 
-Start SQL Server:
+The API uses `http://localhost:5278`. `/health` checks the process; `/health/ready` checks connectivity and migrations. SQL Server remains a legacy local compatibility option; the versioned migrations target PostgreSQL.
 
-```powershell
-cd server
-docker compose up -d
-```
+**3. Start the frontend in another terminal.**
 
-For PostgreSQL local development, set `Database__Provider=PostgreSql` and a
-local PostgreSQL connection string instead. Production always uses PostgreSQL.
-
-### 2. Backend
-
-The API can be configured with environment variables or with a local Git-ignored file such as `appsettings.Development.local.json`.
-
-Expected configuration:
-
-- `ConnectionStrings__Default`
-- `Jwt__Key`
-- `Jwt__Issuer`
-- `Jwt__Audience`
-- `Cors__AllowedOrigins__0`
-- `Client__BaseUrl`
-- `Database__Provider`
-- `Email__Enabled` and `Email__Provider` (`Brevo` is the production provider)
-- `Brevo__ApiKey`, `Brevo__FromEmail`, `Brevo__FromName` and
-  `Brevo__TimeoutSeconds` only when testing e-mail locally
-- `Notifications__Enabled` and `Notifications__ProcessingIntervalMinutes`
-- `Demo__Enabled`
-- `Demo__Name`
-- `Demo__Email`
-- `Demo__ResetLockTimeoutSeconds`
-- `Demo__SessionLifetimeHours`
-- `Pluggy__ClientId`
-- `Pluggy__ClientSecret`
-
-You can use `server/FinanceDashboard.Api/appsettings.Development.local.example.json` as a base.
-
-Run the API:
-
-```powershell
-cd server/FinanceDashboard.Api
-dotnet run
-```
-
-Default API URL:
-
-```text
-http://localhost:5278
-```
-
-### 3. Frontend
-
-```powershell
+```bash
 cd client
-npm install
+npm ci
 npm run dev
 ```
 
-Default frontend URL:
+Open `http://localhost:5173`. In development, the client calls `http://localhost:5278/api`. Only set `VITE_API_URL` to target a different API; its value is public and must end in `/api`.
 
-```text
-http://localhost:5173
-```
+## Verify changes
 
-For local frontend development, `client/src/lib/api/http.js` falls back to:
+From the repository root:
 
-```text
-http://localhost:5278/api
-```
-
-The deployed frontend uses the `/api/*` rewrite declared in `vercel.json`.
-`VITE_API_URL` is optional and should only be set when a build must call a
-different API directly:
-
-```text
-VITE_API_URL=https://your-api.example.com/api
-```
-
-## Database Migrations
-
-For local development, apply migrations with:
-
-```powershell
-cd server/FinanceDashboard.Api
-dotnet ef database update
-```
-
-Production migrations use a separate administrative connection configured as
-`ConnectionStrings__Migration`. Keep the runtime connection least-privileged;
-enable `Database__ApplyMigrationsOnStartup=true` only for the controlled deploy
-that applies pending migrations, then disable it again. See the
-[production runbook](docs/production-runbook.md).
-
-## Tests
-
-Backend:
-
-```powershell
+```bash
 dotnet test tests/FinanceDashboard.Api.Tests/FinanceDashboard.Api.Tests.csproj
+npm --prefix client run lint
+npm --prefix client test
+npm --prefix client run build
 ```
 
-Frontend:
+For browser tests, install Playwright's Chromium and run:
 
-```powershell
+```bash
 cd client
-npm run lint
-npm test
-npm run build
-```
-
-End-to-end:
-
-```powershell
-cd client
+npx playwright install chromium
 npm run test:e2e
 ```
 
-## Documentation
+Playwright starts Vite at `127.0.0.1:4173`. Deployment, production migrations, and data recovery follow the [runbook](docs/production-runbook.md); local tests do not replace smoke tests against the deployed environment.
 
-- [Production runbook](docs/production-runbook.md)
-- [Email delivery roadmap](docs/EMAIL_DELIVERY_ROADMAP.md)
-- [Héstia redesign roadmap](docs/HESTIA_REDESIGN_ROADMAP.md)
-- [Roadmap](docs/roadmap.md)
-- [Changelog](docs/changelog.md)
-- [Architecture decisions](docs/architecture-decisions.md)
-- [Security and reliability checklist](docs/security-hardening-checklist.md)
-- [Archived Azure deployment guide](docs/azure-deploy.md)
+## Next steps
 
-## Security Notes
+- [ ] **Validate hardening in real environments:** password history, readiness, cold starts, trusted proxies, and concurrent locks, starting with disposable PostgreSQL and then the active infrastructure.
+- [ ] **Complete operational setup:** require checks through `main` branch protection, configure alerts, and perform a full recovery in an isolated Neon environment.
+- [ ] **Finalize domains and email:** validate cookies and CORS on the final hosts, authenticate the sending domain, and implement deduplicated delivery events before enabling financial notifications.
+- [ ] **Improve the financial experience:** polish existing flows, improve transfers, forecasts, and import review, and develop Open Finance further.
+- [ ] **Add channels and assistance:** implement secure Telegram/WhatsApp pairing, start with authenticated queries, and require confirmation for writes. Agents and scheduled summaries depend on this foundation and idempotent worker/cron execution.
 
-- Do not commit secrets.
-- Keep local backend configuration out of Git.
-- Store PostgreSQL, Brevo and local SQL Server credentials only in safe secret
-  stores.
-- Keep password reset links out of logs in production.
-- Keep `Client__BaseUrl` pinned to the trusted frontend origin.
-- Keep rate limiting enabled on public authentication endpoints.
-- Invalidate sessions when tokens expire or when the user stays inactive for too long.
+The detailed sequence and acceptance criteria live in the [Héstia roadmap](docs/HESTIA_REDESIGN_ROADMAP.md). See also the [architecture decisions](docs/architecture-decisions.md), [email roadmap](docs/EMAIL_DELIVERY_ROADMAP.md), and [documentation index](docs/README.md). Supporting documentation is primarily in Portuguese.

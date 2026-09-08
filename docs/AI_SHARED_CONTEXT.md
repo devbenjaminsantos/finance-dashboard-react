@@ -37,22 +37,19 @@ validá-los primeiro em ambientes descartáveis e depois na infraestrutura ativa
   aplicação existentes; resumo semanal de domingo exige worker/cron idempotente.
   Isso é planejamento, sem integração de canal, agente ou modelo implementada.
 
-## Trabalho local aguardando revisão/commit
+## Documentação e revisão atual
 
-O worktree contém hardening de proxies ainda não commitado:
-
-- `TrustedProxyConfiguration` lê `ReverseProxy:KnownProxies` e
-  `ReverseProxy:KnownNetworks`, rejeita IP/CIDR inválido e redes `/0`, limita a
-  um salto e desativa forwarded headers quando as duas listas estão vazias.
-- `Program.cs` passou a usar essa configuração. Auditoria normaliza IPv4 mapeado
-  como já faz a chave do rate limit.
-- `appsettings.Production.json` mantém provisoriamente `100.0.0.0/8` por
-  compatibilidade Railway; a faixa mínima e a cadeia Vercel → Railway ainda não
-  foram confirmadas em produção.
-- `TrustedProxyConfigurationTests` cobre peer não confiável, CIDR, cabeçalho
-  forjado, IPv4 mapeado, auditoria e rate limit no middleware real.
-
-Não sobrescreva esses arquivos sem revisar o diff atual.
+- `README.md` e `README-pt-BR.md` foram reescritos com conteúdo equivalente:
+  proposta do produto, recursos disponíveis, arquitetura, execução local com
+  PostgreSQL, testes e próximos passos. Os previews antigos foram removidos dos
+  READMEs; os arquivos de mídia foram preservados.
+- O setup explica que o exemplo local ainda usa SQL Server e deve ser adaptado
+  para PostgreSQL; a factory do EF lê `ConnectionStrings__Default` do ambiente.
+- O hardening de proxies já está commitado (`793662a`), conforme Git. A faixa
+  `100.0.0.0/8` permanece provisória; configuração validada e testes locais não
+  encerram a verificação da cadeia Vercel/Railway em produção.
+- Esta revisão altera documentação; não executa deploy, migrations ou testes
+  de runtime. Conferir `git status` para identificar o trabalho local atual.
 
 ## Decisões vigentes
 
@@ -98,9 +95,9 @@ Não sobrescreva esses arquivos sem revisar o diff atual.
 
 ## Próximo passo sugerido
 
-Revisar e commitar o hardening de proxies como um incremento isolado. Em seguida,
+Revisar os READMEs nas duas línguas. Para retomar segurança/confiabilidade,
 usar ambiente descartável e a cadeia pública para validar os IPs observados antes
-de alterar a faixa de produção. Só então seguir para locks concorrentes no Neon.
+de alterar a faixa de produção. Depois, seguir para locks concorrentes no Neon.
 
 ## Manutenção deste arquivo
 

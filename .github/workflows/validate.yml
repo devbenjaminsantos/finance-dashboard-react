@@ -1,0 +1,92 @@
+name: Validate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  frontend:
+    name: Frontend checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - run: npm audit --audit-level=high
+
+  api:
+    name: API checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet restore finance-dashboard-react.sln
+      - run: dotnet build finance-dashboard-react.sln --configuration Release --no-restore
+      - run: dotnet test tests/FinanceDashboard.Api.Tests/FinanceDashboard.Api.Tests.csproj --configuration Release --no-build --no-restore
+      - name: Fail on vulnerable NuGet dependencies
+        run: |
+          dotnet list finance-dashboard-react.sln package --vulnerable --include-transitive --format json > vulnerable-packages.json
+          jq -e '[.. | objects | .vulnerabilities? | arrays | .[]] | length == 0' vulnerable-packages.json
+
+  backup-restore:
+    name: PostgreSQL backup and restore drill
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: hestia
+          POSTGRES_PASSWORD: hestia_ci_only
+          POSTGRES_DB: hestia_source
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U hestia -d hestia_source"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v5
+      - name: Seed a disposable source database
+        run: |
+          docker run --rm --network host -e PGPASSWORD=hestia_ci_only postgres:16-alpine \
+            psql --host 127.0.0.1 --username hestia --dbname hestia_source --set ON_ERROR_STOP=1 \
+            --command "CREATE TABLE recovery_probe (id integer PRIMARY KEY, value text NOT NULL); INSERT INTO recovery_probe VALUES (1, 'restored');"
+          docker run --rm --network host -e PGPASSWORD=hestia_ci_only postgres:16-alpine \
+            createdb --host 127.0.0.1 --username hestia hestia_restore
+      - name: Create and restore a custom-format backup
+        run: |
+          docker run --rm --network host -e PGPASSWORD=hestia_ci_only -v "$PWD:/workspace" postgres:16-alpine \
+            pg_dump --host 127.0.0.1 --username hestia --format custom --no-owner --no-privileges \
+            --file /workspace/recovery.dump hestia_source
+          docker run --rm --network host -e PGPASSWORD=hestia_ci_only -v "$PWD:/workspace" postgres:16-alpine \
+            pg_restore --host 127.0.0.1 --username hestia --dbname hestia_restore \
+            --no-owner --no-privileges /workspace/recovery.dump
+      - name: Verify restored data
+        run: |
+          restored_value="$(docker run --rm --network host -e PGPASSWORD=hestia_ci_only postgres:16-alpine \
+            psql --host 127.0.0.1 --username hestia --dbname hestia_restore --tuples-only --no-align \
+            --command 'SELECT value FROM recovery_probe WHERE id = 1;')"
+          test "$restored_value" = restored

@@ -1,0 +1,41 @@
+name: Post-deploy smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_base_url:
+        description: Public Railway API URL, without /api
+        required: true
+        type: string
+      frontend_url:
+        description: Public Vercel URL to check
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Production smoke
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      API_BASE_URL: ${{ inputs.api_base_url }}
+      FRONTEND_URL: ${{ inputs.frontend_url }}
+    steps:
+      - name: Check public liveness and database readiness
+        run: |
+          api_base_url="${API_BASE_URL%/}"
+          curl --fail --silent --show-error --max-time 10 "$api_base_url/health/live" | jq -e '.status == "ok"'
+          curl --fail --silent --show-error --max-time 10 "$api_base_url/health/ready" | jq -e '.status == "ready"'
+      - name: Check the frontend response
+        run: curl --fail --silent --show-error --head --max-time 10 "$FRONTEND_URL"
+      - name: Record the verified revision
+        run: |
+          {
+            echo "## Post-deploy smoke"
+            echo "- Commit: \`${GITHUB_SHA}\`"
+            echo "- API readiness: passed"
+            echo "- Frontend response: passed"
+          } >> "$GITHUB_STEP_SUMMARY"

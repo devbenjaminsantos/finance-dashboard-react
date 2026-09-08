@@ -23,6 +23,10 @@ validá-los primeiro em ambientes descartáveis e depois na infraestrutura ativa
   Cada item contém somente mês, categoria, valor e tipo; descrição, contas,
   tags, identificadores e recorrência não são retornados. A interface informa o
   recorte e não oferece histórico completo.
+- Os workflows `Validate` e `Post-deploy smoke` estabelecem checks de frontend,
+  API, auditorias e um drill descartável de `pg_dump`/`pg_restore`. Ainda é
+  necessário configurar a proteção de `main`, alertas Railway/Vercel/Neon e
+  executar o primeiro drill completo em uma recuperação Neon isolada.
 
 ## Trabalho local aguardando revisão/commit
 

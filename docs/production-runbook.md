@@ -43,13 +43,17 @@ não deve ser usada pela API durante a operação normal.
 
 ## Deploy rotineiro
 
-1. Revisar o diff, executar testes proporcionais à alteração e confirmar que
+1. Confirmar os checks obrigatórios do GitHub Actions e o drill de backup/
+   restauração; não promover `main` se algum deles falhar.
+2. Revisar o diff, executar testes proporcionais à alteração e confirmar que
    não há secrets no worktree.
-2. Publicar o commit somente depois da revisão humana.
-3. Confirmar o deploy correspondente na Vercel e na Railway.
-4. Verificar `GET /health` (processo) e `GET /health/ready` (banco e migrations)
+3. Publicar o commit somente depois da revisão humana.
+4. Confirmar o deploy correspondente na Vercel e na Railway.
+5. Executar o workflow manual `Post-deploy smoke`, que verifica liveness,
+   readiness e frontend; registrar o SHA e os IDs dos deploys aprovados.
+6. Verificar `GET /health` (processo) e `GET /health/ready` (banco e migrations)
    na API pública e os logs de startup, sem copiar credenciais.
-5. Executar um smoke do frontend: sessão, CSRF e uma rota autenticada.
+7. Executar um smoke do frontend: sessão, CSRF e uma rota autenticada.
 
 ## Deploy com migration
 

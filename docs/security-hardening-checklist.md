@@ -76,7 +76,10 @@ adequados e validação no ambiente correspondente.
   genérica e sem cache. Readiness mantém rate limit e não valida sessão.
 - [ ] Validar readiness contra PostgreSQL real e no deploy; histórico de migrations
   não substitui verificação de drift manual de schema nem smoke funcional.
-- [ ] Definir monitoramento, backup e restauração para Vercel, Railway e Neon.
+- [x] Definir o gate de CI, o smoke pós-deploy, os sinais de monitoramento e o
+  procedimento de backup/restauração. A proteção da branch, os alertas dos
+  provedores e o primeiro drill completo no Neon continuam pendentes de
+  configuração e execução externas; ver [`operations.md`](operations.md).
 - [ ] Manter notificações financeiras desativadas até adotar worker/cron com
   outbox, coordenação idempotente e retenção definida.
 

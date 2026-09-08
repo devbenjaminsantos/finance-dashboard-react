@@ -643,8 +643,9 @@ o redesign pronto para produção.
       como histórico de auditoria.
 - [ ] Até lá, impedir que um push comum faça deploy simultâneo e não intencional
       em Azure, Vercel e Railway.
-- [ ] Exigir lint, testes, build e auditorias antes das integrações automáticas de
-      Vercel e Railway promoverem `main`.
+- [x] Implementar workflow de lint, testes, build, auditorias e drill descartável
+      de backup/restauração antes de promover `main`. A proteção da branch e a
+      configuração das integrações Vercel/Railway ainda exigem ação externa.
 - [ ] Registrar o commit e os IDs dos deploys aprovados para relacionar repo,
       frontend e API em cada release.
 

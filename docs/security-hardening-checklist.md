@@ -36,10 +36,14 @@ adequados e validação no ambiente correspondente.
 - [ ] Aplicar `AddPasswordHistory` e validar os dois fluxos em produção.
   O item e os critérios de aceite estão em
   [`HESTIA_REDESIGN_ROADMAP.md`](HESTIA_REDESIGN_ROADMAP.md#correções-e-polimentos).
-- [ ] Validar o intervalo de proxies confiáveis da Railway e reduzir a
-  configuração atual ao menor conjunto suportado. Confirmar que
-  `X-Forwarded-For` não altera auditoria nem a partição do rate limit quando
-  enviado diretamente por um cliente.
+- [x] Tornar proxies/redes confiáveis configuráveis, rejeitar IP/CIDR inválido e
+  redes `/0`, limitar forwarded headers a um salto e desativá-los quando ambas
+  as listas estiverem vazias. Auditoria e rate limit normalizam IPv4 mapeado.
+- [x] Cobrir no middleware real headers falsificados de pares não confiáveis,
+  cadeia com valor forjado à esquerda, limite de CIDR e ausência de confiança.
+- [ ] Confirmar o peer e a cadeia Vercel -> Railway -> API em produção e reduzir
+  `100.0.0.0/8` somente com evidência suportada da plataforma. Validar a identidade
+  de clientes distintos e a resistência a spoofing pelo endpoint público.
 - [ ] Verificar cookies, CSRF, logout, expiração e revogação no domínio
   definitivo, depois do cutover de DNS.
 - [x] Limitar chamadas do frontend a 30 segundos, incluindo CSRF e corpo da

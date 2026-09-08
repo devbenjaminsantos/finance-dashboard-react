@@ -11,6 +11,7 @@ Esta pasta reúne os documentos de apoio do Héstia. O README principal apresent
 - [Changelog](changelog.md): histórico de entregas organizado por marcos do projeto.
 - [Decisões de arquitetura](architecture-decisions.md): registro das escolhas técnicas, seus motivos e impactos.
 - [Checklist de segurança e confiabilidade](security-hardening-checklist.md): achados da revisão, ordem de correção e critérios de conclusão.
+- [Contexto compartilhado de IA](AI_SHARED_CONTEXT.md): estado operacional atual para continuidade entre sessões e modelos.
 - [Trilha de migração Azure -> Vercel + Railway + Neon](TRILHA_MIGRACAO_AZURE_VERCEL_RAILWAY_NEON.md): registro histórico do planejamento e da migração concluída.
 - [Roadmap de redesign Héstia](HESTIA_REDESIGN_ROADMAP.md): tradução técnica do spec de UI/UX, ordem incremental e critérios de aceite.
 - [Guia de deploy no Azure](azure-deploy.md): registro histórico da infraestrutura anterior; não é o caminho de produção atual.

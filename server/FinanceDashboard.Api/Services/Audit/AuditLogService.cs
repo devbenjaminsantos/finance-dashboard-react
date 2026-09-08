@@ -21,7 +21,10 @@ namespace FinanceDashboard.Api.Services.Audit
             int? userId = null,
             string? entityId = null)
         {
-            var ipAddress = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+            var remoteIpAddress = _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress;
+            var ipAddress = remoteIpAddress?.IsIPv4MappedToIPv6 == true
+                ? remoteIpAddress.MapToIPv4().ToString()
+                : remoteIpAddress?.ToString();
 
             _context.AuditLogs.Add(new AuditLog
             {

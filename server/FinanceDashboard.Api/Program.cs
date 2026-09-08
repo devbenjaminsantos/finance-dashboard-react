@@ -19,11 +19,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
-using System.Net;
 using System.Text;
 using System.Threading.RateLimiting;
 
@@ -39,14 +37,7 @@ builder.Configuration.AddJsonFile(
 builder.Services.AddHestiaDatabase(builder.Configuration);
 builder.Services.AddHestiaHealthChecks();
 
-builder.Services.Configure<ForwardedHeadersOptions>(options =>
-{
-    options.ForwardedHeaders =
-        ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    options.ForwardLimit = 1;
-    options.KnownIPNetworks.Add(
-        new System.Net.IPNetwork(IPAddress.Parse("100.0.0.0"), 8));
-});
+builder.Services.AddHestiaForwardedHeaders(builder.Configuration);
 
 builder.Services.Configure<PluggyOptions>(
     builder.Configuration.GetSection(PluggyOptions.SectionName));

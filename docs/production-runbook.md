@@ -64,6 +64,43 @@ não deve ser usada pela API durante a operação normal.
 
 Não conceda DDL à conexão de runtime para contornar um bloqueio de migration.
 
+## Proxies confiáveis e identidade de IP
+
+`ReverseProxy__KnownProxies` aceita IPs exatos e
+`ReverseProxy__KnownNetworks` aceita CIDRs, separados por `;`. São valores
+escalares: a variável de ambiente substitui integralmente a lista do JSON.
+Entradas inválidas, endereços wildcard e redes `/0` impedem o startup.
+As duas listas vazias desativam forwarded headers; nunca significam confiar em
+qualquer origem. Não definir `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true`:
+a aplicação rejeita esse modo automático para evitar configurações conflitantes.
+
+O arquivo base permite somente `127.0.0.1` e `::1`, para proxy local. O arquivo
+`appsettings.Production.json` substitui esses peers por lista vazia e mantém
+provisoriamente `100.0.0.0/8` como rede confiável. Em outra hospedagem, configurar
+explicitamente os peers desse ambiente. Mudanças exigem reiniciar/reimplantar a API.
+
+O middleware aceita `X-Forwarded-For` e `X-Forwarded-Proto` somente do peer
+confiável, consumindo no máximo um salto, da direita para a esquerda. Não aceita
+`X-Forwarded-Host` nem usa `X-Real-IP` diretamente. Auditoria e rate limit leem
+apenas `Connection.RemoteIpAddress`, depois do middleware, normalizando IPv4 mapeado.
+
+Pesquisa em 2026-09-08: o [guia oficial de React/Caddy da Railway](https://docs.railway.com/guides/react)
+ainda exemplifica `100.0.0.0/8`; isso não confirma uma faixa menor estável. A
+[referência de headers](https://docs.railway.com/networking/public-networking/specs-and-limits)
+lista `X-Real-IP` e `X-Forwarded-Proto`. Por isso a troca de header ou aumento de
+saltos fica condicionada à validação da topologia efetiva, não a uma suposição.
+
+Antes de fechar esse hardening, conferir em ambiente controlado o peer visto
+antes do middleware e o IP efetivo após ele, passando diretamente pela Railway
+e pela Vercel. Comparar clientes distintos e requisições com headers forjados;
+a aplicação não pode aceitar identidade arbitrária nem agrupar todos os usuários
+no IP de um proxy intermediário. Não criar endpoint público de diagnóstico nem
+registrar cookies, tokens ou payloads. Remover diagnóstico temporário após o teste.
+
+A redução do CIDR, a validação dos headers no edge e o smoke de HTTPS, cookies e
+rate limit continuam pendentes. Não substituir `/8` por `/10` sem confirmação
+nem liberar todos os proxies para corrigir redirecionamentos.
+
 ## Liveness e readiness
 
 | Rota | O que verifica | Resposta |

@@ -694,10 +694,15 @@ executados neste incremento.
 
 ### P0/P1 - autenticação e proxy
 
-- [ ] Validar o range real dos proxies Railway e substituir a confiança ampla em
-      `100.0.0.0/8` pelo menor conjunto documentado ou configurável.
-- [ ] Confirmar que IP de auditoria e partições do rate limiter não podem ser
-      alterados por `X-Forwarded-For` vindo de um cliente não confiável.
+- [x] Extrair confiança em proxies para `ReverseProxy:KnownProxies` e
+      `ReverseProxy:KnownNetworks`, com validação de IP/CIDR, rejeição de `/0`,
+      desativação quando as listas estão vazias e `ForwardLimit=1`.
+- [x] Testar o middleware real junto de auditoria e partições do rate limiter:
+      pares desconhecidos não podem definir IP/esquema, e valores extras à
+      esquerda de `X-Forwarded-For` não são consumidos.
+- [ ] Confirmar o menor range suportado pela Railway e a cadeia real incluindo
+      Vercel. `100.0.0.0/8` permanece provisoriamente em produção por compatibilidade;
+      tornar configurável não conclui sua redução nem prova o IP final do usuário.
 - [ ] Revisar o cadastro para não revelar desnecessariamente se um e-mail já
       existe, preservando um fluxo útil de recuperação de conta.
 - [ ] Redesenhar o bloqueio após cinco senhas inválidas para reduzir negação de
@@ -705,6 +710,13 @@ executados neste incremento.
 - [ ] Revalidar cookie JWT, CSRF, logout, expiração e revogação nos navegadores
       principais depois do novo domínio.
 - [ ] Manter preview deployments fora do banco e das credenciais de produção.
+
+**Validação local de proxies (2026-09-08):** build e suíte completa da API
+passaram com 149 testes, incluindo 17 casos novos com o middleware real,
+auditoria persistida em banco InMemory, validação de configuração e identidade
+do rate limit. `git diff --check` passou. A faixa de produção e a identificação
+do usuário pela cadeia Vercel/Railway não foram validadas ao vivo; o hardening
+operacional permanece pendente. Nenhuma configuração externa ou deploy foi alterado.
 
 **Evidência da fundação de rate limiting (2026-08-28):**
 
@@ -845,5 +857,5 @@ Aplicar a migration `AddPasswordHistory` antes de publicar a API atualizada e
 validar manualmente a rejeição de senha atual e histórica, seguida de nova
 tentativa com o mesmo token e uma senha inédita. Em segurança/confiabilidade,
 validar timeout/cold start e liveness/readiness no ambiente real. O próximo
-incremento de implementação é revisar proxies confiáveis e proteção do IP de
-auditoria/rate limit. O teste de cadastro continua na fila de polimentos.
+passo é validar a configuração de proxies e o IP efetivo pela cadeia pública
+Vercel/Railway. Depois, validar locks transacionais com instâncias concorrentes. O teste de cadastro continua na fila de polimentos.

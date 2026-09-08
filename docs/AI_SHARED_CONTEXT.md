@@ -19,6 +19,10 @@ validá-los primeiro em ambientes descartáveis e depois na infraestrutura ativa
   válido após rejeição de senha reutilizada.
 - `/health` e `/health/live` são liveness; `/health/ready` verifica conexão e
   migrations, com resposta genérica e prazo de cinco segundos.
+- O dashboard público expõe no máximo 100 lançamentos dos últimos 12 meses.
+  Cada item contém somente mês, categoria, valor e tipo; descrição, contas,
+  tags, identificadores e recorrência não são retornados. A interface informa o
+  recorte e não oferece histórico completo.
 
 ## Trabalho local aguardando revisão/commit
 

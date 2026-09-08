@@ -6,7 +6,6 @@ import DashboardCharts from "../features/dashboard/DashboardCharts";
 import {
   getMonthsForPeriod,
   getPeriodOptions,
-  lastNMonthsISO,
   summarizeTransactions,
 } from "../features/dashboard/dashboardAnalytics";
 import { getPublicDashboard } from "../lib/api/publicDashboard";
@@ -14,12 +13,15 @@ import { useI18n } from "../i18n/LanguageProvider";
 
 export default function PublicDashboard() {
   const { token } = useParams();
-  const { t, formatCurrencyFromCents, formatDate } = useI18n();
+  const { t, formatCurrencyFromCents, formatMonthYear } = useI18n();
   const [period, setPeriod] = useState("current-month");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [dashboard, setDashboard] = useState(null);
-  const periodOptions = useMemo(() => getPeriodOptions(t), [t]);
+  const periodOptions = useMemo(
+    () => getPeriodOptions(t).filter((option) => option.value !== "all"),
+    [t]
+  );
 
   useEffect(() => {
     let active = true;
@@ -59,16 +61,9 @@ export default function PublicDashboard() {
     [period, periodOptions, t]
   );
 
-  const chartMonths = useMemo(
-    () => (period === "all" ? lastNMonthsISO(6) : getMonthsForPeriod(period)),
-    [period]
-  );
+  const chartMonths = useMemo(() => getMonthsForPeriod(period), [period]);
 
   const filteredTransactions = useMemo(() => {
-    if (period === "all") {
-      return transactions;
-    }
-
     const allowedMonths = new Set(getMonthsForPeriod(period));
     return transactions.filter((transaction) =>
       allowedMonths.has((transaction.date || "").slice(0, 7))
@@ -110,6 +105,7 @@ export default function PublicDashboard() {
 
       <div className="hestia-page-note mb-4">
         {t("publicDashboard.pageNote")}
+        <span className="d-block mt-1">{t("publicDashboard.sharedDataScope")}</span>
       </div>
 
       <div className="hestia-card p-4 mb-4">
@@ -125,7 +121,7 @@ export default function PublicDashboard() {
             <div className="hestia-subtitle small mt-2">
               {dashboard?.lastTransactionDate
                 ? t("publicDashboard.lastUpdated", {
-                    date: formatDate(dashboard.lastTransactionDate),
+                    month: formatMonthYear(dashboard.lastTransactionDate),
                   })
                 : t("publicDashboard.noUpdate")}
             </div>

@@ -212,7 +212,7 @@ export const translations = {
       publicDashboardDisabled: "Painel público inativo",
       publicDashboardLinkLabel: "Link compartilhável",
       publicDashboardLinkHelp:
-        "Qualquer pessoa com este link poderá visualizar o painel em modo leitura.",
+        "Qualquer pessoa com este link poderá visualizar, em modo leitura, até 100 lançamentos dos últimos 12 meses.",
       publicDashboardCopy: "Copiar link",
       publicDashboardOpen: "Abrir painel público",
       publicDashboardEmpty:
@@ -716,12 +716,13 @@ export const translations = {
       subtitleWithName: "Painel financeiro compartilhado por {{name}} em modo leitura.",
       pageNote:
         "Este link foi pensado para apresentação e consulta rápida, sem expor a área autenticada nem permitir alterações.",
+      sharedDataScope: "Exibe até 100 lançamentos dos últimos 12 meses, agrupados por mês.",
       readOnlyBadge: "Somente leitura",
       readOnlyDescription:
         "Este painel exibe um recorte compartilhado dos gráficos e do resumo financeiro.",
       visibilityLabel: "Acesso",
       visibilityValue: "Leitura compartilhada",
-      lastUpdated: "Última movimentação em {{date}}",
+      lastUpdated: "Dados compartilhados até {{month}}",
       noUpdate: "Sem movimentações compartilhadas ainda",
       unavailableTitle: "Painel indisponível",
       loadError: "Não foi possível carregar este painel público.",
@@ -1220,7 +1221,7 @@ export const translations = {
       publicDashboardDisabled: "Public dashboard disabled",
       publicDashboardLinkLabel: "Shareable link",
       publicDashboardLinkHelp:
-        "Anyone with this link will be able to view the dashboard in read-only mode.",
+        "Anyone with this link can view up to 100 transactions from the last 12 months in read-only mode.",
       publicDashboardCopy: "Copy link",
       publicDashboardOpen: "Open public dashboard",
       publicDashboardEmpty:
@@ -1722,12 +1723,13 @@ export const translations = {
       subtitleWithName: "{{name}}'s shared financial dashboard in read-only mode.",
       pageNote:
         "This link is meant for presentation and quick consultation, without exposing the authenticated area or allowing changes.",
+      sharedDataScope: "Shows up to 100 transactions from the last 12 months, grouped by month.",
       readOnlyBadge: "Read only",
       readOnlyDescription:
         "This dashboard shows a shared view of charts and the financial summary.",
       visibilityLabel: "Access",
       visibilityValue: "Shared read-only view",
-      lastUpdated: "Latest transaction on {{date}}",
+      lastUpdated: "Shared data through {{month}}",
       noUpdate: "No shared activity yet",
       unavailableTitle: "Dashboard unavailable",
       loadError: "Unable to load this public dashboard.",

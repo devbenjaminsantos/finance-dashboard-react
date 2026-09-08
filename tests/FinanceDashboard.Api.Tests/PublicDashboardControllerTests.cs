@@ -40,6 +40,70 @@ public class PublicDashboardControllerTests
         Assert.Equal("Keller", payload.DisplayName);
         Assert.Single(payload.Transactions);
         Assert.Equal(12990, payload.Transactions[0].AmountCents);
+        Assert.Equal(new DateTime(2026, 8, 1), payload.Transactions[0].Date);
+        Assert.Equal(new DateTime(2026, 8, 1), payload.LastTransactionDate);
+    }
+
+    [Fact]
+    public async Task Get_ReturnsOnlyTheMostRecentHundredTransactionsFromTheLastTwelveMonths()
+    {
+        using var context = CreateContext();
+        var tokenService = new PublicDashboardTokenService();
+        var token = tokenService.GenerateToken();
+        Assert.True(tokenService.TryHashToken(token, out var tokenHash));
+
+        context.Users.Add(CreateUser(tokenHash));
+
+        var currentMonthStart = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+        var periodStart = currentMonthStart.AddMonths(-11);
+        context.Transactions.AddRange(Enumerable.Range(1, 101).Select(index => new Transaction
+        {
+            Id = index,
+            UserId = 7,
+            Description = $"Private transaction {index}",
+            Category = "Shared category",
+            AmountCents = index,
+            Date = currentMonthStart,
+            Type = "expense",
+            IsRecurring = true
+        }));
+        context.Transactions.AddRange(
+            new Transaction
+            {
+                Id = 102,
+                UserId = 7,
+                Description = "Old private transaction",
+                Category = "Must not be shared",
+                AmountCents = 999,
+                Date = periodStart.AddTicks(-1),
+                Type = "expense"
+            },
+            new Transaction
+            {
+                Id = 103,
+                UserId = 7,
+                Description = "Future private transaction",
+                Category = "Must not be shared",
+                AmountCents = 999,
+                Date = currentMonthStart.AddMonths(1),
+                Type = "expense"
+            });
+        await context.SaveChangesAsync();
+
+        var controller = new PublicDashboardController(context, tokenService);
+        var result = await controller.Get(token);
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        var payload = Assert.IsType<PublicDashboardResponse>(ok.Value);
+        Assert.Equal(100, payload.Transactions.Count);
+        Assert.All(payload.Transactions, transaction =>
+        {
+            Assert.Equal(currentMonthStart, transaction.Date);
+            Assert.Equal("Shared category", transaction.Category);
+        });
+        Assert.Equal(
+            ["Date", "Category", "AmountCents", "Type"],
+            typeof(PublicDashboardTransactionResponse).GetProperties().Select(property => property.Name));
     }
 
     [Fact]

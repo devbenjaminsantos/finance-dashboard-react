@@ -14,6 +14,5 @@ namespace FinanceDashboard.Api.DTOs.PublicDashboard
         public string Category { get; set; } = string.Empty;
         public long AmountCents { get; set; }
         public string Type { get; set; } = string.Empty;
-        public bool IsRecurring { get; set; }
     }
 }

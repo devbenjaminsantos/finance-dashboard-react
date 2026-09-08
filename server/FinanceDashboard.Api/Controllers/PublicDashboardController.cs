@@ -12,6 +12,9 @@ namespace FinanceDashboard.Api.Controllers
     [AllowAnonymous]
     public class PublicDashboardController : ControllerBase
     {
+        private const int PublicDashboardTransactionLimit = 100;
+        private const int PublicDashboardPeriodMonths = 12;
+
         private readonly AppDbContext _context;
         private readonly PublicDashboardTokenService _publicDashboardTokenService;
 
@@ -54,25 +57,44 @@ namespace FinanceDashboard.Api.Controllers
                 });
             }
 
+            var currentMonthStart = new DateTime(now.Year, now.Month, 1);
+            var periodStart = currentMonthStart.AddMonths(-(PublicDashboardPeriodMonths - 1));
+            var nextMonthStart = currentMonthStart.AddMonths(1);
+
             var transactions = await _context.Transactions
                 .AsNoTracking()
-                .Where(transaction => transaction.UserId == user.Id)
+                .Where(transaction =>
+                    transaction.UserId == user.Id &&
+                    transaction.Date >= periodStart &&
+                    transaction.Date < nextMonthStart)
                 .OrderByDescending(transaction => transaction.Date)
-                .Select(transaction => new PublicDashboardTransactionResponse
+                .Take(PublicDashboardTransactionLimit)
+                .Select(transaction => new
                 {
-                    Date = transaction.Date,
-                    Category = transaction.Category,
-                    AmountCents = transaction.AmountCents,
-                    Type = transaction.Type,
-                    IsRecurring = transaction.IsRecurring
+                    transaction.Date,
+                    transaction.Category,
+                    transaction.AmountCents,
+                    transaction.Type
                 })
                 .ToListAsync();
+
+            var publicTransactions = transactions
+                .Select(transaction => new PublicDashboardTransactionResponse
+                {
+                    Date = new DateTime(transaction.Date.Year, transaction.Date.Month, 1),
+                    Category = transaction.Category,
+                    AmountCents = transaction.AmountCents,
+                    Type = transaction.Type
+                })
+                .ToList();
 
             return Ok(new PublicDashboardResponse
             {
                 DisplayName = user.Name,
-                LastTransactionDate = transactions.FirstOrDefault()?.Date,
-                Transactions = transactions
+                LastTransactionDate = transactions.Count == 0
+                    ? null
+                    : new DateTime(transactions[0].Date.Year, transactions[0].Date.Month, 1),
+                Transactions = publicTransactions
             });
         }
     }

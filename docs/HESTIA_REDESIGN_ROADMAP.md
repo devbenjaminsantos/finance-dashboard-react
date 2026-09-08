@@ -732,9 +732,11 @@ operacional permanece pendente. Nenhuma configuração externa ou deploy foi alt
 
 ### P1 - dados públicos e entradas grandes
 
-- [ ] Definir o período e o conjunto mínimo de dados exibidos no dashboard
-      público.
-- [ ] Adicionar paginação ou limite de transações ao dashboard público.
+- [x] Definir o período e o conjunto mínimo de dados exibidos no dashboard
+      público: últimos 12 meses, até 100 lançamentos, sem descrição, contas,
+      tags, identificadores ou recorrência; datas são reduzidas ao mês.
+- [x] Adicionar limite de 100 transações ao dashboard público, ordenadas da
+      mais recente para a mais antiga.
 - [ ] Avaliar expiração opcional do compartilhamento além de rotação e revogação.
 - [ ] Evitar vazamento do token do dashboard por histórico, referer, analytics ou
       logs; avaliar `Referrer-Policy: no-referrer` na rota compartilhada.

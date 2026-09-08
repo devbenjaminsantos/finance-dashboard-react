@@ -84,6 +84,26 @@ function createI18nValue(language) {
         dateStyle: "short",
       }).format(date);
     },
+    formatMonthYear(isoMonth) {
+      if (!isoMonth) {
+        return "";
+      }
+
+      const [year, month] = String(isoMonth).trim().slice(0, 7).split("-");
+      if (!year || !month) {
+        return "";
+      }
+
+      const date = new Date(`${year}-${month}-01T00:00:00`);
+      if (Number.isNaN(date.getTime())) {
+        return "";
+      }
+
+      return new Intl.DateTimeFormat(language, {
+        month: "long",
+        year: "numeric",
+      }).format(date);
+    },
     formatDateTime(isoDateTime) {
       if (!isoDateTime) {
         return "";
